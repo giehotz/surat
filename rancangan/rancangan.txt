@@ -1,0 +1,517 @@
+# Rancangan Sistem Aplikasi Layanan Surat dengan CodeIgniter 4 (Fokus Flow & Migration)
+
+## 📋 Daftar Isi
+1. [Flowchart Sistem](#flowchart-sistem)
+2. [Flow Detail Proses](#flow-detail-proses)
+3. [Struktur Database & Migration](#struktur-database--migration)
+4. [Relasi Antar Tabel](#relasi-antar-tabel)
+5. [Struktur Folder CodeIgniter 4](#struktur-folder-codeigniter-4)
+
+---
+
+## 1. Flowchart Sistem
+
+```mermaid
+graph TD
+    A[Mulai] --> B{Login}
+    B -->|Invalid| C[Tampilkan Error]
+    C --> B
+    B -->|Valid| D[Dashboard Utama]
+    
+    D --> E{Pilih Menu}
+    
+    %% Surat Masuk Flow
+    E -->|Surat Masuk| F[Menu Surat Masuk]
+    F --> G{Pilih Aksi}
+    G -->|Tambah| H[Form Surat Masuk]
+    G -->|Lihat| I[Detail Surat]
+    G -->|Disposisi| J[Form Disposisi]
+    G -->|Cari| K[Form Pencarian]
+    
+    H --> L{Validasi Input}
+    L -->|Tidak Valid| M[Tampilkan Error Validasi]
+    M --> H
+    L -->|Valid| N[Upload File Surat]
+    N --> O[Generate Nomor Agenda]
+    O --> P[Simpan ke DB surat_masuk]
+    P --> Q[Insert Log Aktivitas]
+    Q --> R[Notifikasi Sukses]
+    R --> D
+    
+    J --> S{Cek User Tujuan}
+    S -->|Tidak Ada| T[Pilih User Lain]
+    T --> J
+    S -->|Ada| U[Simpan ke DB disposisi]
+    U --> V[Update Status Surat]
+    V --> W[Insert Log Disposisi]
+    W --> D
+    
+    I --> X[Lihat Detail + Riwayat]
+    X --> D
+    
+    K --> Y[Input Keyword]
+    Y --> Z[Query ke DB]
+    Z --> AA[Tampilkan Hasil]
+    AA --> D
+    
+    %% Surat Keluar Flow
+    E -->|Surat Keluar| AB[Menu Surat Keluar]
+    AB --> AC{Pilih Aksi}
+    AC -->|Buat Baru| AD[Form Surat Keluar]
+    AC -->|Lihat| AE[Detail Surat Keluar]
+    AC -->|Approval| AF[Form Approval]
+    
+    AD --> AG[Upload File Konsep]
+    AG --> AH[Simpan Draft]
+    AH --> AI[Notifikasi ke Approver]
+    AI --> D
+    
+    AF --> AJ{Status Approval}
+    AJ -->|Setuju| AK[Generate Nomor Surat]
+    AJ -->|Tolak| AL[Catatan Revisi]
+    
+    AK --> AM[Upload Final File]
+    AM --> AN[Update Status Terkirim]
+    AN --> D
+    
+    AL --> AD
+    
+    %% Laporan Flow
+    E -->|Laporan| AO[Menu Laporan]
+    AO --> AP{Pilih Jenis}
+    AP -->|Rekap Harian| AQ[Filter Tanggal]
+    AP -->|Rekap Bulanan| AR[Pilih Bulan]
+    AP -->|Statistik| AS[Grafik & Chart]
+    
+    AQ --> AT[Generate Laporan]
+    AR --> AT
+    AT --> AU[Export PDF/Excel]
+    AU --> D
+```
+
+## 2. Flow Detail Proses
+
+### Flow Surat Masuk dengan Disposisi
+
+```mermaid
+sequenceDiagram
+    participant Staff
+    participant Sistem
+    participant DB_Surat
+    participant DB_Disposisi
+    participant DB_Log
+    participant Kepala
+    
+    Staff->>Sistem: Input data surat masuk
+    Staff->>Sistem: Upload file surat
+    Sistem->>DB_Surat: Insert surat_masuk
+    Sistem->>DB_Log: Insert log (status: diterima)
+    DB_Surat-->>Sistem: success
+    Sistem-->>Staff: Notifikasi sukses
+    
+    Staff->>Sistem: Pilih menu disposisi
+    Sistem->>DB_Surat: Get data surat
+    DB_Surat-->>Sistem: data surat
+    Sistem-->>Staff: Form disposisi
+    
+    Staff->>Sistem: Pilih user tujuan (Kepala)
+    Staff->>Sistem: Input instruksi
+    Sistem->>DB_Disposisi: Insert disposisi
+    Sistem->>DB_Surat: Update status = didistribusikan
+    Sistem->>DB_Log: Insert log disposisi
+    Sistem-->>Staff: Notifikasi disposisi terkirim
+    
+    Sistem-->>Kepala: Notifikasi disposisi masuk
+    Kepala->>Sistem: Lihat disposisi
+    Sistem->>DB_Disposisi: Get disposisi
+    DB_Disposisi-->>Sistem: data disposisi
+    Sistem-->>Kepala: Detail disposisi
+    
+    Kepala->>Sistem: Update status = diproses
+    Sistem->>DB_Disposisi: Update status
+    Sistem->>DB_Log: Insert log
+```
+
+### Flow Surat Keluar dengan Approval
+
+```mermaid
+sequenceDiagram
+    participant Staff
+    participant Sistem
+    participant DB_Keluar
+    participant DB_Log
+    participant Kepala
+    
+    Staff->>Sistem: Input data surat keluar
+    Staff->>Sistem: Upload file konsep
+    Sistem->>DB_Keluar: Insert draft (status: draft)
+    Sistem->>DB_Log: Insert log (buat draft)
+    Sistem-->>Staff: Notifikasi draft tersimpan
+    
+    Staff->>Sistem: Submit untuk approval
+    Sistem->>DB_Keluar: Update status = menunggu
+    Sistem->>DB_Log: Insert log (menunggu approval)
+    Sistem-->>Kepala: Notifikasi perlu approval
+    
+    Kepala->>Sistem: Lihat daftar approval
+    Sistem->>DB_Keluar: Get surat status=menunggu
+    DB_Keluar-->>Sistem: data surat
+    
+    Kepala->>Sistem: Approve surat
+    Sistem->>DB_Keluar: Generate nomor_surat
+    Sistem->>DB_Keluar: Update status = disetujui
+    Sistem->>DB_Keluar: Update approved_by, approved_at
+    Sistem->>DB_Log: Insert log (disetujui)
+    Sistem-->>Staff: Notifikasi surat disetujui
+    
+    Staff->>Sistem: Upload file final
+    Sistem->>DB_Keluar: Update file_path
+    Sistem->>DB_Keluar: Update status = dikirim
+    Sistem->>DB_Log: Insert log (dikirim)
+    Sistem-->>Staff: Notifikasi surat terkirim
+```
+
+## 3. Struktur Database & Migration
+
+### Daftar Migration (Urutan Eksekusi)
+
+```
+app/Database/Migrations/
+├── 2024_01_01_000001_create_users.php
+├── 2024_01_01_000002_create_surat_masuk.php
+├── 2024_01_01_000003_create_surat_keluar.php
+├── 2024_01_01_000004_create_disposisi.php
+├── 2024_01_01_000005_create_log_aktivitas.php
+└── 2024_01_01_000006_create_file_attachments.php
+```
+
+### Migration 1: Users
+
+```php
+// 2024_01_01_000001_create_users.php
+{
+    id (INT, PK, AI)
+    username (VARCHAR 50, UNIQUE)
+    password (VARCHAR 255)
+    nama_lengkap (VARCHAR 100)
+    email (VARCHAR 100, NULL)
+    jabatan (VARCHAR 100, NULL)
+    role (ENUM: admin, staff, kepala) DEFAULT 'staff'
+    foto_profile (VARCHAR 255, NULL)
+    created_at (DATETIME, NULL)
+    updated_at (DATETIME, NULL)
+    
+    INDEX: idx_username, idx_role
+}
+```
+
+### Migration 2: Surat Masuk
+
+```php
+// 2024_01_01_000002_create_surat_masuk.php
+{
+    id (INT, PK, AI)
+    nomor_agenda (VARCHAR 50, UNIQUE)        // Format: IN-YYYY-XXX
+    nomor_surat (VARCHAR 100)                 // Nomor dari pengirim
+    tanggal_surat (DATE)                       // Tanggal surat dibuat
+    tanggal_terima (DATE)                       // Tanggal diterima
+    pengirim (VARCHAR 200)
+    perihal (TEXT)
+    lampiran (INT) DEFAULT 0
+    file_path (VARCHAR 255, NULL)
+    file_name (VARCHAR 255, NULL)
+    file_size (INT, NULL)
+    keterangan (TEXT, NULL)
+    status (ENUM: diterima, didistribusikan, selesai) DEFAULT 'diterima'
+    created_by (INT, NULL)                     // FK ke users.id
+    created_at (DATETIME, NULL)
+    updated_at (DATETIME, NULL)
+    
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    INDEX: idx_nomor_agenda, idx_tanggal_terima, idx_status, idx_pengirim
+}
+```
+
+### Migration 3: Surat Keluar
+
+```php
+// 2024_01_01_000003_create_surat_keluar.php
+{
+    id (INT, PK, AI)
+    nomor_agenda (VARCHAR 50, UNIQUE)        // Format: OUT-YYYY-XXX
+    nomor_surat (VARCHAR 100, UNIQUE)         // Nomor resmi instansi
+    tanggal_surat (DATE)                       // Tanggal pembuatan
+    tanggal_kirim (DATE)                       // Tanggal pengiriman
+    tujuan (VARCHAR 200)                       // Tujuan surat
+    perihal (TEXT)
+    lampiran (INT) DEFAULT 0
+    file_path (VARCHAR 255, NULL)              // Path file final
+    file_name (VARCHAR 255, NULL)
+    file_size (INT, NULL)
+    file_konsep_path (VARCHAR 255, NULL)       // Path file draft
+    keterangan (TEXT, NULL)
+    status (ENUM: draft, menunggu, disetujui, dikirim) DEFAULT 'draft'
+    approved_by (INT, NULL)                    // FK ke users.id
+    approved_at (DATETIME, NULL)
+    created_by (INT, NULL)                     // FK ke users.id
+    created_at (DATETIME, NULL)
+    updated_at (DATETIME, NULL)
+    
+    FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    INDEX: idx_nomor_surat, idx_tanggal_kirim, idx_status
+}
+```
+
+### Migration 4: Disposisi
+
+```php
+// 2024_01_01_000004_create_disposisi.php
+{
+    id (INT, PK, AI)
+    surat_masuk_id (INT, NOT NULL)             // FK ke surat_masuk.id
+    dari_user_id (INT, NULL)                   // FK ke users.id (pengirim)
+    ke_user_id (INT, NOT NULL)                 // FK ke users.id (penerima)
+    instruksi (TEXT)                            // Instruksi disposisi
+    batas_waktu (DATE, NULL)                    // Deadline penyelesaian
+    status (ENUM: diteruskan, diproses, selesai) DEFAULT 'diteruskan'
+    catatan (TEXT, NULL)                        // Catatan tambahan
+    created_at (DATETIME, NULL)
+    updated_at (DATETIME, NULL)
+    
+    FOREIGN KEY (surat_masuk_id) REFERENCES surat_masuk(id) ON DELETE CASCADE
+    FOREIGN KEY (dari_user_id) REFERENCES users(id) ON DELETE SET NULL
+    FOREIGN KEY (ke_user_id) REFERENCES users(id) ON DELETE CASCADE
+    INDEX: idx_surat_masuk, idx_ke_user, idx_status
+}
+```
+
+### Migration 5: Log Aktivitas
+
+```php
+// 2024_01_01_000005_create_log_aktivitas.php
+{
+    id (INT, PK, AI)
+    user_id (INT, NULL)                        // FK ke users.id
+    aksi (VARCHAR 50)                          // create, update, delete, view, download, disposisi, approve
+    tipe_surat (ENUM: masuk, keluar)            // Jenis surat
+    surat_id (INT, NOT NULL)                    // ID surat (masuk/keluar)
+    detail (TEXT, NULL)                         // Detail aktivitas
+    ip_address (VARCHAR 45, NULL)               // IP user
+    user_agent (TEXT, NULL)                      // Browser/device info
+    created_at (DATETIME, NULL)
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    INDEX: idx_user, idx_tipe_surat, idx_surat_id, idx_created_at
+}
+```
+
+### Migration 6: File Attachments
+
+```php
+// 2024_01_01_000006_create_file_attachments.php
+{
+    id (INT, PK, AI)
+    surat_id (INT, NOT NULL)                    // ID surat
+    tipe_surat (ENUM: masuk, keluar)            // Jenis surat
+    original_name (VARCHAR 255)                  // Nama file asli
+    file_path (VARCHAR 255)                      // Path file tersimpan
+    file_size (INT, NULL)                        // Ukuran file (bytes)
+    mime_type (VARCHAR 100, NULL)                // Tipe file
+    is_konsep (BOOLEAN) DEFAULT FALSE            // True untuk file draft
+    uploaded_by (INT, NULL)                      // FK ke users.id
+    uploaded_at (DATETIME, NULL)
+    
+    FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL
+    INDEX: idx_surat, idx_tipe_surat
+}
+```
+
+## 4. Relasi Antar Tabel
+
+```mermaid
+erDiagram
+    USERS ||--o{ SURAT_MASUK : "membuat"
+    USERS ||--o{ SURAT_KELUAR : "membuat"
+    USERS ||--o{ SURAT_KELUAR : "menyetujui"
+    USERS ||--o{ DISPOSISI : "mengirim"
+    USERS ||--o{ DISPOSISI : "menerima"
+    USERS ||--o{ LOG_AKTIVITAS : "melakukan"
+    USERS ||--o{ FILE_ATTACHMENTS : "mengupload"
+    
+    SURAT_MASUK ||--o{ DISPOSISI : "memiliki"
+    SURAT_MASUK ||--o{ LOG_AKTIVITAS : "memiliki"
+    SURAT_MASUK ||--o{ FILE_ATTACHMENTS : "memiliki"
+    
+    SURAT_KELUAR ||--o{ LOG_AKTIVITAS : "memiliki"
+    SURAT_KELUAR ||--o{ FILE_ATTACHMENTS : "memiliki"
+```
+
+### Detail Kardinalitas:
+
+| Tabel 1 | Relasi | Tabel 2 | Keterangan |
+|---------|--------|---------|------------|
+| users | 1 : N | surat_masuk | Satu user bisa membuat banyak surat masuk |
+| users | 1 : N | surat_keluar (created_by) | Satu user bisa membuat banyak surat keluar |
+| users | 1 : N | surat_keluar (approved_by) | Satu user bisa menyetujui banyak surat |
+| users | 1 : N | disposisi (dari_user_id) | Satu user bisa mengirim banyak disposisi |
+| users | 1 : N | disposisi (ke_user_id) | Satu user bisa menerima banyak disposisi |
+| users | 1 : N | log_aktivitas | Satu user bisa memiliki banyak log |
+| surat_masuk | 1 : N | disposisi | Satu surat masuk bisa banyak disposisi |
+| surat_masuk | 1 : N | log_aktivitas | Satu surat masuk bisa banyak log |
+| surat_keluar | 1 : N | log_aktivitas | Satu surat keluar bisa banyak log |
+
+## 5. Struktur Folder CodeIgniter 4
+
+```
+ci4-surat-app/
+├── app/
+│   ├── Config/
+│   │   ├── Database.php          # Konfigurasi database
+│   │   ├── Routes.php             # Routing URL
+│   │   ├── Validation.php         # Aturan validasi
+│   │   └── Filters.php            # Daftar filter (login, role)
+│   │
+│   ├── Controllers/
+│   │   ├── Auth.php               # Login, logout, register
+│   │   ├── Dashboard.php           # Dashboard utama
+│   │   ├── SuratMasuk.php          # CRUD surat masuk
+│   │   ├── SuratKeluar.php         # CRUD surat keluar
+│   │   ├── Disposisi.php           # Manajemen disposisi
+│   │   ├── Laporan.php             # Generate laporan
+│   │   ├── Arsip.php               # Pencarian & arsip
+│   │   ├── Profile.php             # Manajemen profil user
+│   │   └── Api/
+│   │       ├── SuratMasuk.php      # API untuk AJAX
+│   │       └── Statistik.php       # Data statistik
+│   │
+│   ├── Models/
+│   │   ├── UserModel.php
+│   │   ├── SuratMasukModel.php
+│   │   ├── SuratKeluarModel.php
+│   │   ├── DisposisiModel.php
+│   │   ├── LogAktivitasModel.php
+│   │   └── FileModel.php
+│   │
+│   ├── Views/
+│   │   ├── layout/
+│   │   │   ├── header.php
+│   │   │   ├── sidebar.php
+│   │   │   ├── footer.php
+│   │   │   └── template.php
+│   │   ├── surat_masuk/
+│   │   │   ├── index.php          # Daftar surat
+│   │   │   ├── create.php          # Form tambah
+│   │   │   ├── edit.php            # Form edit
+│   │   │   └── detail.php          # Detail surat
+│   │   ├── surat_keluar/
+│   │   │   ├── index.php
+│   │   │   ├── create.php
+│   │   │   ├── edit.php
+│   │   │   └── detail.php
+│   │   ├── disposisi/
+│   │   │   ├── index.php           # Daftar disposisi
+│   │   │   └── my_disposisi.php    # Disposisi untuk user
+│   │   ├── laporan/
+│   │   │   ├── surat_masuk.php
+│   │   │   ├── surat_keluar.php
+│   │   │   └── statistik.php
+│   │   └── auth/
+│   │       ├── login.php
+│   │       └── forgot_password.php
+│   │
+│   ├── Filters/
+│   │   ├── LoginFilter.php         # Cek login
+│   │   └── RoleFilter.php           # Cek role user
+│   │
+│   ├── Libraries/
+│   │   ├── Surat.php                # Helper fungsi surat
+│   │   └── Notification.php         # Notifikasi email
+│   │
+│   ├── Helpers/
+│   │   └── surat_helper.php         # Fungsi bantuan
+│   │
+│   └── Database/
+│       ├── Migrations/
+│       │   ├── 2024_01_01_000001_create_users.php
+│       │   ├── 2024_01_01_000002_create_surat_masuk.php
+│       │   ├── 2024_01_01_000003_create_surat_keluar.php
+│       │   ├── 2024_01_01_000004_create_disposisi.php
+│       │   ├── 2024_01_01_000005_create_log_aktivitas.php
+│       │   └── 2024_01_01_000006_create_file_attachments.php
+│       └── Seeds/
+│           └── DatabaseSeeder.php    # Data awal
+│
+├── public/
+│   ├── assets/
+│   │   ├── css/
+│   │   │   ├── style.css
+│   │   │   └── adminlte.min.css
+│   │   ├── js/
+│   │   │   ├── app.js
+│   │   │   └── surat.js
+│   │   └── images/
+│   │       └── default-avatar.png
+│   └── uploads/                       # Folder file upload
+│       ├── surat_masuk/
+│       └── surat_keluar/
+│
+├── writable/
+│   ├── logs/                          # Log aplikasi
+│   └── uploads/                        # Temporary uploads
+│
+└── .env                                 # Environment config
+```
+
+### Konfigurasi Database (.env)
+
+```env
+#--------------------------------------------------------------------
+# DATABASE CONFIGURATION
+#--------------------------------------------------------------------
+
+database.default.hostname = localhost
+database.default.database = db_surat_app
+database.default.username = root
+database.default.password = 
+database.default.DBDriver = MySQLi
+database.default.DBPrefix =
+database.default.port = 3306
+
+#--------------------------------------------------------------------
+# ENCRYPTION KEY
+#--------------------------------------------------------------------
+
+encryption.key = hex2bin:your-32-character-hex-key-here
+
+#--------------------------------------------------------------------
+# UPLOAD CONFIGURATION
+#--------------------------------------------------------------------
+
+upload.maxSize = 5120
+upload.fileTypes = pdf|jpg|jpeg|png|doc|docx
+upload.path.surat_masuk = public/uploads/surat_masuk
+upload.path.surat_keluar = public/uploads/surat_keluar
+```
+
+---
+
+## Ringkasan Fitur Database
+
+| Tabel | Fungsi | Relasi dengan |
+|-------|--------|---------------|
+| users | Data pengguna sistem | Semua tabel |
+| surat_masuk | Data surat masuk | users, disposisi, log, file |
+| surat_keluar | Data surat keluar | users, log, file |
+| disposisi | Alur disposisi surat | users, surat_masuk |
+| log_aktivitas | Log semua aktivitas | users, surat_masuk, surat_keluar |
+| file_attachments | Manajemen file | users, surat_masuk, surat_keluar |
+
+### Format Nomor Agenda:
+- **Surat Masuk**: `IN-YYYY-NNN` (IN-2024-001)
+- **Surat Keluar**: `OUT-YYYY-NNN` (OUT-2024-001)
+
+### Status Workflow:
+- **Surat Masuk**: diterima → didistribusikan → selesai
+- **Surat Keluar**: draft → menunggu → disetujui → dikirim
+- **Disposisi**: diteruskan → diproses → selesai
