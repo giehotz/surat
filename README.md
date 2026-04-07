@@ -1,68 +1,153 @@
-# CodeIgniter 4 Application Starter
+# Surat - Sistem Manajemen Surat dan Buku Tamu
 
-## What is CodeIgniter?
+Aplikasi web manajemen surat dan buku tamu berbasis CodeIgniter 4, khusus dibuat untuk kebutuhan madrasah atau sekolah.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+## Ringkasan Proyek
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+Aplikasi ini menangani:
+- Autentikasi pengguna dengan proteksi brute-force login
+- Dashboard ringkasan surat masuk, surat keluar, disposisi, aktivitas dan statistik
+- Modul Surat Masuk dan Surat Keluar dengan import/export Excel/PDF
+- Alur persetujuan Surat Keluar untuk pimpinan
+- Sistem Disposisi untuk tindak lanjut Surat Masuk
+- Buku Tamu publik terintegrasi dengan formulir umum dan dinas
+- Manajemen data siswa, kelas, data guru, dan data madrasah
+- Pengaturan aplikasi dan manajemen pengguna berbasis peran
+- Backup database dan pengaturan tahun anggaran
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+## Teknologi
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+- PHP 8.1+ (direkomendasikan)
+- CodeIgniter 4
+- MySQL/MariaDB atau database yang didukung CodeIgniter
+- Composer
 
-## Installation & updates
+## Arsitektur Utama
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+- `app/Controllers` - logika kontrol aplikasi
+- `app/Models` - akses data ke tabel database
+- `app/Views` - tampilan HTML dan antarmuka pengguna
+- `app/Config/Routes.php` - definisi rute aplikasi
+- `app/Config/Filters.php` - manajemen autentikasi dan role filter
+- `public/` - root web server dan asset publik
+- `writable/` dan `uploads/` - direktori runtime dan file upload
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+## Alur Utama Aplikasi
 
-## Setup
+### 1. Akses Publik
+- `/` atau `/auth/login` menampilkan halaman login.
+- Jika sudah login, pengguna diarahkan ke `/dashboard`.
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+### 2. Autentikasi
+- Login diproses oleh `App\Controllers\Auth`.
+- Proteksi brute-force menggunakan `LoginAttemptModel`.
+- Akun dapat login dengan username/email dan password yang tersimpan.
+- Terdapat akun dummy `admin/admin` dan `staf/staf` untuk pengujian lokal jika DB belum tersedia.
+- Logout menghapus sesi dan mencatat aktivitas login/logout.
 
-## Important Change with index.php
+### 3. Dashboard
+- Dashboard dikelola oleh `App\Controllers\Dashboard`.
+- Untuk `admin_tamu`, dashboard menampilkan statistik buku tamu, kunjungan, dan grafik.
+- Untuk pengguna lain, dashboard menampilkan ringkasan surat masuk/keluar, disposisi, pengguna, dan log aktivitas.
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+### 4. Modul Utama
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+#### Surat Masuk
+- URL: `surat-masuk/*`
+- Fungsionalitas: daftar, buat, edit, detail, hapus, impor, ekspor Excel/PDF.
+- Hanya `admin` dan `operator` boleh membuat, mengedit, dan mengimpor.
 
-**Please** read the user guide for a better explanation of how CI4 works!
+#### Surat Keluar
+- URL: `surat-keluar/*`
+- Fungsionalitas: daftar, buat, edit, detail, hapus, persetujuan, impor, ekspor Excel/PDF.
+- Proses approval untuk pimpinan.
+- Hanya `admin` dan `operator` boleh membuat dan mengedit.
 
-## Repository Management
+#### Disposisi
+- URL: `disposisi/*`
+- Fungsionalitas: buat disposisi dari surat masuk, lihat detail, ubah status.
+- Akses dasar tersedia untuk pengguna yang sudah login.
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+#### Prestasi Siswa
+- URL: `prestasi-siswa/*`
+- Fungsionalitas: CRUD prestasi, impor, dan ekspor data.
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+#### Data Siswa & Kelas
+- URL: `siswa/*` dan `kelas/*`
+- Fungsionalitas: manajemen siswa, kelas, dan penunjukan siswa ke kelas.
+- Terbatas untuk `admin` dan `operator`.
 
-## Server Requirements
+#### Data Guru
+- URL: `data-guru/*`
+- Fungsionalitas: CRUD data guru, unggah berkas, impor data.
+- Terbatas untuk `admin` dan `operator`.
 
-PHP version 8.1 or higher is required, with the following extensions installed:
+#### Data Madrasah
+- URL: `/data-madrasah`
+- Menampilkan informasi madrasah, hanya dapat diakses oleh `admin` dan `operator`.
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+#### Buku Tamu
+- URL publik: `/buku-tamu`, `/buku-tamu/umum`, `/buku-tamu/dinas`
+- Formulir tamu umum dan dinas.
+- Logika buka/tutup berdasarkan pengaturan dan jadwal kerja.
+- Penyimpanan data tamu, kunjungan, foto wajah, tanda tangan, dan dokumen pendukung.
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - If you are still using PHP 7.4 or 8.0, you should upgrade immediately.
-> - The end of life date for PHP 8.1 will be December 31, 2025.
+#### Admin Buku Tamu
+- URL: `/admin-buku-tamu/*`
+- Fungsionalitas: lihat tamu, update status, tindak lanjut, ekspor, hapus.
+- Akses untuk `admin`, `operator`, dan `admin_tamu`.
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+#### Pengaturan Aplikasi
+- URL: `/pengaturan/*`
+- Fungsionalitas: identitas sekolah, pimpinan, preferensi, wajib field, buku tamu, dan tahun anggaran.
+- Akses untuk `admin`; beberapa pengaturan buku tamu dapat diubah oleh `admin_tamu`.
+- API tambahan: `/pengaturan/get-link-drive`
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+### 5. Keamanan & Role
+
+- Filter global `isLoggedIn` memastikan hanya pengguna login yang mengakses bagian internal.
+- `role` filter mengatur hak akses untuk route tertentu.
+- `honeypot` aktif khusus pada route `buku-tamu/*`.
+- Aplikasi menggunakan session CodeIgniter untuk manajemen pengguna.
+
+## Setup dan Jalankan
+
+1. Install dependencies:
+   ```bash
+   composer install
+   ```
+2. Salin `env` ke `.env` dan atur konfigurasi:
+   - `app.baseURL`
+   - database
+   - env, debug, dan session
+3. Pastikan web server diarahkan ke folder `public/`.
+4. Pastikan direktori `writable/` dan `public/uploads/` dapat ditulis.
+5. Jalankan migrasi database jika tersedia.
+
+## Catatan Penting
+
+- `index.php` berada di dalam `public/`.
+- `app/Config/App.php` memiliki logika baseURL otomatis yang hanya mengizinkan host tertentu.
+- Upload file disimpan dalam `public/uploads/`.
+- Role yang digunakan di aplikasi: `admin`, `operator`, `admin_tamu`, dan kemungkinan lainnya.
+
+## Struktur Fitur
+
+- `app/Controllers/Auth.php` - login/logout dan proteksi login
+- `app/Controllers/Dashboard.php` - ringkasan data dan dashboard role-spesifik
+- `app/Controllers/BukuTamu.php` - alur pengiriman tamu publik dan penyimpanan kunjungan
+- `app/Controllers/Pengaturan.php` - pusat konfigurasi sistem
+- `app/Config/Routes.php` - peta rute utama dan otorisasi per modul
+- `app/Config/Filters.php` - aturan keamanan dan filter global
+
+## Pelajari Alurnya
+
+1. Pengguna mengunjungi `/auth/login`.
+2. Setelah login, pengguna diarahkan ke `/dashboard`.
+3. Dashboard menampilkan ringkasan data sesuai peran.
+4. Pengguna dapat mengakses modul surat, disposisi, data akademik, dan pengaturan.
+5. Pengguna publik bisa mengisi buku tamu tanpa login.
+
+---
+
+Dokumentasi ini menggantikan README bawaan dan menyesuaikan dengan alur aplikasi `surat` yang ada.
