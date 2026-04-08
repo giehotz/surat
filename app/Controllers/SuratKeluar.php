@@ -183,6 +183,24 @@ class SuratKeluar extends BaseController
     public function store()
     {
         $suratKeluarModel = new \App\Models\SuratKeluarModel();
+
+        $nomorSurat = $this->request->getPost('nomor_surat');
+        $perihal = $this->request->getPost('perihal');
+
+        // Cek duplikasi berdasarkan nomor_surat atau perihal
+        // Jika nomor_surat kosong (draft), hanya cek perihal
+        $query = $suratKeluarModel->groupStart();
+        if (!empty($nomorSurat)) {
+            $query->where('nomor_surat', $nomorSurat);
+            $query->orWhere('perihal', $perihal);
+        } else {
+            $query->where('perihal', $perihal);
+        }
+        $existingSurat = $query->groupEnd()->first();
+
+        if ($existingSurat) {
+            return redirect()->back()->withInput()->with('error', 'Peringatan: Nomor atau isi surat sudah ada!');
+        }
         
         // Dapatkan aturan validasi berdasarkan pengaturan wajib field
         $validationRules = $suratKeluarModel->getValidationRulesFromPengaturan();
@@ -309,6 +327,23 @@ class SuratKeluar extends BaseController
 
         if (empty($surat)) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Data Surat Keluar tidak ditemukan.');
+        }
+
+        $nomorSurat = $this->request->getPost('nomor_surat');
+        $perihal = $this->request->getPost('perihal');
+
+        // Cek duplikasi berdasarkan nomor_surat atau perihal (kecuali surat ini sendiri)
+        $query = $suratKeluarModel->groupStart();
+        if (!empty($nomorSurat)) {
+            $query->where('nomor_surat', $nomorSurat);
+            $query->orWhere('perihal', $perihal);
+        } else {
+            $query->where('perihal', $perihal);
+        }
+        $existingSurat = $query->groupEnd()->where('id !=', $id)->first();
+
+        if ($existingSurat) {
+            return redirect()->back()->withInput()->with('error', 'Peringatan: Nomor atau isi surat sudah ada!');
         }
 
         // Dapatkan aturan validasi berdasarkan pengaturan wajib field
@@ -442,26 +477,51 @@ class SuratKeluar extends BaseController
             return redirect()->back()->with('error', 'Data Surat Keluar tidak ditemukan.');
         }
 
-        // Update status menjadi disetujui
-        $suratKeluarModel->update($id, [
-            'status' => 'disetujui',
-            'approved_by' => session()->get('user_id'),
-            'approved_at' => date('Y-m-d H:i:s')
-        ]);
+        $actionType = $this->request->getPost('action_type');
+
+        if ($actionType === 'cancel') {
+            $suratKeluarModel->update($id, [
+                'status' => 'draft',
+                'approved_by' => null,
+                'approved_at' => null
+            ]);
+            $msg = 'Persetujuan Surat Keluar berhasil dibatalkan (kembali ke Draft).';
+            $logAksi = 'cancel_approval';
+            $logDetail = 'Membatalkan persetujuan surat keluar nomor ' . $surat['nomor_surat'];
+        } elseif ($actionType === 'reject') {
+            $suratKeluarModel->update($id, [
+                'status' => 'ditolak',
+                'approved_by' => session()->get('user_id'),
+                'approved_at' => date('Y-m-d H:i:s')
+            ]);
+            $msg = 'Surat Keluar berhasil ditolak.';
+            $logAksi = 'reject';
+            $logDetail = 'Menolak surat keluar nomor ' . $surat['nomor_surat'];
+        } else {
+            // Default to Approve
+            $suratKeluarModel->update($id, [
+                'status' => 'disetujui',
+                'approved_by' => session()->get('user_id'),
+                'approved_at' => date('Y-m-d H:i:s')
+            ]);
+            $msg = 'Surat Keluar berhasil disetujui.';
+            $logAksi = 'approve';
+            $logDetail = 'Menyetujui surat keluar nomor ' . $surat['nomor_surat'];
+        }
 
         // Catat aktivitas
         $logModel = new \App\Models\LogAktivitasModel();
         $logModel->save([
             'user_id'    => session()->get('user_id'),
             'surat_id'   => $id,
-            'aksi'       => 'approve',
+            'aksi'       => $logAksi,
             'tipe_surat' => 'surat_keluar',
-            'detail'     => 'Menyetujui surat keluar nomor ' . $surat['nomor_surat'],
+            'detail'     => $logDetail,
             'ip_address' => $this->request->getIPAddress(),
             'user_agent' => $this->request->getUserAgent()->getAgentString()
         ]);
 
-        return redirect()->to('/surat-keluar')->with('success', 'Surat Keluar berhasil disetujui');
+        return redirect()->to('/surat-keluar')->with('success', $msg);
     }
 
     public function reject($id = null)

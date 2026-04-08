@@ -163,6 +163,20 @@ class SuratMasuk extends BaseController
     {
         $suratMasukModel = new \App\Models\SuratMasukModel();
 
+        $nomorSurat = $this->request->getPost('nomor_surat');
+        $perihal = $this->request->getPost('perihal');
+
+        // Cek duplikasi berdasarkan nomor_surat atau perihal
+        $existingSurat = $suratMasukModel->groupStart()
+                                            ->where('nomor_surat', $nomorSurat)
+                                            ->orWhere('perihal', $perihal)
+                                         ->groupEnd()
+                                         ->first();
+
+        if ($existingSurat) {
+            return redirect()->back()->withInput()->with('error', 'Peringatan: Nomor atau isi surat sudah ada!');
+        }
+
         // Generate Nomor Agenda (IN-YYYY-001)
         $lastSurat = $suratMasukModel->orderBy('id', 'DESC')->first();
         $lastNumber = 0;
@@ -257,6 +271,21 @@ class SuratMasuk extends BaseController
 
         if (empty($surat)) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Data Surat Masuk tidak ditemukan.');
+        }
+
+        $nomorSurat = $this->request->getPost('nomor_surat');
+        $perihal = $this->request->getPost('perihal');
+
+        // Cek duplikasi berdasarkan nomor_surat atau perihal (kecuali surat ini sendiri)
+        $existingSurat = $suratMasukModel->groupStart()
+                                            ->where('nomor_surat', $nomorSurat)
+                                            ->orWhere('perihal', $perihal)
+                                         ->groupEnd()
+                                         ->where('id !=', $id)
+                                         ->first();
+
+        if ($existingSurat) {
+            return redirect()->back()->withInput()->with('error', 'Peringatan: Nomor atau isi surat sudah ada!');
         }
 
         $tipe_penyimpanan = $this->request->getPost('tipe_penyimpanan');
