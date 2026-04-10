@@ -9,6 +9,11 @@
                 <h3 class="card-title">Daftar Surat Masuk</h3>
                 <div class="card-actions">
                     <div class="btn-list">
+                        <?php if (session()->get('role') === 'admin'): ?>
+                            <button type="button" id="btn-reassign-agenda" class="btn btn-outline-warning" title="Urutkan ulang nomor agenda berdasarkan tanggal surat">
+                                <i class="ti ti-arrows-sort icon"></i> Urutkan Agenda
+                            </button>
+                        <?php endif; ?>
                         <a href="<?= base_url('surat-masuk/export-excel') ?>" class="btn btn-outline-success">
                             <i class="ti ti-file-spreadsheet icon"></i> Excel
                         </a>
@@ -129,6 +134,8 @@
                 orderable: false,
                 searchable: false
             }],
+            // PERUBAHAN: dari 'desc' menjadi 'asc' agar urutan dari tanggal lama ke baru (Januari ke Desember)
+            order: [[3, 'asc']],
             language: {
                 url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/id.json"
             }
@@ -136,6 +143,52 @@
 
         $('#btn-filter').click(function() {
             table.draw();
+        });
+
+        // Tombol Urutkan Agenda (admin only)
+        $('#btn-reassign-agenda').click(function() {
+            Swal.fire({
+                title: 'Urutkan Ulang No. Agenda?',
+                text: 'Nomor agenda akan diurutkan ulang berdasarkan tanggal surat (kronologis). Proses ini akan mengubah nomor agenda yang sudah ada.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#e6a919',
+                confirmButtonText: '<i class="ti ti-arrows-sort"></i> Ya, Urutkan!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var btn = $('#btn-reassign-agenda');
+                    btn.prop('disabled', true).html('<i class="ti ti-loader icon spin"></i> Memproses...');
+
+                    $.ajax({
+                        url: '<?= base_url("surat-masuk/reassign-agenda") ?>',
+                        type: 'POST',
+                        data: { <?= csrf_token() ?>: '<?= csrf_hash() ?>' },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil!',
+                                    text: response.message,
+                                    timer: 2500,
+                                    showConfirmButton: false
+                                });
+                                table.draw(); // Refresh tabel
+                            } else {
+                                Swal.fire('Gagal', response.message, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Error', 'Terjadi kesalahan saat menghubungi server.', 'error');
+                        },
+                        complete: function() {
+                            btn.prop('disabled', false).html('<i class="ti ti-arrows-sort icon"></i> Urutkan Agenda');
+                        }
+                    });
+                }
+            });
         });
     });
 

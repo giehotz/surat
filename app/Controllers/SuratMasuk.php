@@ -177,13 +177,11 @@ class SuratMasuk extends BaseController
             return redirect()->back()->withInput()->with('error', 'Peringatan: Nomor atau isi surat sudah ada!');
         }
 
-        // Generate Nomor Agenda (IN-YYYY-001)
-        $lastSurat = $suratMasukModel->orderBy('id', 'DESC')->first();
-        $lastNumber = 0;
-        if ($lastSurat && preg_match('/IN-\d{4}-(\d+)/', $lastSurat['nomor_agenda'], $matches)) {
-            $lastNumber = (int)$matches[1];
-        }
-        $nomor_agenda = 'IN-' . date('Y') . '-' . sprintf('%03d', $lastNumber + 1);
+        $tanggalSurat = $this->request->getPost('tanggal_surat');
+        $tahunSurat = date('Y', strtotime($tanggalSurat));
+
+        // Nomor agenda sementara, akan di-reassign setelah insert
+        $nomor_agenda = 'IN-' . $tahunSurat . '-TEMP-' . time();
 
         $tipe_penyimpanan = $this->request->getPost('tipe_penyimpanan');
         $fileName = null;
@@ -206,7 +204,7 @@ class SuratMasuk extends BaseController
         $data = [
             'nomor_agenda'     => $nomor_agenda,
             'nomor_surat'      => $this->request->getPost('nomor_surat'),
-            'tanggal_surat'    => $this->request->getPost('tanggal_surat'),
+            'tanggal_surat'    => $tanggalSurat,
             'tanggal_terima'   => $this->request->getPost('tanggal_terima'),
             'pengirim'         => $this->request->getPost('pengirim'),
             'perihal'          => $this->request->getPost('perihal'),
@@ -223,6 +221,9 @@ class SuratMasuk extends BaseController
 
         $suratMasukModel->insert($data);
         $insertId = $suratMasukModel->getInsertID();
+
+        // Reassign nomor_agenda berdasarkan urutan kronologis tanggal_surat
+        $suratMasukModel->reassignNomorAgenda($tahunSurat);
 
         // Catat di log_aktivitas
         $logModel = new \App\Models\LogAktivitasModel();
@@ -327,6 +328,21 @@ class SuratMasuk extends BaseController
 
         $suratMasukModel->update($id, $data);
 
+        // Reassign nomor_agenda jika tanggal_surat berubah
+        $tanggalSuratBaru = $this->request->getPost('tanggal_surat');
+        $tanggalSuratLama = $surat['tanggal_surat'];
+        $tahunBaru = date('Y', strtotime($tanggalSuratBaru));
+        $tahunLama = date('Y', strtotime($tanggalSuratLama));
+
+        if ($tanggalSuratBaru !== $tanggalSuratLama) {
+            // Reassign tahun baru
+            $suratMasukModel->reassignNomorAgenda($tahunBaru);
+            // Jika pindah tahun, reassign tahun lama juga
+            if ($tahunBaru !== $tahunLama) {
+                $suratMasukModel->reassignNomorAgenda($tahunLama);
+            }
+        }
+
         // Catat aktivitas
         $logModel = new \App\Models\LogAktivitasModel();
         $logModel->save([
@@ -348,7 +364,11 @@ class SuratMasuk extends BaseController
         $surat = $suratMasukModel->find($id);
 
         if ($surat) {
+            $tahunSurat = date('Y', strtotime($surat['tanggal_surat']));
             $suratMasukModel->delete($id);
+
+            // Reassign nomor_agenda setelah penghapusan
+            $suratMasukModel->reassignNomorAgenda($tahunSurat);
 
             // Jika ada file lokal, hapus fisik file (opsional, tergantung kebijakan)
             // if ($surat['file_path'] && file_exists(FCPATH . $surat['file_path'])) {
@@ -369,6 +389,33 @@ class SuratMasuk extends BaseController
         }
 
         return redirect()->to('/surat-masuk')->with('success', 'Surat Masuk berhasil dihapus');
+    }
+
+    /**
+     * Reassign nomor agenda secara manual (hanya untuk admin).
+     * Endpoint ini dipanggil via AJAX dari tombol di halaman index.
+     */
+    public function reassignAgenda()
+    {
+        // Double-check role di controller
+        if (session()->get('role') !== 'admin') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Anda tidak memiliki akses untuk fitur ini.']);
+        }
+
+        try {
+            $suratMasukModel = new \App\Models\SuratMasukModel();
+            $suratMasukModel->reassignNomorAgenda();
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Nomor agenda berhasil diperbarui berdasarkan urutan kronologis tanggal surat.'
+            ]);
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Gagal memperbarui nomor agenda: ' . $e->getMessage()
+            ]);
+        }
     }
 
     public function exportExcel()
@@ -587,13 +634,9 @@ class SuratMasuk extends BaseController
                 continue;
             }
 
-            // Generate Nomor Agenda (IN-YYYY-001) for each row
-            $lastSurat = $suratMasukModel->orderBy('id', 'DESC')->first();
-            $lastNumber = 0;
-            if ($lastSurat && preg_match('/IN-\d{4}-(\d+)/', $lastSurat['nomor_agenda'], $matches)) {
-                $lastNumber = (int)$matches[1];
-            }
-            $nomor_agenda = 'IN-' . date('Y') . '-' . sprintf('%03d', $lastNumber + 1);
+            // Nomor agenda sementara, akan di-reassign setelah semua data diimport
+            $tahunSurat = date('Y', strtotime($row['tanggal_surat']));
+            $nomor_agenda = 'IN-' . $tahunSurat . '-TEMP-' . time() . '-' . $validRows;
 
             $dataInsert = [
                 'nomor_agenda'     => $nomor_agenda,
@@ -625,6 +668,11 @@ class SuratMasuk extends BaseController
             ]);
 
             $validRows++;
+        }
+
+        // Reassign semua nomor_agenda setelah semua data diimport
+        if ($validRows > 0) {
+            $suratMasukModel->reassignNomorAgenda();
         }
 
         $db->transComplete();

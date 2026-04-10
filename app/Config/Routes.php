@@ -40,6 +40,7 @@ $routes->group('surat-masuk', function ($routes) {
     $routes->get('download-template', 'SuratMasuk::downloadTemplate', ['filter' => 'role:admin,operator']);
     $routes->post('preview', 'SuratMasuk::preview', ['filter' => 'role:admin,operator']);
     $routes->post('store-import', 'SuratMasuk::storeImport', ['filter' => 'role:admin,operator']);
+    $routes->post('reassign-agenda', 'SuratMasuk::reassignAgenda', ['filter' => 'role:admin']);
 });
 
 // Surat Keluar Routes
