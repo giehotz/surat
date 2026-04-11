@@ -18,13 +18,7 @@
                         </span>
                     </div>
                     <h2 class="page-title mb-1" style="font-size: 1.5rem;">
-                        Selamat <?php
-                            $hour = (int)date('H');
-                            if ($hour >= 5 && $hour < 12) echo 'Pagi';
-                            elseif ($hour >= 12 && $hour < 15) echo 'Siang';
-                            elseif ($hour >= 15 && $hour < 18) echo 'Sore';
-                            else echo 'Malam';
-                        ?>, <?= esc(session('nama_lengkap') ?? session('username') ?? 'Pengguna') ?>! <i class="ti ti-hand-stop text-warning ms-1" style="font-size: 1.3rem; transform: rotate(15deg); display: inline-block;"></i>
+                        <span id="live-greeting">Selamat ...</span>, <?= esc(session('nama_lengkap') ?? session('username') ?? 'Pengguna') ?>! <i class="ti ti-hand-stop text-warning ms-1" style="font-size: 1.3rem; transform: rotate(15deg); display: inline-block;"></i>
                     </h2>
                     <p class="text-muted mb-0">
                         <i class="ti ti-calendar-event me-1"></i><?= date('l, d F Y') ?>
@@ -384,6 +378,14 @@
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
             
+            // Update Greeting based on browser time
+            const hour = now.getHours();
+            let greeting = 'Malam';
+            if (hour >= 5 && hour < 11) greeting = 'Pagi';
+            else if (hour >= 11 && hour < 15) greeting = 'Siang';
+            else if (hour >= 15 && hour < 18) greeting = 'Sore';
+            
+            document.getElementById('live-greeting').innerHTML = `Selamat ${greeting}`;
             document.getElementById('live-clock').innerHTML = `${dayName}, ${day} ${monthName} ${year} | ${hours}:${minutes}:${seconds}`;
         }
         setInterval(updateClock, 1000);
