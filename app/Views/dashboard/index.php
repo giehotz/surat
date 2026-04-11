@@ -11,6 +11,12 @@
                     <i class="ti ti-layout-dashboard fs-1 text-primary"></i>
                 </div>
                 <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge bg-blue-lt px-2 py-1" style="font-size: 0.75rem; letter-spacing: 0.02em;">
+                            <i class="ti ti-clock-filled me-1"></i>
+                            <span id="live-clock"><?= format_tanggal_indo(date('Y-m-d')) ?> • <?= date('H:i:s') ?></span>
+                        </span>
+                    </div>
                     <h2 class="page-title mb-1" style="font-size: 1.5rem;">
                         Selamat <?php
                             $hour = (int)date('H');
@@ -364,6 +370,25 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        // ===== Real-time Clock =====
+        function updateClock() {
+            const now = new Date();
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            
+            const dayName = days[now.getDay()];
+            const day = String(now.getDate()).padStart(2, '0');
+            const monthName = months[now.getMonth()];
+            const year = now.getFullYear();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            document.getElementById('live-clock').innerHTML = `${dayName}, ${day} ${monthName} ${year} • ${hours}:${minutes}:${seconds}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock(); // Initial call
+
         // ===== ApexCharts Configuration =====
         var el = document.getElementById('chart-persuratan');
         if (!el || typeof ApexCharts === 'undefined') return;
