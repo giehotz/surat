@@ -24,7 +24,7 @@
                             elseif ($hour >= 12 && $hour < 15) echo 'Siang';
                             elseif ($hour >= 15 && $hour < 18) echo 'Sore';
                             else echo 'Malam';
-                        ?>, <?= esc(session('nama_lengkap') ?? session('username') ?? 'Pengguna') ?>! 👋
+                        ?>, <?= esc(session('nama_lengkap') ?? session('username') ?? 'Pengguna') ?>! <i class="ti ti-hand-stop text-warning ms-1" style="font-size: 1.3rem; transform: rotate(15deg); display: inline-block;"></i>
                     </h2>
                     <p class="text-muted mb-0">
                         <i class="ti ti-calendar-event me-1"></i><?= date('l, d F Y') ?>
