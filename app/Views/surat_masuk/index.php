@@ -134,8 +134,8 @@
                 orderable: false,
                 searchable: false
             }],
-            // PERUBAHAN: dari 'desc' menjadi 'asc' agar urutan dari tanggal lama ke baru (Januari ke Desember)
-            order: [[3, 'asc']],
+            // Urutkan berdasarkan No. Agenda ASC agar urutan kronologis terlihat jelas
+            order: [[1, 'asc']],
             language: {
                 url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/id.json"
             }
