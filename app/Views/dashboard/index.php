@@ -14,7 +14,7 @@
                     <div class="d-flex align-items-center gap-2 mb-1">
                         <span class="badge bg-blue-lt px-2 py-1" style="font-size: 0.75rem; letter-spacing: 0.02em;">
                             <i class="ti ti-clock-filled me-1"></i>
-                            <span id="live-clock"><?= format_tanggal_indo(date('Y-m-d')) ?> • <?= date('H:i:s') ?></span>
+                            <span id="live-clock"><?= format_tanggal_indo(date('Y-m-d')) ?> | <?= date('H:i:s') ?></span>
                         </span>
                     </div>
                     <h2 class="page-title mb-1" style="font-size: 1.5rem;">
@@ -28,7 +28,7 @@
                     </h2>
                     <p class="text-muted mb-0">
                         <i class="ti ti-calendar-event me-1"></i><?= date('l, d F Y') ?>
-                        <span class="mx-2">·</span>
+                        <span class="mx-2 text-muted-lt">|</span>
                         <span class="badge bg-primary-lt text-primary"><?= ucfirst(esc((string)(session('role') ?? 'User'))) ?></span>
                     </p>
                 </div>
@@ -384,7 +384,7 @@
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
             
-            document.getElementById('live-clock').innerHTML = `${dayName}, ${day} ${monthName} ${year} • ${hours}:${minutes}:${seconds}`;
+            document.getElementById('live-clock').innerHTML = `${dayName}, ${day} ${monthName} ${year} | ${hours}:${minutes}:${seconds}`;
         }
         setInterval(updateClock, 1000);
         updateClock(); // Initial call
