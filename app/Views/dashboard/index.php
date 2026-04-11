@@ -153,16 +153,16 @@
         <div class="card shadow-sm border-0">
             <div class="card-header d-flex justify-content-between align-items-center border-bottom">
                 <h3 class="card-title d-flex align-items-center gap-2 mb-0">
-                    <i class="ti ti-chart-area text-primary"></i>
+                    <i class="ti ti-chart-candle text-primary"></i>
                     Tren Persuratan Tahun <?= date('Y') ?>
                 </h3>
                 <div class="d-flex gap-3 align-items-center small">
                     <span class="d-flex align-items-center gap-1">
-                        <span class="legend-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #206bc4; display: inline-block;"></span>
+                        <span class="legend-dot" style="width: 10px; height: 10px; border-radius: 3px; background: linear-gradient(135deg, #206bc4, #4299e1); display: inline-block;"></span>
                         Masuk
                     </span>
                     <span class="d-flex align-items-center gap-1">
-                        <span class="legend-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #2fb344; display: inline-block;"></span>
+                        <span class="legend-dot" style="width: 10px; height: 10px; border-radius: 3px; background: linear-gradient(135deg, #2fb344, #51cf66); display: inline-block;"></span>
                         Keluar
                     </span>
                 </div>
@@ -371,9 +371,12 @@
         // Detect dark mode
         var isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
         
+        var dataMasuk = <?= json_encode(array_values($chart_data['masuk'] ?? [])) ?>;
+        var dataKeluar = <?= json_encode(array_values($chart_data['keluar'] ?? [])) ?>;
+
         var chart = new ApexCharts(el, {
             chart: {
-                type: "area",
+                type: "bar",
                 fontFamily: 'inherit',
                 height: 300,
                 parentHeightOffset: 0,
@@ -381,48 +384,65 @@
                 animations: { 
                     enabled: true,
                     easing: 'easeinout',
-                    speed: 800,
-                    animateGradually: { enabled: true, delay: 150 },
-                    dynamicAnimation: { enabled: true, speed: 350 }
-                },
-                dropShadow: {
-                    enabled: true,
-                    top: 3,
-                    left: 0,
-                    blur: 4,
-                    opacity: 0.1
+                    speed: 900,
+                    animateGradually: { enabled: true, delay: 100 },
+                    dynamicAnimation: { enabled: true, speed: 400 }
                 }
             },
-            dataLabels: { enabled: false },
+            plotOptions: {
+                bar: {
+                    columnWidth: '55%',
+                    borderRadius: 4,
+                    borderRadiusApplication: 'end',
+                    dataLabels: {
+                        position: 'top'
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function(val) {
+                    return val > 0 ? val : '';
+                },
+                offsetY: -18,
+                style: {
+                    fontSize: '10px',
+                    fontWeight: 600,
+                    colors: [isDark ? '#ccc' : '#555']
+                }
+            },
             fill: {
                 type: 'gradient',
                 gradient: {
-                    shadeIntensity: 1,
-                    opacityFrom: 0.5,
-                    opacityTo: 0.05,
-                    stops: [0, 95, 100]
+                    shade: isDark ? 'dark' : 'light',
+                    type: 'vertical',
+                    shadeIntensity: 0.3,
+                    opacityFrom: 1,
+                    opacityTo: 0.85,
+                    stops: [0, 100]
                 }
             },
             stroke: {
-                width: [2.5, 2.5],
-                curve: 'smooth'
+                show: true,
+                width: 1.5,
+                colors: ['transparent']
             },
             series: [{
                 name: "Surat Masuk",
-                data: <?= json_encode(array_values($chart_data['masuk'] ?? [])) ?>
+                data: dataMasuk
             }, {
                 name: "Surat Keluar",
-                data: <?= json_encode(array_values($chart_data['keluar'] ?? [])) ?>
+                data: dataKeluar
             }],
             xaxis: {
                 categories: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'],
                 axisBorder: { show: false },
                 axisTicks: { show: false },
-                tooltip: { enabled: false },
                 labels: {
                     style: {
                         colors: isDark ? '#999' : '#666',
-                        fontSize: '11px'
+                        fontSize: '11px',
+                        fontWeight: 500
                     }
                 }
             },
@@ -447,6 +467,24 @@
                     formatter: function(val) {
                         return val + ' surat';
                     }
+                },
+                custom: function({ series, seriesIndex, dataPointIndex, w }) {
+                    var masuk = series[0][dataPointIndex];
+                    var keluar = series[1][dataPointIndex];
+                    var bulan = w.globals.labels[dataPointIndex];
+                    var total = masuk + keluar;
+                    var selisih = masuk - keluar;
+                    var selisihColor = selisih >= 0 ? '#2fb344' : '#d63939';
+                    var selisihIcon = selisih >= 0 ? '▲' : '▼';
+                    
+                    return '<div style="padding: 10px 14px; font-size: 12px; line-height: 1.6;">' +
+                        '<div style="font-weight: 700; margin-bottom: 6px; font-size: 13px;">' + bulan + ' <?= date("Y") ?></div>' +
+                        '<div style="display: flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 10px; border-radius: 3px; background: linear-gradient(135deg, #206bc4, #4299e1);"></span> Masuk: <strong>' + masuk + '</strong></div>' +
+                        '<div style="display: flex; align-items: center; gap: 8px;"><span style="width: 10px; height: 10px; border-radius: 3px; background: linear-gradient(135deg, #2fb344, #51cf66);"></span> Keluar: <strong>' + keluar + '</strong></div>' +
+                        '<div style="border-top: 1px solid ' + (isDark ? '#444' : '#eee') + '; margin-top: 6px; padding-top: 6px; display: flex; justify-content: space-between;">' +
+                        '<span>Total: <strong>' + total + '</strong></span>' +
+                        '<span style="color: ' + selisihColor + '; font-weight: 600;">' + selisihIcon + ' ' + Math.abs(selisih) + '</span>' +
+                        '</div></div>';
                 }
             },
             colors: ["#206bc4", "#2fb344"],
@@ -456,13 +494,20 @@
             grid: {
                 strokeDashArray: 4,
                 borderColor: isDark ? '#333' : '#e9ecef',
-                padding: { top: -20, right: 0, bottom: -5, left: 0 }
+                padding: { top: -5, right: 0, bottom: -5, left: 0 }
             },
-            markers: {
-                size: 0,
+            states: {
                 hover: {
-                    size: 5,
-                    sizeOffset: 3
+                    filter: {
+                        type: 'darken',
+                        value: 0.15
+                    }
+                },
+                active: {
+                    filter: {
+                        type: 'darken',
+                        value: 0.2
+                    }
                 }
             }
         });
