@@ -475,7 +475,7 @@
                     var total = masuk + keluar;
                     var selisih = masuk - keluar;
                     var selisihColor = selisih >= 0 ? '#2fb344' : '#d63939';
-                    var selisihIcon = selisih >= 0 ? '▲' : '▼';
+                    var selisihIcon = selisih >= 0 ? '&#9650;' : '&#9660;';
                     
                     return '<div style="padding: 10px 14px; font-size: 12px; line-height: 1.6;">' +
                         '<div style="font-weight: 700; margin-bottom: 6px; font-size: 13px;">' + bulan + ' <?= date("Y") ?></div>' +
