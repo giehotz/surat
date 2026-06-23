@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\PengaturanModel;
 use App\Models\TahunAnggaranModel;
+use App\Models\FormatSuratModel;
 
 class Pengaturan extends BaseController
 {
@@ -28,10 +29,11 @@ class Pengaturan extends BaseController
         $data = [
             'title'    => 'Pengaturan Aplikasi',
             'settings' => $this->pengaturanModel->getSettings(),
-            'active_tab' => session()->getFlashdata('active_tab') ?? 'identitas',
+            'active_tab' => session()->getFlashdata('active_tab') ?? $this->request->getGet('active_tab') ?? 'identitas',
             'users'    => $userModel->findAll(),
             'wajib_fields' => $wajibFieldModel->getPengaturanByForm('surat_keluar'),
-            'tahun_anggaran_list' => (new TahunAnggaranModel())->getList()
+            'tahun_anggaran_list' => (new TahunAnggaranModel())->getList(),
+            'format_surat_list' => (new FormatSuratModel())->findAll()
         ];
 
         return view('pengaturan/index', $data);
@@ -40,6 +42,15 @@ class Pengaturan extends BaseController
     public function updateIdentitas()
     {
         if (session('role') !== 'admin') return redirect()->back();
+
+        $rules = [
+            'sekolah_nama' => 'required',
+            'sekolah_alamat' => 'required',
+        ];
+
+        if (!$this->validate($rules)) {
+            return redirect()->to('/pengaturan')->withInput()->with('error', 'Nama institusi dan alamat wajib diisi.')->with('active_tab', 'identitas');
+        }
 
         $postData = $this->request->getPost();
 
@@ -202,6 +213,70 @@ class Pengaturan extends BaseController
         cache()->delete('app_settings');
 
         return redirect()->to('/pengaturan')->with('success', 'Tahun Anggaran ' . $tahun . ' berhasil diaktifkan.')->with('active_tab', 'tahun-anggaran');
+    }
+
+    public function storeFormatSurat()
+    {
+        if (session('role') !== 'admin') return redirect()->back();
+
+        $rules = [
+            'nama' => 'required|string|max_length[100]',
+            'template' => 'required|string|max_length[255]',
+        ];
+
+        if (!$this->validate($rules)) {
+            return redirect()->to('/pengaturan')->withInput()->with('error', 'Nama dan template format surat wajib diisi.')->with('active_tab', 'format-surat');
+        }
+
+        $model = new FormatSuratModel();
+        $model->insert([
+            'nama' => $this->request->getPost('nama'),
+            'template' => $this->request->getPost('template'),
+        ]);
+
+        return redirect()->to('/pengaturan')->with('success', 'Format Surat berhasil ditambahkan.')->with('active_tab', 'format-surat');
+    }
+
+    public function updateFormatSurat($id = null)
+    {
+        if (session('role') !== 'admin') return redirect()->back();
+
+        $model = new FormatSuratModel();
+        $format = $model->find($id);
+        if (!$format) {
+            return redirect()->to('/pengaturan')->with('error', 'Format surat tidak ditemukan.')->with('active_tab', 'format-surat');
+        }
+
+        $rules = [
+            'nama' => 'required|string|max_length[100]',
+            'template' => 'required|string|max_length[255]',
+        ];
+
+        if (!$this->validate($rules)) {
+            return redirect()->to('/pengaturan')->withInput()->with('error', 'Nama dan template format surat wajib diisi.')->with('active_tab', 'format-surat');
+        }
+
+        $model->update($id, [
+            'nama' => $this->request->getPost('nama'),
+            'template' => $this->request->getPost('template'),
+        ]);
+
+        return redirect()->to('/pengaturan')->with('success', 'Format Surat berhasil diperbarui.')->with('active_tab', 'format-surat');
+    }
+
+    public function deleteFormatSurat($id = null)
+    {
+        if (session('role') !== 'admin') return redirect()->back();
+
+        $model = new FormatSuratModel();
+        $format = $model->find($id);
+        if (!$format) {
+            return redirect()->to('/pengaturan')->with('error', 'Format surat tidak ditemukan.')->with('active_tab', 'format-surat');
+        }
+
+        $model->delete($id);
+
+        return redirect()->to('/pengaturan')->with('success', 'Format Surat berhasil dihapus.')->with('active_tab', 'format-surat');
     }
 
     public function updateBukuTamu()

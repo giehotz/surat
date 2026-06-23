@@ -1,4 +1,4 @@
-<div class="tab-pane <?= $active_tab == 'wajib-field' ? 'active show' : '' ?>" id="tab-wajib-field">
+<div class="tab-pane <?= ($active_tab ?? '') == 'wajib-field' ? 'active show' : '' ?>" id="tab-wajib-field">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title">
             <i class="ti ti-list-check me-2 text-primary"></i>Pengaturan Wajib Isi Field Surat Keluar

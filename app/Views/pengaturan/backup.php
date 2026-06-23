@@ -1,4 +1,4 @@
-<div class="tab-pane <?= $active_tab == 'backup' ? 'active show' : '' ?>" id="tab-backup">
+<div class="tab-pane <?= ($active_tab ?? '') == 'backup' ? 'active show' : '' ?>" id="tab-backup">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title">
             <i class="ti ti-database-export me-2 text-primary"></i>Backup Database Sistem

@@ -1,4 +1,4 @@
-<div class="tab-pane <?= $active_tab == 'identitas' ? 'active show' : '' ?>" id="tab-identitas">
+<div class="tab-pane <?= ($active_tab ?? '') == 'identitas' ? 'active show' : '' ?>" id="tab-identitas">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title">
             <i class="ti ti-building-bank me-2 text-primary"></i>Profil & Logo Institusi

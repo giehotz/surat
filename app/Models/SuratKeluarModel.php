@@ -15,6 +15,9 @@ class SuratKeluarModel extends Model
     protected $allowedFields    = [
         'nomor_agenda',
         'nomor_surat',
+        'nomor_urut',
+        'bulan',
+        'format_surat_id',
         'tanggal_surat',
         'tanggal_kirim',
         'tujuan',
@@ -77,7 +80,8 @@ class SuratKeluarModel extends Model
         foreach ($requiredFields as $field) {
             switch ($field) {
                 case 'nomor_surat':
-                    $validationRules['nomor_surat'] = 'required|string|max_length[100]';
+                    $validationRules['nomor_urut'] = 'required|string|max_length[20]';
+                    $validationRules['bulan'] = 'required|exact_length[2]|in_list[01,02,03,04,05,06,07,08,09,10,11,12]';
                     break;
                 case 'tanggal_kirim':
                     $validationRules['tanggal_kirim'] = 'required|valid_date';

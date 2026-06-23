@@ -15,7 +15,7 @@
         <form action="<?= base_url('admin-buku-tamu') ?>" method="get" class="row gx-3 gy-2 align-items-center">
             <div class="col-sm-3">
                 <label class="visually-hidden" for="status">Status</label>
-                <select class="form-select" id="status" name="status">
+                <select class="form-select" id="status" name="status" onchange="this.form.submit()">
                     <option value="">-- Semua Status --</option>
                     <option value="menunggu" <?= ($status == 'menunggu') ? 'selected' : '' ?>>Menunggu</option>
                     <option value="diterima" <?= ($status == 'diterima') ? 'selected' : '' ?>>Diterima</option>
@@ -198,7 +198,7 @@
     $(document).ready(function() {
         $('.datatable').DataTable({
             "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json"
+                "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/id.json"
             }
         });
     });
@@ -211,23 +211,24 @@
                 $('#modalDetailTamu .telepon-tamu').text(res.tamu.no_hp || '-');
                 
                 let imgHtml = '';
-                const baseUrl = '<?= base_url() ?>/';
+                const baseUrl = '<?= rtrim(base_url(), '/') ?>';
                 
                 if(res.kunjungan.foto_wajah) {
-                    let fotoUrl = res.kunjungan.foto_wajah.startsWith('data:') ? res.kunjungan.foto_wajah : baseUrl + res.kunjungan.foto_wajah;
+                    let path = res.kunjungan.foto_wajah.replace(/^\/+/, '');
+                    let fotoUrl = res.kunjungan.foto_wajah.startsWith('data:') ? res.kunjungan.foto_wajah : baseUrl + '/' + path;
                     imgHtml += '<img src="'+fotoUrl+'" class="img-fluid rounded mb-2" alt="Foto Wajah">';
                 }
                 if(res.kunjungan.tanda_tangan) {
-                    let ttdUrl = res.kunjungan.tanda_tangan.startsWith('data:') ? res.kunjungan.tanda_tangan : baseUrl + res.kunjungan.tanda_tangan;
+                    let path = res.kunjungan.tanda_tangan.replace(/^\/+/, '');
+                    let ttdUrl = res.kunjungan.tanda_tangan.startsWith('data:') ? res.kunjungan.tanda_tangan : baseUrl + '/' + path;
                     imgHtml += '<img src="'+ttdUrl+'" class="img-fluid border rounded" style="background:#fff;" alt="Tanda Tangan">';
                 }
                 $('#modalDetailTamu .gambar-tamu').html(imgHtml);
                 
-                $('#form-status').attr('action', '<?= base_url("admin-buku-tamu/update-status") ?>/' + id);
-                $('#form-status select[name="status_kunjungan"]').val(res.kunjungan.status_kunjungan);
-                
-                $('#form-tindaklanjut').attr('action', '<?= base_url("admin-buku-tamu/tindak-lanjut") ?>/' + id);
-                $('#form-tindaklanjut textarea').val(res.kunjungan.tindak_lanjut || '');
+                // Setup form update kunjungan
+                $('#form-update-kunjungan').attr('action', '<?= base_url("admin-buku-tamu/update-kunjungan") ?>/' + id);
+                $('#form-update-kunjungan select[name="status_kunjungan"]').val(res.kunjungan.status_kunjungan);
+                $('#form-update-kunjungan textarea[name="tindak_lanjut"]').val(res.kunjungan.tindak_lanjut || '');
                 
                 var modal = new bootstrap.Modal(document.getElementById('modalDetailTamu'));
                 modal.show();

@@ -1,4 +1,4 @@
-<div class="tab-pane <?= $active_tab == 'pengguna' ? 'active show' : '' ?>" id="tab-pengguna">
+<div class="tab-pane <?= ($active_tab ?? '') == 'pengguna' ? 'active show' : '' ?>" id="tab-pengguna">
     
     <!-- 1. HEADER DENGAN DESKRIPSI (UI/UX) -->
     <div class="card-header border-bottom-0 d-flex justify-content-between align-items-center py-3">
@@ -23,16 +23,16 @@
             <div class="text-muted d-none d-md-block">
                 Tampilkan
                 <div class="mx-2 d-inline-block">
-                    <select class="form-select form-select-sm" aria-label="Entri per halaman">
+                    <select class="form-select form-select-sm" id="per-page" aria-label="Entri per halaman">
                         <option value="10">10</option>
-                        <option value="25">25</option>
+                        <option value="25" selected>25</option>
                         <option value="50">50</option>
                     </select>
                 </div>
                 entri
             </div>
             <div class="ms-auto d-flex gap-2 w-100 w-md-auto">
-                <select class="form-select form-select-sm w-auto" aria-label="Filter Peran">
+                <select class="form-select form-select-sm w-auto" id="filter-role" aria-label="Filter Peran">
                     <option value="">Semua Peran</option>
                     <option value="admin">Administrator</option>
                     <option value="pimpinan">Pimpinan</option>
@@ -43,7 +43,7 @@
                     <span class="input-icon-addon">
                         <i class="ti ti-search"></i>
                     </span>
-                    <input type="text" class="form-control form-control-sm" placeholder="Cari pengguna..." aria-label="Cari pengguna">
+                    <input type="text" class="form-control form-control-sm" id="search-user" placeholder="Cari pengguna..." aria-label="Cari pengguna">
                 </div>
             </div>
         </div>
@@ -67,7 +67,7 @@
                 <?php if (isset($users) && count($users) > 0): ?>
                     <?php $i = 1;
                     foreach ($users as $user): ?>
-                        <tr>
+                        <tr data-role="<?= esc($user['role']) ?>">
                             <td class="text-muted"><?= $i++ ?></td>
                             <td>
                                 <div class="d-flex py-1 align-items-center">
@@ -78,7 +78,54 @@
                                         <div class="text-muted small">
                                             <i class="ti ti-mail me-1"></i>
                                             <a href="mailto:<?= esc($user['email']) ?>" class="text-reset text-decoration-none hover-primary"><?= esc($user['email']) ?></a>
-                                        </div>
+</div>
+
+<script>
+(function() {
+    var searchInput = document.getElementById('search-user');
+    var roleFilter = document.getElementById('filter-role');
+    var perPage = document.getElementById('per-page');
+    var tableBody = document.querySelector('#tab-pengguna tbody');
+    if (!tableBody || !searchInput || !roleFilter || !perPage) return;
+
+    var allRows = Array.prototype.slice.call(tableBody.querySelectorAll('tr[data-role]'));
+
+    function filterRows() {
+        var keyword = searchInput.value.toLowerCase().trim();
+        var role = roleFilter.value;
+        var max = parseInt(perPage.value) || 25;
+
+        var visible = allRows.filter(function(row) {
+            if (role && row.getAttribute('data-role') !== role) return false;
+            if (keyword) {
+                var text = row.textContent.toLowerCase();
+                if (text.indexOf(keyword) === -1) return false;
+            }
+            return true;
+        });
+
+        // Hide all first
+        allRows.forEach(function(r) { r.style.display = 'none'; });
+
+        // Show only matching + within page limit
+        visible.slice(0, max).forEach(function(r) { r.style.display = ''; });
+
+        // Update pagination info
+        var info = document.querySelector('#tab-pengguna .card-footer .text-muted small');
+        if (info) {
+            var shown = Math.min(visible.length, max);
+            info.innerHTML = 'Menampilkan <span>1</span> hingga <span>' + shown + '</span> dari <span>' + visible.length + '</span> entri';
+        }
+    }
+
+    searchInput.addEventListener('input', filterRows);
+    roleFilter.addEventListener('change', filterRows);
+    perPage.addEventListener('change', filterRows);
+
+    // Initial filter
+    filterRows();
+})();
+</script>
                                     </div>
                                 </div>
                             </td>

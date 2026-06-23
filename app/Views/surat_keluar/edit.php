@@ -45,20 +45,73 @@
                                 <input type="text" class="form-control bg-light text-muted fw-bold" name="nomor_agenda" id="nomor_agenda" value="<?= esc($surat['nomor_agenda']) ?>" readonly tabindex="-1" data-bs-toggle="tooltip" title="Nomor agenda dibuat otomatis oleh sistem dan tidak dapat diubah.">
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
+                            <label class="form-label required mb-0">
+                                Format Surat
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="ti ti-file-description text-muted"></i></span>
+                                <select class="form-select <?= isset($validation) && $validation->hasError('format_surat_id') ? 'is-invalid' : '' ?>" 
+                                       name="format_surat_id" id="format_surat_id" required>
+                                    <option value="">-- Pilih Format --</option>
+                                    <?php foreach ($format_surat_list as $f): ?>
+                                        <option value="<?= $f['id'] ?>" data-template="<?= esc($f['template'], 'attr') ?>" <?= (old('format_surat_id') ?? $surat['format_surat_id']) == $f['id'] ? 'selected' : '' ?>><?= esc($f['nama']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?php if(isset($validation) && $validation->hasError('format_surat_id')): ?>
+                                    <div class="invalid-feedback"><?= $validation->getError('format_surat_id') ?></div>
+                                <?php endif; ?>
+                            </div>
+                            <p class="text-muted small mb-1 mt-1">
+                                <i class="ti ti-settings me-1"></i>
+                                Kelola format di <a href="<?= base_url('pengaturan?active_tab=format-surat') ?>">Pengaturan &rarr; Format Surat Keluar</a>
+                            </p>
+                        </div>
+                        <div class="col-md-2">
                             <label class="form-label <?= in_array('nomor_surat', $required_fields ?? []) ? 'required' : '' ?>">
-                                Nomor Surat
+                                Nomor Urut
                             </label>
                             <div class="input-icon">
                                 <span class="input-icon-addon"><i class="ti ti-123 text-muted"></i></span>
-                                <input type="text" class="form-control <?= isset($validation) && $validation->hasError('nomor_surat') ? 'is-invalid' : '' ?>" 
-                                       name="nomor_surat" id="nomor_surat" 
-                                       value="<?= old('nomor_surat') ?? $surat['nomor_surat'] ?>" 
+                                <input type="text" class="form-control <?= isset($validation) && $validation->hasError('nomor_urut') ? 'is-invalid' : '' ?>" 
+                                       name="nomor_urut" id="nomor_urut" 
+                                       value="<?= old('nomor_urut') ?? $surat['nomor_urut'] ?>" 
+                                       placeholder="036"
                                        <?= in_array('nomor_surat', $required_fields ?? []) ? 'required' : '' ?>>
-                                <?php if(isset($validation) && $validation->hasError('nomor_surat')): ?>
-                                    <div class="invalid-feedback"><?= $validation->getError('nomor_surat') ?></div>
+                                <?php if(isset($validation) && $validation->hasError('nomor_urut')): ?>
+                                    <div class="invalid-feedback"><?= $validation->getError('nomor_urut') ?></div>
                                 <?php endif; ?>
                             </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label <?= in_array('nomor_surat', $required_fields ?? []) ? 'required' : '' ?>">
+                                Bulan
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="ti ti-calendar-month text-muted"></i></span>
+                                <select class="form-select <?= isset($validation) && $validation->hasError('bulan') ? 'is-invalid' : '' ?>" 
+                                       name="bulan" id="bulan"
+                                       <?= in_array('nomor_surat', $required_fields ?? []) ? 'required' : '' ?>>
+                                    <option value="">-- Pilih --</option>
+                                    <?php foreach ($bulan_list as $val => $label): ?>
+                                        <option value="<?= $val ?>" <?= (old('bulan') ?? $surat['bulan']) == $val ? 'selected' : '' ?>><?= $label ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?php if(isset($validation) && $validation->hasError('bulan')): ?>
+                                    <div class="invalid-feedback"><?= $validation->getError('bulan') ?></div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">Preview Nomor Surat</label>
+                            <div class="alert alert-info bg-info-lt py-2 px-3 mb-1" id="preview-container" style="display: none;">
+                                <div class="d-flex align-items-center">
+                                    <i class="ti ti-eye me-2 text-info"></i>
+                                    <strong class="me-2">Hasil:</strong>
+                                    <span id="preview-nomor" class="fw-bold text-info"></span>
+                                </div>
+                            </div>
+                            <input type="hidden" name="nomor_surat" id="hidden-nomor-surat" value="<?= old('nomor_surat') ?? $surat['nomor_surat'] ?>">
                         </div>
 
                         <div class="col-md-6">
@@ -205,20 +258,20 @@
                                                 </div>
                                                 <div class="flex-grow-1 overflow-hidden">
                                                     <div class="fw-bold text-truncate"><a href="<?= base_url($surat['file_path']) ?>" target="_blank" class="text-reset text-decoration-none hover-primary"><?= $surat['file_name'] ?></a></div>
-                                                    <div class="text-muted small"><?= $surat['file_size'] > 0 ? round($surat['file_size']/1024, 2).' MB' : $surat['file_size'].' KB' ?></div>
+                                                    <div class="text-muted small"><?= esc($surat['file_size']) > 0 ? round(esc($surat['file_size'])/1024, 2).' MB' : esc($surat['file_size']).' KB' ?></div>
                                                 </div>
                                                 <div class="ms-2">
                                                     <a href="<?= base_url($surat['file_path']) ?>" target="_blank" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Lihat/Unduh File"><i class="ti ti-download"></i></a>
-                                                </div>
-                                            </div>
+                            </div>
                                         </div>
                                     <?php endif; ?>
 
                                     <label class="form-label mb-2"><?= ($surat['tipe_penyimpanan'] == 'lokal' && $surat['file_path']) ? 'Ganti File Konsep Baru (Opsional)' : 'Pilih File Konsep' ?></label>
                                     <input type="file" class="form-control <?= isset($validation) && $validation->hasError('file_konsep') ? 'is-invalid' : '' ?>" 
                                            name="file_konsep" id="file_konsep" 
-                                           accept=".pdf,.doc,.docx" 
-                                           <?= in_array('file_konsep', $required_fields ?? []) && empty($surat['file_path']) ? 'required' : '' ?>>
+                                            accept=".pdf,.doc,.docx" 
+                                            <?= (in_array('file_konsep', $required_fields ?? []) && empty($surat['file_path']) && $surat['tipe_penyimpanan'] == 'lokal') ? 'required' : '' ?>
+                                            data-required-mode="lokal" data-required="<?= (in_array('file_konsep', $required_fields ?? []) && empty($surat['file_path'])) ? '1' : '0' ?>">
                                     <?php if(isset($validation) && $validation->hasError('file_konsep')): ?>
                                         <div class="invalid-feedback"><?= $validation->getError('file_konsep') ?></div>
                                     <?php endif; ?>
@@ -234,8 +287,9 @@
                                         <input type="url" class="form-control <?= isset($validation) && $validation->hasError('file_link') ? 'is-invalid' : '' ?>" 
                                                name="file_link" id="file_link" 
                                                placeholder="https://docs.google.com/document/d/..." 
-                                               value="<?= old('file_link') ?? ($surat['tipe_penyimpanan'] == 'cloud' ? $surat['file_link'] : '') ?>" 
-                                               <?= in_array('file_link', $required_fields ?? []) ? 'required' : '' ?>>
+                                                value="<?= old('file_link') ?? ($surat['tipe_penyimpanan'] == 'cloud' ? $surat['file_link'] : '') ?>" 
+                                                <?= (in_array('file_link', $required_fields ?? []) && $surat['tipe_penyimpanan'] == 'cloud') ? 'required' : '' ?>
+                                                data-required-mode="cloud" data-required="<?= in_array('file_link', $required_fields ?? []) ? '1' : '0' ?>">
                                         <?php if(isset($validation) && $validation->hasError('file_link')): ?>
                                             <div class="invalid-feedback"><?= $validation->getError('file_link') ?></div>
                                         <?php endif; ?>
@@ -296,7 +350,50 @@
 
 <?= $this->section('scripts') ?>
 <script>
+    function updatePreview() {
+        var nomorUrut = document.getElementById('nomor_urut').value.trim();
+        var bulan = document.getElementById('bulan').value;
+        var formatSelect = document.getElementById('format_surat_id');
+        var selectedOption = formatSelect.options[formatSelect.selectedIndex];
+        var template = selectedOption && selectedOption.dataset.template ? selectedOption.dataset.template : '';
+        var tahun = '<?= esc($tahun_anggaran, 'js') ?>';
+        var previewEl = document.getElementById('preview-nomor');
+        var container = document.getElementById('preview-container');
+        var hidden = document.getElementById('hidden-nomor-surat');
+
+        if (nomorUrut && bulan) {
+            var result = template.replace('{nomor}', nomorUrut)
+                                 .replace('{bulan}', bulan)
+                                 .replace('{tahun}', tahun);
+            previewEl.textContent = result;
+            hidden.value = result;
+            container.style.display = '';
+        } else {
+            previewEl.textContent = '-';
+            hidden.value = '';
+            container.style.display = 'none';
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('nomor_urut').addEventListener('input', updatePreview);
+        document.getElementById('bulan').addEventListener('change', updatePreview);
+        document.getElementById('format_surat_id').addEventListener('change', updatePreview);
+
+        // Auto-show preview if nomor_surat already exists
+        if (document.getElementById('hidden-nomor-surat').value) {
+            var nomorUrut = document.getElementById('nomor_urut').value.trim();
+            var bulan = document.getElementById('bulan').value;
+        if (nomorUrut && bulan && template) {
+                updatePreview();
+            } else {
+                var previewEl = document.getElementById('preview-nomor');
+                var container = document.getElementById('preview-container');
+                previewEl.textContent = document.getElementById('hidden-nomor-surat').value;
+                container.style.display = '';
+            }
+        }
+
         // === Logika Tipe Penyimpanan (Radio Button atau Hidden Input) ===
         const radios = document.querySelectorAll('input[name="tipe_penyimpanan"][type="radio"]');
         const hiddenInput = document.querySelector('input[name="tipe_penyimpanan"][type="hidden"]');
@@ -314,6 +411,16 @@
                 if (areaCloud) areaCloud.style.display = 'none';
                 if (areaUpload) areaUpload.style.display = 'block';
             }
+
+            // Toggle required attribute on conditional inputs
+            document.querySelectorAll('[data-required-mode]').forEach(function(el) {
+                var needsRequired = el.dataset.required === '1' && el.dataset.requiredMode === selectedValue;
+                if (needsRequired) {
+                    el.setAttribute('required', '');
+                } else {
+                    el.removeAttribute('required');
+                }
+            });
         }
 
         // Jalankan saat pertama load

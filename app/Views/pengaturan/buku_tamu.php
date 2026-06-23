@@ -1,4 +1,4 @@
-<div class="tab-pane <?= $active_tab == 'buku-tamu' ? 'active show' : '' ?>" id="tab-buku-tamu">
+<div class="tab-pane <?= ($active_tab ?? '') == 'buku-tamu' ? 'active show' : '' ?>" id="tab-buku-tamu">
     <div class="card-header border-bottom">
         <h3 class="card-title">
             <i class="ti ti-notebook me-2 text-green"></i>Kontrol Operasional Buku Tamu

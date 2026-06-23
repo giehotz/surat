@@ -32,6 +32,13 @@
                             <a href="<?= base_url('surat-keluar/import') ?>" class="btn btn-outline-primary">
                                 <i class="ti ti-upload icon"></i> Import
                             </a>
+                            <form action="<?= base_url('surat-keluar/renumber') ?>" method="post" style="display:inline;" 
+                                  onsubmit="return confirm('Urutkan ulang nomor surat? Data yang ada akan diurutkan ulang secara berurutan.');">
+                                <?= csrf_field() ?>
+                                <button type="submit" class="btn btn-outline-warning">
+                                    <i class="ti ti-sort-ascending icon"></i> Urutkan Ulang
+                                </button>
+                            </form>
                             <a href="<?= base_url('surat-keluar/create') ?>" class="btn btn-primary shadow-sm">
                                 <i class="ti ti-plus icon"></i> Buat Surat
                             </a>
@@ -59,12 +66,13 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label small fw-bold text-uppercase text-muted">Status</label>
-                        <select id="filter_status" class="form-select">
-                            <option value="">Semua Status</option>
-                            <option value="draft">Draft</option>
-                            <option value="disetujui">Disetujui</option>
-                            <option value="ditolak">Ditolak</option>
-                        </select>
+                            <select id="filter_status" class="form-select">
+                                <option value="">Semua Status</option>
+                                <option value="draft">Draft</option>
+                                <option value="disetujui">Disetujui</option>
+                                <option value="ditolak">Ditolak</option>
+                                <option value="dikirim">Dikirim</option>
+                            </select>
                     </div>
                     <div class="col-md-3">
                         <button type="button" id="btn-filter" class="btn btn-dark w-100">
@@ -75,7 +83,7 @@
             </div>
 
             <!-- Table Area -->
-            <div class="p-0" data-bs-theme="light">
+            <div class="p-0">
                 <table id="table-surat-keluar" class="table table-sm table-vcenter table-striped table-hover mt-0 w-100">
                     <thead>
                         <tr>
@@ -185,14 +193,21 @@
     }
 
     #table-surat-keluar thead th {
-        background: #f6f8fb;
+        background: var(--tblr-bg-surface-secondary, #f6f8fb);
         text-transform: uppercase;
         font-size: 0.70rem;
         letter-spacing: 0.02em;
-        color: #616876;
+        color: var(--tblr-muted, #616876);
         padding: 8px 10px !important;
         border-top: none !important;
         border-bottom: 1px solid var(--tblr-border-color, #e6e8eb) !important;
+    }
+
+    [data-bs-theme="dark"] #table-surat-keluar thead th,
+    html[data-bs-theme="dark"] #table-surat-keluar thead th {
+        background: var(--tblr-bg-surface, #1e293b);
+        color: var(--tblr-muted, #94a3b8);
+        border-bottom-color: var(--tblr-border-color, #334155) !important;
     }
 
 

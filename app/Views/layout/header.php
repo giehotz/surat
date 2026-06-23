@@ -31,6 +31,17 @@
                         </a>
                     </li>
 
+                    <li class="nav-item <?= strpos(current_url(), 'surat-resmi') !== false ? 'active' : '' ?>">
+                        <a class="nav-link" href="<?= base_url('surat-resmi') ?>">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <i class="ti ti-file-certificate icon"></i>
+                            </span>
+                            <span class="nav-link-title">
+                                Buat Surat Resmi
+                            </span>
+                        </a>
+                    </li>
+
                     <li class="nav-item <?= strpos(current_url(), 'surat-masuk') !== false ? 'active' : '' ?>">
                         <a class="nav-link" href="<?= base_url('surat-masuk') ?>">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">

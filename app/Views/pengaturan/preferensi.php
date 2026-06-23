@@ -1,4 +1,4 @@
-<div class="tab-pane <?= $active_tab == 'preferensi' ? 'active show' : '' ?>" id="tab-preferensi">
+<div class="tab-pane <?= ($active_tab ?? '') == 'preferensi' ? 'active show' : '' ?>" id="tab-preferensi">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title">
             <i class="ti ti-settings me-2 text-primary"></i>Preferensi Sistem Utama
@@ -65,7 +65,7 @@
                 </div>
 
                 <?php
-                $metodeLampiran = isset($settings['metode_lampiran']) ? explode(',', $settings['metode_lampiran']) : ['upload'];
+                $metodeLampiran = (!empty($settings['metode_lampiran'])) ? explode(',', $settings['metode_lampiran']) : [];
                 ?>
                 <div class="col-12 mt-4">
                     <label class="form-label mb-3">Metode Penyimpanan Lampiran Surat</label>

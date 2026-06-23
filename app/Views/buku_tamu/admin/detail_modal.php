@@ -20,29 +20,27 @@
                     
                     <!-- Sisi Kanan: Form Aksi -->
                     <div class="col-md-7 ps-md-4">
-                        <h4 class="mb-3">Update Status Layanan</h4>
-                        <form id="form-status" method="post" class="mb-4">
+                        <form id="form-update-kunjungan" method="post">
                             <?= csrf_field() ?>
-                            <div class="input-group">
+                            
+                            <h4 class="mb-3">Update Status Layanan</h4>
+                            <div class="mb-4">
                                 <select class="form-select" name="status_kunjungan">
                                     <option value="menunggu">Menunggu</option>
                                     <option value="diterima">Diterima / Sedang Dilayani</option>
                                     <option value="selesai">Selesai</option>
                                     <option value="batal">Batal / Ditolak</option>
                                 </select>
-                                <button type="submit" class="btn btn-primary">Simpan Status</button>
                             </div>
-                        </form>
 
-                        <h4 class="mb-3">Catatan / Tindak Lanjut</h4>
-                        <form id="form-tindaklanjut" method="post">
-                            <?= csrf_field() ?>
+                            <h4 class="mb-3">Catatan / Tindak Lanjut</h4>
                             <div class="mb-3">
                                 <textarea class="form-control" name="tindak_lanjut" rows="4" placeholder="Tuliskan catatan hasil pertemuan atau instruksi selanjutnya..." required></textarea>
                             </div>
+                            
                             <div class="text-end">
-                                <button type="submit" class="btn btn-success">
-                                    <i class="ti ti-device-floppy me-2"></i> Simpan Catatan
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="ti ti-device-floppy me-2"></i> Simpan Perubahan
                                 </button>
                             </div>
                         </form>

@@ -92,7 +92,7 @@ if ($status_surat == 'disetujui') {
                             <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#previewModal">
                                 <i class="ti ti-eye icon"></i> Preview
                             </button>
-                            <a href="<?= base_url(esc($surat['file_path'])) ?>" target="_blank" class="btn btn-primary"><i class="ti ti-download icon"></i> Download</a>
+                            <a href="<?= base_url(esc($surat['file_path'], 'url')) ?>" target="_blank" class="btn btn-primary"><i class="ti ti-download icon"></i> Download</a>
                         </div>
                     <?php else: ?>
                         <p class="h4 text-muted">Tidak Ada File</p>
@@ -129,11 +129,11 @@ if ($status_surat == 'disetujui') {
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-0">
-                    <iframe src="<?= base_url(esc($surat['file_path'])) ?>" width="100%" height="600px" style="border:none;"></iframe>
+                    <iframe src="<?= base_url(esc($surat['file_path'], 'url')) ?>" width="100%" height="600px" style="border:none;"></iframe>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Tutup</button>
-                    <a href="<?= base_url(esc($surat['file_path'])) ?>" target="_blank" class="btn btn-primary"><i class="ti ti-download icon"></i> Download Draft</a>
+                    <a href="<?= base_url(esc($surat['file_path'], 'url')) ?>" target="_blank" class="btn btn-primary"><i class="ti ti-download icon"></i> Download Draft</a>
                 </div>
             </div>
         </div>

@@ -60,6 +60,7 @@ $routes->group('surat-keluar', function ($routes) {
     $routes->get('download-template', 'SuratKeluar::downloadTemplate', ['filter' => 'role:admin,operator']);
     $routes->post('preview', 'SuratKeluar::preview', ['filter' => 'role:admin,operator']);
     $routes->post('store-import', 'SuratKeluar::storeImport', ['filter' => 'role:admin,operator']);
+    $routes->post('renumber', 'SuratKeluar::renumber', ['filter' => 'role:admin,operator']);
 });
 
 // Disposisi Routes
@@ -157,14 +158,26 @@ $routes->group('buku-tamu', function ($routes) {
     $routes->get('success', 'BukuTamu::successPage');
 });
 
+$routes->get('test-admin-buku-tamu', 'AdminBukuTamu::index');
 $routes->group('admin-buku-tamu', ['filter' => 'role:admin,operator,admin_tamu'], function ($routes) {
     $routes->get('/', 'AdminBukuTamu::index');
     $routes->get('show/(:num)', 'AdminBukuTamu::show/$1');
-    $routes->post('update-status/(:num)', 'AdminBukuTamu::updateStatus/$1');
-    $routes->post('tindak-lanjut/(:num)', 'AdminBukuTamu::addTindakLanjut/$1');
+    $routes->post('update-kunjungan/(:num)', 'AdminBukuTamu::updateKunjungan/$1');
     $routes->post('export-excel', 'AdminBukuTamu::exportExcel');
     $routes->post('export-pdf', 'AdminBukuTamu::exportPdf');
     $routes->post('delete/(:num)', 'AdminBukuTamu::delete/$1');
+});
+
+$routes->group('surat-resmi', ['filter' => 'isLoggedIn'], function ($routes) {
+    $routes->get('/', 'SuratResmi::index');
+    $routes->get('create', 'SuratResmi::create');
+    $routes->post('store', 'SuratResmi::store');
+    $routes->get('edit/(:num)', 'SuratResmi::edit/$1');
+    $routes->post('update/(:num)', 'SuratResmi::update/$1');
+    $routes->post('delete/(:num)', 'SuratResmi::delete/$1');
+    $routes->post('save-kop', 'SuratResmi::saveKop');
+    $routes->post('previewPdf', 'SuratResmi::previewPdf');
+    $routes->get('printPdf/(:num)', 'SuratResmi::printPdf/$1');
 });
 
 // Pengaturan Routes
@@ -179,6 +192,9 @@ $routes->group('pengaturan', ['filter' => 'role:admin,admin_tamu'], function ($r
     $routes->post('store-tahun-anggaran', 'Pengaturan::storeTahunAnggaran');
     $routes->post('delete-tahun-anggaran/(:num)', 'Pengaturan::deleteTahunAnggaran/$1');
     $routes->post('aktifkan-tahun-anggaran/(:any)', 'Pengaturan::aktifkanTahunAnggaran/$1');
+    $routes->post('store-format-surat', 'Pengaturan::storeFormatSurat');
+    $routes->post('update-format-surat/(:num)', 'Pengaturan::updateFormatSurat/$1');
+    $routes->post('delete-format-surat/(:num)', 'Pengaturan::deleteFormatSurat/$1');
 });
 
 // API Pengaturan (diakses oleh semua user yang sudah login)

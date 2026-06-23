@@ -44,6 +44,11 @@
             </li>
             <?php endif; ?>
             <li class="nav-item">
+                <a href="#tab-format-surat" class="nav-link <?= $active_tab == 'format-surat' ? 'active' : '' ?>" data-bs-toggle="tab">
+                    <i class="ti ti-file-description icon me-2 text-indigo"></i> Format Surat Keluar
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="#tab-buku-tamu" class="nav-link <?= $active_tab == 'buku-tamu' || session('role') === 'admin_tamu' ? 'active' : '' ?>" data-bs-toggle="tab">
                     <i class="ti ti-notebook icon me-2 text-green"></i> Pengaturan Buku Tamu
                 </a>
@@ -61,6 +66,7 @@
                 <?= $this->include('pengaturan/backup') ?>
                 <?= $this->include('pengaturan/wajib_field') ?>
                 <?= $this->include('pengaturan/tahun_anggaran') ?>
+                <?= $this->include('pengaturan/format_surat') ?>
                 <?php endif; ?>
                 <?= $this->include('pengaturan/buku_tamu') ?>
             </div>
@@ -82,49 +88,41 @@
         }
     }
 
-    // Fungsi untuk menyimpan tab aktif ke localStorage
+    // Hanya restore dari localStorage jika server tidak mengirim tab spesifik (default = identitas)
+    var serverActiveTab = '<?= $active_tab ?? "identitas" ?>';
+
     document.addEventListener('DOMContentLoaded', function() {
-        // Cek apakah ada tab aktif yang disimpan di localStorage
-        const activeTab = localStorage.getItem('pengaturanActiveTab');
-        if (activeTab) {
-            // Hapus kelas aktif dari semua link
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.remove('active');
-            });
-
-            // Hapus kelas aktif dari semua tab pane
-            document.querySelectorAll('.tab-pane').forEach(pane => {
-                pane.classList.remove('active', 'show');
-            });
-
-            // Aktifkan tab yang disimpan
-            const targetTab = document.querySelector(`a[href="${activeTab}"]`);
-            if (targetTab) {
-                targetTab.classList.add('active');
-
-                // Aktifkan pane yang sesuai
-                const targetPaneId = targetTab.getAttribute('href');
-                const targetPane = document.querySelector(targetPaneId);
-                if (targetPane) {
-                    targetPane.classList.add('active', 'show');
+        // Jika server mengirim tab spesifik (via flashdata setelah submit), jangan timpa
+        if (serverActiveTab === 'identitas') {
+            var storedTab = localStorage.getItem('pengaturanActiveTab');
+            if (storedTab) {
+                document.querySelectorAll('.nav-link').forEach(function(link) {
+                    link.classList.remove('active');
+                });
+                document.querySelectorAll('.tab-pane').forEach(function(pane) {
+                    pane.classList.remove('active', 'show');
+                });
+                var targetTab = document.querySelector('a[href="' + storedTab + '"]');
+                if (targetTab) {
+                    targetTab.classList.add('active');
+                    var targetPane = document.querySelector(targetTab.getAttribute('href'));
+                    if (targetPane) {
+                        targetPane.classList.add('active', 'show');
+                    }
                 }
             }
         }
 
-        // Tambahkan event listener ke semua tab
-        document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+        document.querySelectorAll('[data-bs-toggle="tab"]').forEach(function(tab) {
             tab.addEventListener('shown.bs.tab', function(e) {
-                // Simpan ID tab yang sedang aktif ke localStorage
                 localStorage.setItem('pengaturanActiveTab', e.target.getAttribute('href'));
             });
         });
 
-        // Setelah submit form, pastikan tab aktif tetap sama
-        const forms = document.querySelectorAll('form');
-        forms.forEach(form => {
+        var forms = document.querySelectorAll('form');
+        forms.forEach(function(form) {
             form.addEventListener('submit', function() {
-                // Simpan tab aktif saat ini sebelum submit
-                const activeTabLink = document.querySelector('.nav-link.active');
+                var activeTabLink = document.querySelector('.nav-link.active');
                 if (activeTabLink) {
                     localStorage.setItem('pengaturanActiveTab', activeTabLink.getAttribute('href'));
                 }

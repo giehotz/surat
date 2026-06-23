@@ -1,4 +1,4 @@
-<div class="tab-pane <?= $active_tab == 'pimpinan' ? 'active show' : '' ?>" id="tab-pimpinan">
+<div class="tab-pane <?= ($active_tab ?? '') == 'pimpinan' ? 'active show' : '' ?>" id="tab-pimpinan">
     <div class="card-header">
         <h3 class="card-title">Data Pimpinan Surat</h3>
     </div>

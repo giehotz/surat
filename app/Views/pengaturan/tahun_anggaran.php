@@ -1,4 +1,4 @@
-<div class="tab-pane <?= $active_tab == 'tahun-anggaran' ? 'active show' : '' ?>" id="tab-tahun-anggaran">
+<div class="tab-pane <?= ($active_tab ?? '') == 'tahun-anggaran' ? 'active show' : '' ?>" id="tab-tahun-anggaran">
     <div class="card-header border-0 pb-0 d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
             <h3 class="card-title">
@@ -110,7 +110,7 @@
                                         <form action="<?= base_url('pengaturan/delete-tahun-anggaran/' . $row['id']) ?>" 
                                               method="post" 
                                               class="m-0"
-                                              onsubmit="return confirm('Peringatan: Menghapus tahun <?= $row['tahun'] ?> mungkin akan mempengaruhi data yang terkait. Lanjutkan?')">
+                                               onsubmit="return confirm('Peringatan: Menghapus tahun <?= esc($row['tahun']) ?> mungkin akan mempengaruhi data yang terkait. Lanjutkan?')">
                                             <?= csrf_field() ?>
                                             <button type="submit" 
                                                     class="btn btn-icon <?= $isActive ? 'btn-ghost-secondary disabled opacity-50' : 'btn-outline-danger' ?> btn-sm" 

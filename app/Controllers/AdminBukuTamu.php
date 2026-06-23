@@ -44,22 +44,27 @@ class AdminBukuTamu extends BaseController
         ]);
     }
 
-    public function updateStatus($id)
+    public function updateKunjungan($id)
     {
         $status = $this->request->getPost('status_kunjungan');
-        // Validasi
-        if (in_array($status, ['menunggu', 'diterima', 'selesai', 'batal'])) {
-            $this->kunjunganModel->update($id, ['status_kunjungan' => $status]);
-            return redirect()->back()->with('success', 'Status kunjungan diperbarui.');
-        }
-        return redirect()->back()->with('error', 'Status tidak valid.');
-    }
-
-    public function addTindakLanjut($id)
-    {
         $tindak_lanjut = $this->request->getPost('tindak_lanjut');
-        $this->kunjunganModel->update($id, ['tindak_lanjut' => $tindak_lanjut]);
-        return redirect()->back()->with('success', 'Tindak lanjut berhasil disimpan.');
+
+        $dataUpdate = [];
+        
+        if (in_array($status, ['menunggu', 'diterima', 'selesai', 'batal'])) {
+            $dataUpdate['status_kunjungan'] = $status;
+        }
+
+        if ($tindak_lanjut !== null) {
+            $dataUpdate['tindak_lanjut'] = $tindak_lanjut;
+        }
+
+        if (!empty($dataUpdate)) {
+            $this->kunjunganModel->update($id, $dataUpdate);
+            return redirect()->back()->with('success', 'Data kunjungan berhasil diperbarui.');
+        }
+
+        return redirect()->back()->with('error', 'Tidak ada data yang diperbarui.');
     }
 
     public function exportExcel()

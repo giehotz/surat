@@ -153,16 +153,35 @@ class SuratKeluar extends BaseController
         return $this->response->setJSON($result);
     }
 
+    private function generateNomorSurat($template, $nomorUrut, $bulan, $tahun)
+    {
+        $replacements = [
+            '{nomor}' => $nomorUrut,
+            '{bulan}' => $bulan,
+            '{tahun}' => $tahun,
+        ];
+        return str_replace(array_keys($replacements), array_values($replacements), $template);
+    }
+
+    private function getBulanList()
+    {
+        return [
+            '01' => 'Januari', '02' => 'Februari', '03' => 'Maret',
+            '04' => 'April', '05' => 'Mei', '06' => 'Juni',
+            '07' => 'Juli', '08' => 'Agustus', '09' => 'September',
+            '10' => 'Oktober', '11' => 'November', '12' => 'Desember',
+        ];
+    }
+
     public function create()
     {
         $wajibFieldModel = new \App\Models\WajibFieldPengaturanModel();
         $pengaturanModel = new \App\Models\PengaturanModel();
         $settings = $pengaturanModel->getSettings();
 
-        // Ambil metode penyimpanan yang diizinkan admin dari pengaturan
         $allowedMethods = isset($settings['metode_lampiran']) && $settings['metode_lampiran'] !== ''
             ? explode(',', $settings['metode_lampiran'])
-            : ['upload', 'link']; // Default: keduanya aktif
+            : ['upload', 'link'];
 
         $defaultMethod = $allowedMethods[0] ?? 'upload';
 
@@ -176,6 +195,9 @@ class SuratKeluar extends BaseController
         $data['allowedMethods']  = $allowedMethods;
         $data['defaultMethod']   = $defaultMethod;
         $data['latest_nomor_surat_keluar'] = $lastSurat ? $lastSurat['nomor_surat'] : '-';
+        $data['tahun_anggaran']  = $settings['tahun_anggaran'] ?? date('Y');
+        $data['bulan_list']      = $this->getBulanList();
+        $data['format_surat_list'] = (new \App\Models\FormatSuratModel())->findAll();
         
         return view('surat_keluar/create', $data);
     }
@@ -183,29 +205,41 @@ class SuratKeluar extends BaseController
     public function store()
     {
         $suratKeluarModel = new \App\Models\SuratKeluarModel();
+        $pengaturanModel = new \App\Models\PengaturanModel();
+        $settings = $pengaturanModel->getSettings();
 
-        $nomorSurat = $this->request->getPost('nomor_surat');
+        $nomorUrut = $this->request->getPost('nomor_urut');
+        $bulan = $this->request->getPost('bulan');
+        $formatSuratId = $this->request->getPost('format_surat_id');
         $perihal = $this->request->getPost('perihal');
 
-        // Cek duplikasi berdasarkan nomor_surat atau perihal
-        // Jika nomor_surat kosong (draft), hanya cek perihal
+        $nomorSurat = '';
+        if (!empty($nomorUrut) && !empty($bulan) && !empty($formatSuratId)) {
+            $formatModel = new \App\Models\FormatSuratModel();
+            $format = $formatModel->find($formatSuratId);
+            $template = $format['template'] ?? '{nomor}/{bulan}/{tahun}';
+            $tahun = $settings['tahun_anggaran'] ?? date('Y');
+            $nomorSurat = $this->generateNomorSurat($template, $nomorUrut, $bulan, $tahun);
+        }
+
+        // Cek duplikasi: nomor_surat harus unik; jika draft (nomor kosong), perihal harus unik
         $query = $suratKeluarModel->groupStart();
         if (!empty($nomorSurat)) {
             $query->where('nomor_surat', $nomorSurat);
-            $query->orWhere('perihal', $perihal);
         } else {
             $query->where('perihal', $perihal);
         }
         $existingSurat = $query->groupEnd()->first();
 
         if ($existingSurat) {
-            return redirect()->back()->withInput()->with('error', 'Peringatan: Nomor atau isi surat sudah ada!');
+            $msg = !empty($nomorSurat)
+                ? 'Nomor surat "' . esc($nomorSurat) . '" sudah digunakan.'
+                : 'Draft dengan perihal "' . esc($perihal) . '" sudah ada.';
+            return redirect()->back()->withInput()->with('error', $msg);
         }
         
-        // Dapatkan aturan validasi berdasarkan pengaturan wajib field
         $validationRules = $suratKeluarModel->getValidationRulesFromPengaturan();
         
-        // Validasi file upload secara terpisah karena tergantung tipe_penyimpanan
         $tipe_penyimpanan = $this->request->getPost('tipe_penyimpanan');
         
         if ($tipe_penyimpanan === 'lokal') {
@@ -250,7 +284,10 @@ class SuratKeluar extends BaseController
 
         $data = [
             'nomor_agenda'     => $nomor_agenda,
-            'nomor_surat'      => $this->request->getPost('nomor_surat'), // Bisa kosong jika menunggu persetujuan
+            'nomor_surat'      => $nomorSurat,
+            'nomor_urut'       => $nomorUrut ?: null,
+            'bulan'            => $bulan ?: null,
+            'format_surat_id'  => $formatSuratId ?: null,
             'tanggal_surat'    => $this->request->getPost('tanggal_surat'),
             'tanggal_kirim'    => $this->request->getPost('tanggal_kirim'),
             'tujuan'           => $this->request->getPost('tujuan'),
@@ -262,14 +299,13 @@ class SuratKeluar extends BaseController
             'file_path'        => $filePath,
             'file_size'        => $fileSize,
             'file_link'        => $fileLink,
-            'status'           => 'draft', // Draft sebelum disetujui pimpinan
+            'status'           => 'draft',
             'created_by'       => session()->get('user_id'),
         ];
 
         $suratKeluarModel->insert($data);
         $insertId = $suratKeluarModel->getInsertID();
 
-        // Catat di log_aktivitas
         $logModel = new \App\Models\LogAktivitasModel();
         $logModel->save([
             'user_id'    => session()->get('user_id'),
@@ -303,7 +339,6 @@ class SuratKeluar extends BaseController
         $pengaturanModel = new \App\Models\PengaturanModel();
         $settings = $pengaturanModel->getSettings();
 
-        // Ambil metode penyimpanan yang diizinkan admin
         $allowedMethods = isset($settings['metode_lampiran']) && $settings['metode_lampiran'] !== ''
             ? explode(',', $settings['metode_lampiran'])
             : ['upload', 'link'];
@@ -317,42 +352,57 @@ class SuratKeluar extends BaseController
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Data Surat Keluar tidak ditemukan.');
         }
 
+        $data['tahun_anggaran']  = $settings['tahun_anggaran'] ?? date('Y');
+        $data['bulan_list']      = $this->getBulanList();
+        $data['format_surat_list'] = (new \App\Models\FormatSuratModel())->findAll();
+
         return view('surat_keluar/edit', $data);
     }
 
     public function update($id = null)
     {
         $suratKeluarModel = new \App\Models\SuratKeluarModel();
+        $pengaturanModel = new \App\Models\PengaturanModel();
+        $settings = $pengaturanModel->getSettings();
         $surat = $suratKeluarModel->find($id);
 
         if (empty($surat)) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Data Surat Keluar tidak ditemukan.');
         }
 
-        $nomorSurat = $this->request->getPost('nomor_surat');
+        $nomorUrut = $this->request->getPost('nomor_urut');
+        $bulan = $this->request->getPost('bulan');
+        $formatSuratId = $this->request->getPost('format_surat_id');
         $perihal = $this->request->getPost('perihal');
 
-        // Cek duplikasi berdasarkan nomor_surat atau perihal (kecuali surat ini sendiri)
+        $nomorSurat = '';
+        if (!empty($nomorUrut) && !empty($bulan) && !empty($formatSuratId)) {
+            $formatModel = new \App\Models\FormatSuratModel();
+            $format = $formatModel->find($formatSuratId);
+            $template = $format['template'] ?? '{nomor}/{bulan}/{tahun}';
+            $tahun = $settings['tahun_anggaran'] ?? date('Y');
+            $nomorSurat = $this->generateNomorSurat($template, $nomorUrut, $bulan, $tahun);
+        }
+
+        // Cek duplikasi: nomor_surat harus unik; jika draft (nomor kosong), perihal harus unik
         $query = $suratKeluarModel->groupStart();
         if (!empty($nomorSurat)) {
             $query->where('nomor_surat', $nomorSurat);
-            $query->orWhere('perihal', $perihal);
         } else {
             $query->where('perihal', $perihal);
         }
         $existingSurat = $query->groupEnd()->where('id !=', $id)->first();
 
         if ($existingSurat) {
-            return redirect()->back()->withInput()->with('error', 'Peringatan: Nomor atau isi surat sudah ada!');
+            $msg = !empty($nomorSurat)
+                ? 'Nomor surat "' . esc($nomorSurat) . '" sudah digunakan.'
+                : 'Draft dengan perihal "' . esc($perihal) . '" sudah ada.';
+            return redirect()->back()->withInput()->with('error', $msg);
         }
 
-        // Dapatkan aturan validasi berdasarkan pengaturan wajib field
         $validationRules = $suratKeluarModel->getValidationRulesFromPengaturan();
-        
-        // Hapus validasi nomor_agenda karena ini hanya dibaca
         unset($validationRules['nomor_agenda']);
         
-        // Validasi file upload secara terpisah karena tergantung tipe_penyimpanan
         $tipe_penyimpanan = $this->request->getPost('tipe_penyimpanan');
         
         if ($tipe_penyimpanan === 'lokal') {
@@ -382,7 +432,6 @@ class SuratKeluar extends BaseController
         if ($tipe_penyimpanan == 'lokal') {
             $file = $this->request->getFile('file_konsep');
             if ($file && $file->isValid() && !$file->hasMoved()) {
-                // Hapus file lama jika ada
                 if ($filePath && file_exists(FCPATH . $filePath)) {
                     unlink(FCPATH . $filePath);
                 }
@@ -398,7 +447,10 @@ class SuratKeluar extends BaseController
         }
 
         $data = [
-            'nomor_surat'      => $this->request->getPost('nomor_surat'),
+            'nomor_surat'      => $nomorSurat,
+            'nomor_urut'       => $nomorUrut ?: null,
+            'bulan'            => $bulan ?: null,
+            'format_surat_id'  => $formatSuratId ?: null,
             'tanggal_surat'    => $this->request->getPost('tanggal_surat'),
             'tanggal_kirim'    => $this->request->getPost('tanggal_kirim'),
             'tujuan'           => $this->request->getPost('tujuan'),
@@ -415,7 +467,6 @@ class SuratKeluar extends BaseController
 
         $suratKeluarModel->update($id, $data);
 
-        // Catat aktivitas
         $logModel = new \App\Models\LogAktivitasModel();
         $logModel->save([
             'user_id'    => session()->get('user_id'),
@@ -598,16 +649,40 @@ class SuratKeluar extends BaseController
         $suratKeluarModel = new \App\Models\SuratKeluarModel();
         $records = $suratKeluarModel->findAll();
 
-        $headers = ['Tgl Keluar', 'No Surat', 'Tgl Surat', 'Tujuan', 'Perihal', 'Status'];
+        $headers = [
+            'Nomor Surat (dari Pengirim)',
+            'Tujuan',
+            'Tanggal Surat (DD/MM/YYYY)',
+            'Tanggal Kirim (DD/MM/YYYY)',
+            'Perihal',
+            'Jumlah Lampiran',
+            'Tipe Penyimpanan (lokal/cloud)',
+            'Link Cloud (Opsional)',
+            'Keterangan (Opsional)'
+        ];
+        
         $data = [];
         foreach ($records as $surat) {
+            $tglSurat = '';
+            if (!empty($surat['tanggal_surat']) && $surat['tanggal_surat'] !== '0000-00-00') {
+                $tglSurat = date('d/m/Y', strtotime($surat['tanggal_surat']));
+            }
+            
+            $tglKirim = '';
+            if (!empty($surat['tanggal_kirim']) && $surat['tanggal_kirim'] !== '0000-00-00') {
+                $tglKirim = date('d/m/Y', strtotime($surat['tanggal_kirim']));
+            }
+
             $data[] = [
-                !empty($surat['tanggal_kirim']) ? $surat['tanggal_kirim'] : '-',
-                $surat['nomor_surat'] ?? '-',
-                $surat['tanggal_surat'],
-                $surat['tujuan'],
-                $surat['perihal'],
-                ucfirst($surat['status'])
+                $surat['nomor_surat'] ?? '',
+                $surat['tujuan'] ?? '',
+                $tglSurat,
+                $tglKirim,
+                $surat['perihal'] ?? '',
+                $surat['lampiran'] ?? '0',
+                $surat['tipe_penyimpanan'] ?? 'lokal',
+                $surat['file_link'] ?? '',
+                $surat['keterangan'] ?? ''
             ];
         }
 
@@ -636,7 +711,7 @@ class SuratKeluar extends BaseController
         $sheet->setCellValue('E1', 'Perihal');
         $sheet->setCellValue('F1', 'Jumlah Lampiran');
         $sheet->setCellValue('G1', 'Tipe Penyimpanan (lokal/cloud)');
-        $sheet->setCellValue('H1', 'Link Cloud');
+        $sheet->setCellValue('H1', 'Link Cloud (Opsional)');
         $sheet->setCellValue('I1', 'Keterangan (Opsional)');
 
         // Format Header
@@ -772,6 +847,9 @@ class SuratKeluar extends BaseController
                 return redirect()->to('/surat-keluar/import')->with('error', 'File Excel kosong atau tidak memiliki data.');
             }
 
+            // Simpan ke session untuk menghindari hidden input base64 (keamanan & ukuran)
+            session()->set('import_data', $importData);
+
             $data = [
                 'title' => 'Preview Import Surat Keluar',
                 'importData' => $importData
@@ -785,15 +863,12 @@ class SuratKeluar extends BaseController
 
     public function storeImport()
     {
-        $base64Data = $this->request->getPost('import_data');
-        if (!$base64Data) {
-            return redirect()->to('/surat-keluar/import')->with('error', 'Data import tidak ditemukan.');
+        $importData = session()->get('import_data');
+        if (!$importData || !is_array($importData)) {
+            return redirect()->to('/surat-keluar/import')->with('error', 'Data import tidak ditemukan. Silakan unggah ulang file Excel.');
         }
 
-        $importData = json_decode(base64_decode($base64Data), true);
-        if (!is_array($importData)) {
-            return redirect()->to('/surat-keluar/import')->with('error', 'Format data tidak valid.');
-        }
+        session()->remove('import_data');
 
         $suratKeluarModel = new \App\Models\SuratKeluarModel();
         $logModel = new \App\Models\LogAktivitasModel();
@@ -902,5 +977,118 @@ class SuratKeluar extends BaseController
             }
             return redirect()->to('/surat-keluar/import')->with('error', $errorMsg);
         }
+    }
+
+    public function renumber()
+    {
+        if ($this->request->getMethod() !== 'POST') {
+            return redirect()->to('/surat-keluar')->with('error', 'Metode tidak diizinkan.');
+        }
+
+        $suratKeluarModel = new \App\Models\SuratKeluarModel();
+        $formatModel = new \App\Models\FormatSuratModel();
+        $updated = 0;
+
+        // --- 1. Proses record yang sudah punya format_surat_id (pakai template) ---
+        $withFormat = $suratKeluarModel
+            ->where('format_surat_id IS NOT NULL', null, false)
+            ->where('nomor_urut !=', '')
+            ->where('nomor_urut IS NOT NULL', null, false)
+            ->orderBy('format_surat_id', 'ASC')
+            ->orderBy('YEAR(tanggal_surat)', 'ASC')
+            ->orderBy("CAST(nomor_urut AS UNSIGNED)", 'ASC')
+            ->orderBy('id', 'ASC')
+            ->findAll();
+
+        $grouped = [];
+        foreach ($withFormat as $s) {
+            if (!empty($s['format_surat_id']) && !empty($s['tanggal_surat'])) {
+                $tahun = date('Y', strtotime($s['tanggal_surat']));
+                $key = $s['format_surat_id'] . '-' . $tahun;
+                $grouped[$key][] = $s;
+            }
+        }
+
+        foreach ($grouped as $list) {
+            $no = 1;
+            foreach ($list as $rec) {
+                $nomorUrutBaru = str_pad($no, 3, '0', STR_PAD_LEFT);
+
+                if ($rec['nomor_urut'] === $nomorUrutBaru) {
+                    $no++;
+                    continue;
+                }
+
+                $format = $formatModel->find($rec['format_surat_id']);
+                $tahun = date('Y', strtotime($rec['tanggal_surat']));
+                $nomorSuratBaru = $format
+                    ? $this->generateNomorSurat($format['template'], $nomorUrutBaru, $rec['bulan'], $tahun)
+                    : '';
+
+                $suratKeluarModel->update($rec['id'], [
+                    'nomor_urut' => $nomorUrutBaru,
+                    'nomor_surat' => $nomorSuratBaru,
+                ]);
+                $updated++;
+                $no++;
+            }
+        }
+
+        // --- 2. Proses record legacy (format_surat_id IS NULL) ---
+        $legacy = $suratKeluarModel
+            ->where('format_surat_id IS NULL', null, false)
+            ->where('nomor_surat !=', '')
+            ->where('nomor_surat IS NOT NULL', null, false)
+            ->findAll();
+
+        // Kelompokkan berdasarkan awalan huruf (B-, KEP-, E-, dll) + tahun
+        $legacyGrouped = [];
+        foreach ($legacy as $rec) {
+            $tahun = date('Y', strtotime($rec['tanggal_surat']));
+            if (!$tahun || $tahun == '0000') {
+                preg_match('/(\d{4})$/', $rec['nomor_surat'], $m);
+                $tahun = $m[1] ?? 'unknown';
+            }
+            preg_match('/^([A-Za-z]+)-\d+/', $rec['nomor_surat'], $m);
+            $prefix = $m[1] ?? 'unknown';
+            $key = $prefix . '-' . $tahun;
+            $legacyGrouped[$key][] = $rec;
+        }
+
+        // Urutkan tiap grup berdasarkan angka pertama di nomor_surat
+        foreach ($legacyGrouped as &$list) {
+            usort($list, function ($a, $b) {
+                preg_match('/^[A-Za-z]+-(\d+)/', $a['nomor_surat'], $ma);
+                preg_match('/^[A-Za-z]+-(\d+)/', $b['nomor_surat'], $mb);
+                $na = (int) ($ma[1] ?? 0);
+                $nb = (int) ($mb[1] ?? 0);
+                return $na === $nb ? $a['id'] - $b['id'] : $na - $nb;
+            });
+        }
+
+        foreach ($legacyGrouped as $list) {
+            $no = 1;
+            foreach ($list as $rec) {
+                $nomorBaru = str_pad($no, 3, '0', STR_PAD_LEFT);
+                preg_match('/^([A-Za-z]+)-(\d+)(.*)$/', $rec['nomor_surat'], $m);
+                if ($m) {
+                    $prefix = $m[1];
+                    $rest = $m[3];
+                    $newNomorSurat = $prefix . '-' . $nomorBaru . $rest;
+
+                    if ($rec['nomor_surat'] !== $newNomorSurat) {
+                        $suratKeluarModel->update($rec['id'], [
+                            'nomor_urut' => $nomorBaru,
+                            'nomor_surat' => $newNomorSurat,
+                        ]);
+                        $updated++;
+                    }
+                }
+                $no++;
+            }
+        }
+
+        return redirect()->to('/surat-keluar')
+            ->with('success', "Berhasil merapikan nomor urut $updated surat keluar.");
     }
 }

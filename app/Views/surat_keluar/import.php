@@ -68,7 +68,7 @@
                     <ul class="list-unstyled space-y-2">
                         <li class="d-flex mb-2">
                             <i class="ti ti-check text-success me-2 mt-1"></i>
-                            <span>Kolom wajib diisi, kecuali <strong>Lampiran</strong> dan <strong>Keterangan</strong>.</span>
+                            <span>Kolom wajib diisi, kecuali <strong>Lampiran</strong>, <strong>Link Cloud</strong>, dan <strong>Keterangan</strong>.</span>
                         </li>
                         <li class="d-flex mb-2">
                             <i class="ti ti-calendar text-primary me-2 mt-1"></i>

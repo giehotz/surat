@@ -44,7 +44,7 @@
 
         <form action="<?= base_url('surat-keluar/store-import'); ?>" method="post">
             <?= csrf_field(); ?>
-            <input type="hidden" name="import_data" value="<?= base64_encode(json_encode($importData)); ?>">
+            <p class="text-muted small">Data akan disimpan sebanyak <strong><?= count($importData) ?></strong> entri.</p>
             
             <button type="submit" class="btn btn-success">
                 <i class="ti ti-check"></i> Simpan Semua Data
