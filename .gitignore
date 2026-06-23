@@ -124,3 +124,9 @@ _modules/*
 
 /results/
 /phpunit*.xml
+
+# Custom Ignores
+/.lingma/
+/rancangan/
+/surat.zip
+
