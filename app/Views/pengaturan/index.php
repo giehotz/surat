@@ -4,6 +4,7 @@
 
 <div class="row gx-lg-4">
     <div class="col-lg-3">
+        <div class="sticky-top" style="top: 1.5rem;">
         <h3 class="mb-3">Kategori Pengaturan</h3>
         <ul class="nav nav-pills nav-vertical" data-bs-toggle="tabs">
             <?php if (session('role') === 'admin'): ?>
@@ -49,11 +50,17 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="#tab-kop-surat" class="nav-link <?= $active_tab == 'kop-surat' ? 'active' : '' ?>" data-bs-toggle="tab">
+                    <i class="ti ti-file-text icon me-2 text-purple"></i> Kop Surat
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="#tab-buku-tamu" class="nav-link <?= $active_tab == 'buku-tamu' || session('role') === 'admin_tamu' ? 'active' : '' ?>" data-bs-toggle="tab">
                     <i class="ti ti-notebook icon me-2 text-green"></i> Pengaturan Buku Tamu
                 </a>
             </li>
         </ul>
+        </div>
     </div>
     <div class="col-lg-9">
         <div class="card">
@@ -67,6 +74,7 @@
                 <?= $this->include('pengaturan/wajib_field') ?>
                 <?= $this->include('pengaturan/tahun_anggaran') ?>
                 <?= $this->include('pengaturan/format_surat') ?>
+                <?= $this->include('pengaturan/kop_surat') ?>
                 <?php endif; ?>
                 <?= $this->include('pengaturan/buku_tamu') ?>
             </div>

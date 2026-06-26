@@ -1,5 +1,5 @@
 <!-- Header Navigation Menu -->
-<header class="navbar-expand-md position-sticky top-0 z-3" style="box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+<header class="navbar-expand-md position-sticky top-0" style="z-index: 1030; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
     <div class="collapse navbar-collapse" id="navbar-menu">
         <div class="navbar">
             <!-- Menambahkan d-flex dan justify-content-center di sini -->

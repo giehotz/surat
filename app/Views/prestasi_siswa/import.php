@@ -43,10 +43,11 @@
                     </div>
 
                     <div class="form-footer">
-                        <a href="<?= base_url('prestasi-siswa') ?>" class="btn btn-link">Batal</a>
+                        <a href="<?= base_url('prestasi-siswa') ?>" class="btn btn-link">
+                            <i class="ti ti-arrow-left icon"></i> Batal
+                        </a>
                         <button type="submit" class="btn btn-primary ms-auto">
-                            <i class="ti ti-eye icon"></i>
-                            Preview Data
+                            <i class="ti ti-eye icon"></i> Preview Data
                         </button>
                     </div>
                 </form>

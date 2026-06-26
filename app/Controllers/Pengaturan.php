@@ -315,6 +315,23 @@ class Pengaturan extends BaseController
         return redirect()->to('/pengaturan')->with('success', 'Pengaturan Buku Tamu berhasil diperbarui.')->with('active_tab', 'buku-tamu');
     }
 
+    public function updateKopSurat()
+    {
+        if (session('role') !== 'admin') return redirect()->back();
+
+        $postData = $this->request->getPost();
+
+        $fields = ['sekolah_kementerian', 'sekolah_kantor_kementerian', 'sekolah_nama', 'sekolah_alamat', 'sekolah_kontak'];
+        foreach ($fields as $field) {
+            if (isset($postData[$field])) {
+                $this->pengaturanModel->updateSetting($field, $postData[$field]);
+            }
+        }
+
+        cache()->delete('app_settings');
+        return redirect()->to('/pengaturan')->with('success', 'Pengaturan Kop Surat berhasil disimpan.')->with('active_tab', 'kop-surat');
+    }
+
     /**
      * API: Mengembalikan link folder Google Drive dalam format JSON.
      * Dipanggil via AJAX dari form Surat Masuk & Surat Keluar.

@@ -202,6 +202,7 @@ $routes->group('pengaturan', ['filter' => 'role:admin,admin_tamu'], function ($r
     $routes->post('store-format-surat', 'Pengaturan::storeFormatSurat');
     $routes->post('update-format-surat/(:num)', 'Pengaturan::updateFormatSurat/$1');
     $routes->post('delete-format-surat/(:num)', 'Pengaturan::deleteFormatSurat/$1');
+    $routes->post('update-kop-surat', 'Pengaturan::updateKopSurat');
 });
 
 // API Pengaturan (diakses oleh semua user yang sudah login)

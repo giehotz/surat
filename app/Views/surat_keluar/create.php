@@ -35,12 +35,12 @@
                     <?php endif; ?>
 
                     <!-- SECTION 1: DATA UTAMA -->
-                    <h4 class="subheader text-muted mb-3">Informasi Dasar Surat</h4>
+                    <h4 class="subheader text-muted mb-3">
+                        <i class="ti ti-info-circle me-1"></i>Informasi Dasar Surat
+                    </h4>
                     <div class="row mb-4 g-3">
-                        <div class="col-md-3">
-                            <label class="form-label required mb-0">
-                                Format Surat
-                            </label>
+                        <div class="col-md-4">
+                            <label class="form-label required mb-0">Format Surat</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="ti ti-file-description text-muted"></i></span>
                                 <select class="form-select <?= isset($validation) && $validation->hasError('format_surat_id') ? 'is-invalid' : '' ?>" 
@@ -60,9 +60,7 @@
                             </p>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label <?= in_array('nomor_surat', $required_fields ?? []) ? 'required' : '' ?>">
-                                Nomor Urut
-                            </label>
+                            <label class="form-label <?= in_array('nomor_surat', $required_fields ?? []) ? 'required' : '' ?>">Nomor Urut</label>
                             <div class="input-icon">
                                 <span class="input-icon-addon"><i class="ti ti-123 text-muted"></i></span>
                                 <input type="text" class="form-control <?= isset($validation) && $validation->hasError('nomor_urut') ? 'is-invalid' : '' ?>" 
@@ -76,9 +74,7 @@
                             </div>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label <?= in_array('nomor_surat', $required_fields ?? []) ? 'required' : '' ?>">
-                                Bulan
-                            </label>
+                            <label class="form-label <?= in_array('nomor_surat', $required_fields ?? []) ? 'required' : '' ?>">Bulan</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="ti ti-calendar-month text-muted"></i></span>
                                 <select class="form-select <?= isset($validation) && $validation->hasError('bulan') ? 'is-invalid' : '' ?>" 
@@ -94,7 +90,7 @@
                                 <?php endif; ?>
                             </div>
                         </div>
-                        <div class="col-md-5">
+                        <div class="col-md-4">
                             <label class="form-label">Preview Nomor Surat</label>
                             <div class="alert alert-info bg-info-lt py-2 px-3 mb-1" id="preview-container" style="display: none;">
                                 <div class="d-flex align-items-center">
@@ -115,10 +111,11 @@
                                 </div>
                             <?php endif; ?>
                         </div>
+                    </div>
+
+                    <div class="row mb-4 g-3">
                         <div class="col-md-6">
-                            <label class="form-label <?= in_array('tujuan', $required_fields ?? []) ? 'required' : '' ?>">
-                                Tujuan Surat
-                            </label>
+                            <label class="form-label <?= in_array('tujuan', $required_fields ?? []) ? 'required' : '' ?>">Tujuan Surat</label>
                             <div class="input-icon">
                                 <span class="input-icon-addon"><i class="ti ti-building-bank text-muted"></i></span>
                                 <input type="text" class="form-control <?= isset($validation) && $validation->hasError('tujuan') ? 'is-invalid' : '' ?>" 
@@ -131,11 +128,8 @@
                                 <?php endif; ?>
                             </div>
                         </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label <?= in_array('tanggal_surat', $required_fields ?? []) ? 'required' : '' ?>">
-                                Tanggal Surat (Tertera di surat)
-                            </label>
+                        <div class="col-md-3">
+                            <label class="form-label <?= in_array('tanggal_surat', $required_fields ?? []) ? 'required' : '' ?>">Tanggal Surat</label>
                             <div class="input-icon">
                                 <span class="input-icon-addon"><i class="ti ti-calendar text-muted"></i></span>
                                 <input type="date" class="form-control <?= isset($validation) && $validation->hasError('tanggal_surat') ? 'is-invalid' : '' ?>" 
@@ -146,11 +140,10 @@
                                     <div class="invalid-feedback"><?= $validation->getError('tanggal_surat') ?></div>
                                 <?php endif; ?>
                             </div>
+                            <small class="text-muted">Tertera di surat</small>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label <?= in_array('tanggal_kirim', $required_fields ?? []) ? 'required' : '' ?>">
-                                Tanggal Kirim (Fisik / Ekspedisi)
-                            </label>
+                        <div class="col-md-3">
+                            <label class="form-label <?= in_array('tanggal_kirim', $required_fields ?? []) ? 'required' : '' ?>">Tanggal Kirim</label>
                             <div class="input-icon">
                                 <span class="input-icon-addon"><i class="ti ti-send text-muted"></i></span>
                                 <input type="date" class="form-control <?= isset($validation) && $validation->hasError('tanggal_kirim') ? 'is-invalid' : '' ?>" 
@@ -161,12 +154,13 @@
                                     <div class="invalid-feedback"><?= $validation->getError('tanggal_kirim') ?></div>
                                 <?php endif; ?>
                             </div>
+                            <small class="text-muted">Fisik / Ekspedisi</small>
                         </div>
+                    </div>
 
+                    <div class="row mb-4 g-3">
                         <div class="col-12">
-                            <label class="form-label <?= in_array('perihal', $required_fields ?? []) ? 'required' : '' ?>">
-                                Perihal / Ringkasan Isi
-                            </label>
+                            <label class="form-label <?= in_array('perihal', $required_fields ?? []) ? 'required' : '' ?>">Perihal / Ringkasan Isi</label>
                             <textarea class="form-control <?= isset($validation) && $validation->hasError('perihal') ? 'is-invalid' : '' ?>" 
                                       name="perihal" id="perihal" 
                                       rows="3" placeholder="Tuliskan perihal atau ringkasan isi surat di sini..."
@@ -177,7 +171,9 @@
                         </div>
                     </div>
 
-                    <div class="hr-text my-4">Dokumen & Lampiran</div>
+                    <div class="hr-text my-4">
+                        <i class="ti ti-paperclip me-1"></i> Dokumen & Lampiran
+                    </div>
 
                     <!-- SECTION 2: LAMPIRAN & DOKUMEN -->
                     <div class="row mb-4 g-3 align-items-start">
@@ -294,16 +290,18 @@
                         </div>
                     </div>
 
-                    <div class="hr-text my-4">Informasi Tambahan</div>
+                    <div class="hr-text my-4">
+                        <i class="ti ti-notes me-1"></i> Keterangan Tambahan
+                    </div>
 
                     <!-- SECTION 3: KETERANGAN -->
-                    <div class="mb-2">
-                        <label class="form-label">Keterangan / Catatan Ekstra (Opsional)</label>
+                    <div class="mb-4">
+                        <label class="form-label">Catatan Internal <span class="text-muted fw-normal">(Opsional)</span></label>
                         <div class="input-icon">
                             <span class="input-icon-addon align-items-start mt-2"><i class="ti ti-notes text-muted"></i></span>
                             <textarea class="form-control <?= isset($validation) && $validation->hasError('keterangan') ? 'is-invalid' : '' ?>" 
                                       name="keterangan" id="keterangan" 
-                                      rows="2" placeholder="Tambahkan catatan jika diperlukan..."><?= old('keterangan') ?></textarea>
+                                      rows="2" placeholder="Tambahkan catatan internal jika diperlukan..."><?= old('keterangan') ?></textarea>
                         </div>
                         <?php if(isset($validation) && $validation->hasError('keterangan')): ?>
                             <div class="text-danger small mt-1"><?= $validation->getError('keterangan') ?></div>
@@ -322,7 +320,8 @@
                     </button>
                 </div>
             </form>
-                        </div>
+        </div>
+    </div>
 </div>
 <?= $this->endSection() ?>
 
