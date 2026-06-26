@@ -4,16 +4,19 @@ namespace App\Controllers;
 
 use App\Models\SuratResmiModel;
 use App\Models\PengaturanModel;
+use App\Models\TemplateSuratResmiModel;
 
 class SuratResmi extends BaseController
 {
     protected $suratResmiModel;
     protected $pengaturanModel;
+    protected $templateModel;
 
     public function __construct()
     {
         $this->suratResmiModel = new SuratResmiModel();
         $this->pengaturanModel = new PengaturanModel();
+        $this->templateModel = new TemplateSuratResmiModel();
     }
 
     public function index()
@@ -33,7 +36,6 @@ class SuratResmi extends BaseController
         
         if ($lastSurat && !empty($lastSurat['nomor_surat'])) {
             $lastNomor = $lastSurat['nomor_surat'];
-            // Jika format diawali angka (misal "50" atau "01/SK/2026")
             if (preg_match('/^(\d+)(.*)$/', $lastNomor, $matches)) {
                 $number = (int)$matches[1] + 1;
                 $paddedNumber = str_pad($number, strlen($matches[1]), '0', STR_PAD_LEFT);
@@ -43,13 +45,12 @@ class SuratResmi extends BaseController
             }
         }
 
-        $suratKeluarModel = new \App\Models\SuratKeluarModel();
-        $listSuratKeluar = $suratKeluarModel->where('nomor_surat !=', null)->where('nomor_surat !=', '')->orderBy('id', 'DESC')->findAll();
-
         $data = [
             'title' => 'Buat Surat Resmi Baru',
             'next_nomor' => $nextNomor,
-            'list_surat_keluar' => $listSuratKeluar
+            'user_jabatan' => session('jabatan'),
+            'user_nama' => session('nama_lengkap'),
+            'templates' => $this->templateModel->orderBy('nama', 'ASC')->findAll(),
         ];
         return view('surat_resmi/FormSurat/index', $data);
     }
@@ -78,13 +79,12 @@ class SuratResmi extends BaseController
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
 
-        $suratKeluarModel = new \App\Models\SuratKeluarModel();
-        $listSuratKeluar = $suratKeluarModel->where('nomor_surat !=', null)->where('nomor_surat !=', '')->orderBy('id', 'DESC')->findAll();
-
         $data = [
             'title' => 'Edit Surat Resmi',
             'surat' => $surat,
-            'list_surat_keluar' => $listSuratKeluar
+            'user_jabatan' => session('jabatan'),
+            'user_nama' => session('nama_lengkap'),
+            'templates' => $this->templateModel->orderBy('nama', 'ASC')->findAll(),
         ];
         return view('surat_resmi/FormSurat/index', $data);
     }
@@ -151,6 +151,98 @@ class SuratResmi extends BaseController
         ];
         
         return view('surat_resmi/print', $data);
+    }
+
+    // ---- Template CRUD ----
+
+    public function template()
+    {
+        $data = [
+            'title' => 'Daftar Template Surat',
+            'templates' => $this->templateModel->orderBy('nama', 'ASC')->findAll(),
+        ];
+        return view('surat_resmi/Template/index', $data);
+    }
+
+    public function templateCreate()
+    {
+        $data = [
+            'title' => 'Buat Template Baru',
+        ];
+        return view('surat_resmi/Template/form', $data);
+    }
+
+    public function templateStore()
+    {
+        $rules = $this->templateModel->getValidationRules();
+
+        if (!$this->validate($rules)) {
+            return redirect()->back()->withInput()->with('error', 'Silakan periksa kembali isian form.')->with('validation', \Config\Services::validation());
+        }
+
+        $post = $this->request->getPost();
+        $post['slug'] = $this->generateSlug($post['slug'] ?? $post['nama']);
+
+        if ($this->templateModel->insert($post)) {
+            return redirect()->to('/surat-resmi/template')->with('success', 'Template berhasil dibuat.');
+        } else {
+            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan template.');
+        }
+    }
+
+    public function templateEdit($id)
+    {
+        $template = $this->templateModel->find($id);
+        if (!$template) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        $data = [
+            'title' => 'Edit Template',
+            'template' => $template,
+        ];
+        return view('surat_resmi/Template/form', $data);
+    }
+
+    public function templateUpdate($id)
+    {
+        $template = $this->templateModel->find($id);
+        if (!$template) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        $rules = $this->templateModel->getValidationRules();
+
+        if (!$this->validate($rules)) {
+            return redirect()->back()->withInput()->with('error', 'Silakan periksa kembali isian form.')->with('validation', \Config\Services::validation());
+        }
+
+        $post = $this->request->getPost();
+
+        if ($this->templateModel->update($id, $post)) {
+            return redirect()->to('/surat-resmi/template')->with('success', 'Template berhasil diperbarui.');
+        } else {
+            return redirect()->back()->withInput()->with('error', 'Gagal memperbarui template.');
+        }
+    }
+
+    public function templateDelete($id)
+    {
+        $template = $this->templateModel->find($id);
+        if (!$template) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        $this->templateModel->delete($id);
+        return redirect()->to('/surat-resmi/template')->with('success', 'Template berhasil dihapus.');
+    }
+
+    private function generateSlug($string)
+    {
+        $slug = strtolower($string);
+        $slug = preg_replace('/[^a-z0-9]+/', '_', $slug);
+        $slug = trim($slug, '_');
+        return $slug;
     }
 
     public function saveKop()

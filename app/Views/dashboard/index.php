@@ -7,9 +7,18 @@
     <div class="row align-items-center">
         <div class="col">
             <div class="d-flex align-items-center gap-3">
-                <div class="avatar avatar-lg rounded-circle shadow-sm bg-primary-lt">
-                    <i class="ti ti-layout-dashboard fs-1 text-primary"></i>
-                </div>
+                <?php
+                $fotoProfile = session('foto_profile');
+                $nama = session('nama_lengkap') ?? session('username') ?? 'U';
+                $inisial = strtoupper(substr($nama, 0, 1));
+                ?>
+                <?php if (!empty($fotoProfile) && file_exists(FCPATH . 'uploads/profiles/' . $fotoProfile)): ?>
+                    <img class="avatar avatar-lg rounded-circle shadow-sm" style="object-fit: cover; width: 56px; height: 56px;" src="<?= base_url('uploads/profiles/' . $fotoProfile) ?>" alt="Foto Profil">
+                <?php else: ?>
+                    <div class="avatar avatar-lg rounded-circle shadow-sm bg-primary-lt d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                        <span class="fw-bold text-primary" style="font-size: 1.3rem;"><?= esc($inisial) ?></span>
+                    </div>
+                <?php endif; ?>
                 <div>
                     <div class="d-flex align-items-center gap-2 mb-1">
                         <span class="badge bg-blue-lt px-2 py-1" style="font-size: 0.75rem; letter-spacing: 0.02em;">

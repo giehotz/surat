@@ -110,6 +110,6 @@ class Filters extends BaseFilters
      * @var array<string, array<string, list<string>>>
      */
     public array $filters = [
-        'honeypot' => ['before' => ['buku-tamu/*']],
+        'honeypot' => ['before' => ['buku-tamu/*'], 'after' => ['buku-tamu/*']],
     ];
 }

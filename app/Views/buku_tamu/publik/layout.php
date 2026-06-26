@@ -42,6 +42,22 @@
                 </a>
             </div>
             
+            <?php $flashError = session()->getFlashdata('error'); ?>
+            <?php if ($flashError): ?>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <?= esc($flashError) ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            <?php endif; ?>
+
+            <?php $flashSuccess = session()->getFlashdata('success'); ?>
+            <?php if ($flashSuccess): ?>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <?= esc($flashSuccess) ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            <?php endif; ?>
+
             <?= $this->renderSection('content') ?>
             
         </div>

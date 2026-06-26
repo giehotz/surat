@@ -91,6 +91,16 @@
         <p class="text-muted mb-4 small" id="countdown">Mengalihkan secara otomatis dalam 5 detik...</p>
 
         <div class="d-flex justify-content-center gap-3">
+            <?php $lastType = session()->getFlashdata('last_form_type'); ?>
+            <?php if ($lastType === 'umum'): ?>
+                <a href="<?= base_url('buku-tamu/umum') ?>" class="btn btn-outline-primary btn-finish d-flex align-items-center gap-2">
+                    <i class="ti ti-plus fs-2"></i> Daftarkan Tamu Lain
+                </a>
+            <?php elseif ($lastType === 'dinas'): ?>
+                <a href="<?= base_url('buku-tamu/dinas') ?>" class="btn btn-outline-primary btn-finish d-flex align-items-center gap-2">
+                    <i class="ti ti-plus fs-2"></i> Daftarkan Tamu Lain
+                </a>
+            <?php endif; ?>
             <a href="<?= base_url('buku-tamu') ?>" class="btn btn-success btn-finish d-flex align-items-center gap-2">
                 <i class="ti ti-home fs-2"></i> Kembali Ke Beranda
             </a>

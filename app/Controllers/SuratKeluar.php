@@ -257,13 +257,12 @@ class SuratKeluar extends BaseController
             return redirect()->back()->withInput()->with('error', 'Data tidak valid. Silakan periksa kembali inputan Anda.')->with('validation', $this->validator);
         }
 
-        // Generate Nomor Agenda (OUT-YYYY-001)
-        $lastSurat = $suratKeluarModel->orderBy('id', 'DESC')->first();
-        $lastNumber = 0;
-        if ($lastSurat && preg_match('/OUT-\d{4}-(\d+)/', $lastSurat['nomor_agenda'], $matches)) {
-            $lastNumber = (int)$matches[1];
-        }
-        $nomor_agenda = 'OUT-' . date('Y') . '-' . sprintf('%03d', $lastNumber + 1);
+        // Generate Nomor Agenda (OUT-YYYY-001) berdasarkan jumlah per tahun
+        $tahunAgenda = date('Y');
+        $countThisYear = $suratKeluarModel
+            ->where('nomor_agenda LIKE', 'OUT-' . $tahunAgenda . '-%')
+            ->countAllResults();
+        $nomor_agenda = 'OUT-' . $tahunAgenda . '-' . sprintf('%03d', $countThisYear + 1);
 
         $fileName = null;
         $filePath = null;
@@ -879,6 +878,12 @@ class SuratKeluar extends BaseController
 
         $db->transStart();
 
+        // Hitung nomor agenda terakhir sekali di luar loop
+        $tahunAgenda = date('Y');
+        $agendaCounter = $suratKeluarModel
+            ->where('nomor_agenda LIKE', 'OUT-' . $tahunAgenda . '-%')
+            ->countAllResults();
+
         foreach ($importData as $index => $row) {
             $rowNum = $index + 2;
 
@@ -912,13 +917,9 @@ class SuratKeluar extends BaseController
                 continue;
             }
 
-            // Generate Nomor Agenda (OUT-YYYY-001) for each row
-            $lastSurat = $suratKeluarModel->orderBy('id', 'DESC')->first();
-            $lastNumber = 0;
-            if ($lastSurat && preg_match('/OUT-\d{4}-(\d+)/', $lastSurat['nomor_agenda'], $matches)) {
-                $lastNumber = (int)$matches[1];
-            }
-            $nomor_agenda = 'OUT-' . date('Y') . '-' . sprintf('%03d', $lastNumber + 1);
+            // Generate Nomor Agenda (OUT-YYYY-001) berdasarkan jumlah per tahun
+            $agendaCounter++;
+            $nomor_agenda = 'OUT-' . $tahunAgenda . '-' . sprintf('%03d', $agendaCounter);
 
             $dataInsert = [
                 'nomor_agenda'     => $nomor_agenda,
@@ -1083,6 +1084,50 @@ class SuratKeluar extends BaseController
                         ]);
                         $updated++;
                     }
+                }
+                $no++;
+            }
+        }
+
+        // --- 3. Renumber nomor_agenda (OUT-YYYY-NNN) secara kontinu ---
+        // Phase 1: Set semua nomor_agenda ke nilai sementara untuk menghindari UNIQUE constraint
+        $allSurat = $suratKeluarModel
+            ->where('nomor_agenda !=', '')
+            ->where('nomor_agenda IS NOT NULL', null, false)
+            ->orderBy('id', 'ASC')
+            ->findAll();
+
+        foreach ($allSurat as $s) {
+            $suratKeluarModel->update($s['id'], [
+                'nomor_agenda' => 'OUT-TEMP-' . $s['id']
+            ]);
+        }
+
+        // Phase 2: Urutkan kronologis, group per tahun, beri nomor urut kontinu
+        $chronological = $suratKeluarModel
+            ->orderBy('YEAR(tanggal_surat)', 'ASC')
+            ->orderBy('tanggal_surat', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->findAll();
+
+        $groupedByYear = [];
+        foreach ($chronological as $s) {
+            $tahun = date('Y', strtotime($s['tanggal_surat']));
+            if (!$tahun || $tahun == '0000') {
+                $tahun = date('Y');
+            }
+            $groupedByYear[$tahun][] = $s;
+        }
+
+        foreach ($groupedByYear as $tahun => $list) {
+            $no = 1;
+            foreach ($list as $rec) {
+                $nomorBaru = 'OUT-' . $tahun . '-' . sprintf('%03d', $no);
+                if ($rec['nomor_agenda'] !== $nomorBaru) {
+                    $suratKeluarModel->update($rec['id'], [
+                        'nomor_agenda' => $nomorBaru
+                    ]);
+                    $updated++;
                 }
                 $no++;
             }

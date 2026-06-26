@@ -14,6 +14,7 @@ class TamuModel extends Model
     protected $protectFields    = true;
     protected $allowedFields    = [
         'jenis_tamu',
+        'sub_jenis_tamu',
         'nama_lengkap',
         'alamat_instansi',
         'nip',

@@ -5,9 +5,17 @@
     <title>Laporan Rekap Buku Tamu</title>
     <style>
         body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.2; }
-        .kop-surat { width: 100%; border-collapse: collapse; }
-        .kop-surat td { padding: 0; vertical-align: middle; }
-        .garis-kop { border-top: 3px solid #000; border-bottom: 1px solid #000; height: 2px; margin-top: 10px; margin-bottom: 20px; }
+        /* Kop Surat - menggunakan table agar kompatibel Dompdf */
+        .kop-surat { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .kop-surat td { vertical-align: middle; padding: 0; }
+        .kop-logo { width: 90px; text-align: center; padding-right: 20px; }
+        .kop-logo img { width: 90px; height: auto; display: block; margin: 0 auto; }
+        .kop-teks { text-align: center; }
+        .kop-teks h1 { font-size: 12pt; margin: 0 0 2px 0; font-weight: bold; text-transform: uppercase; }
+        .kop-teks h2 { font-size: 12pt; margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase; }
+        .kop-teks p { font-size: 9pt; margin: 0; line-height: 1.4; }
+        .garis-kop-tebal { border-top: 3px solid #000; width: 100%; margin: 0; }
+        .garis-kop-tipis { border-top: 1px solid #000; width: 100%; margin: 2px 0 20px 0; }
         .judul-laporan { text-align: center; margin-bottom: 20px; }
         .judul-laporan h3 { margin: 0; text-decoration: underline; font-size: 14pt; text-transform: uppercase; }
         .judul-laporan p { margin: 5px 0 0 0; font-weight: bold; font-size: 10pt; }
@@ -32,30 +40,21 @@
     ?>
     <table class="kop-surat">
         <tr>
-            <td style="width: 15%; text-align: center;">
-                <?php if ($logoDataUri): ?>
-                    <img src="<?= $logoDataUri ?>" width="80" alt="Logo">
-                <?php endif; ?>
+            <td style="width: 90px; text-align: center; vertical-align: middle; padding-right: 15px;">
+                <img src="<?= $logoDataUri ?: 'data:image/png;base64,' ?>" style="width: 80px; height: auto; display: block; margin: 0 auto;" alt="Logo">
             </td>
-            <td style="width: 70%; text-align: center;">
-                <?php if (!empty($appSettings['sekolah_kementerian'])): ?>
-                    <div style="font-size: 13pt; font-weight: bold; text-transform: uppercase;"><?= esc($appSettings['sekolah_kementerian']) ?></div>
-                <?php endif; ?>
-                <div style="font-size: 15pt; font-weight: bold; text-transform: uppercase; margin: 2px 0;"><?= esc($appSettings['sekolah_nama'] ?? 'NAMA INSTITUSI') ?></div>
-                <div style="font-size: 9pt; font-weight: normal;">
-                    <?php if (!empty($appSettings['sekolah_npsn']) || !empty($appSettings['sekolah_nsm'])): ?>
-                        NPSN: <?= esc($appSettings['sekolah_npsn'] ?? '-') ?> | NSM: <?= esc($appSettings['sekolah_nsm'] ?? '-') ?><br>
-                    <?php endif; ?>
-                    <?= esc($appSettings['sekolah_alamat'] ?? 'Alamat Lengkap Institusi') ?><br>
-                    <?php if (!empty($appSettings['sekolah_kontak'])): ?>
-                        Telepon/Fax: <?= esc($appSettings['sekolah_kontak']) ?>
-                    <?php endif; ?>
-                </div>
+            <td style="text-align: center; vertical-align: middle;">
+                <h1 style="font-size: 12pt; margin: 0 0 2px 0; font-weight: bold; text-transform: uppercase;"><?= esc($appSettings['sekolah_kementerian'] ?? 'KEMENTERIAN AGAMA REPUBLIK INDONESIA') ?></h1>
+                <h1 style="font-size: 12pt; margin: 0 0 2px 0; font-weight: bold; text-transform: uppercase;"><?= esc($appSettings['sekolah_kantor_kementerian'] ?? 'KANTOR KEMENTERIAN AGAMA KABUPATEN TANGGAMUS') ?></h1>
+                <h2 style="font-size: 12pt; margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase;"><?= esc($appSettings['sekolah_nama'] ?? 'MADRASAH IBTIDAIYAH NEGERI 2 TANGGAMUS') ?></h2>
+                <p style="font-size: 9pt; margin: 0; line-height: 1.4;"><?= esc($appSettings['sekolah_alamat'] ?? 'Jln. Lap. Ampera No. 109 Purwodadi Kec. Gisting Kab. Tanggamus (0729) 347578 35378') ?></p>
+                <p style="font-size: 9pt; margin: 0; line-height: 1.4;">Email : <?= esc($appSettings['sekolah_kontak'] ?? 'minduatanggamus@gmail.com') ?></p>
             </td>
-            <td style="width: 15%;"></td>
+            <td style="width: 90px;"></td>
         </tr>
     </table>
-    <div class="garis-kop"></div>
+    <hr class="garis-kop-tebal" style="border: none; border-top: 3px solid #000; margin: 0;">
+    <hr class="garis-kop-tipis" style="border: none; border-top: 1px solid #000; margin: 2px 0 20px 0;">
 
     <div class="judul-laporan">
         <h3>REKAPITULASI BUKU TAMU DIGITAL</h3>

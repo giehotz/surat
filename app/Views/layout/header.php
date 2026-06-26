@@ -10,7 +10,7 @@
                     <li class="nav-item <?= current_url() == base_url('dashboard') ? 'active' : '' ?>">
                         <a class="nav-link" href="<?= base_url('dashboard') ?>">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                <i class="ti ti-home icon"></i>
+                                <i class="ti ti-home icon text-blue"></i>
                             </span>
                             <span class="nav-link-title">
                                 Dashboard
@@ -23,29 +23,17 @@
                     <li class="nav-item <?= strpos(current_url(), 'surat-keluar') !== false ? 'active' : '' ?>">
                         <a class="nav-link" href="<?= base_url('surat-keluar') ?>">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                <i class="ti ti-send icon"></i>
+                                <i class="ti ti-send icon text-green"></i>
                             </span>
                             <span class="nav-link-title">
                                 Surat Keluar
                             </span>
                         </a>
                     </li>
-
-                    <li class="nav-item <?= strpos(current_url(), 'surat-resmi') !== false ? 'active' : '' ?>">
-                        <a class="nav-link" href="<?= base_url('surat-resmi') ?>">
-                            <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                <i class="ti ti-file-certificate icon"></i>
-                            </span>
-                            <span class="nav-link-title">
-                                Buat Surat Resmi
-                            </span>
-                        </a>
-                    </li>
-
                     <li class="nav-item <?= strpos(current_url(), 'surat-masuk') !== false ? 'active' : '' ?>">
                         <a class="nav-link" href="<?= base_url('surat-masuk') ?>">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                <i class="ti ti-mail icon"></i>
+                                <i class="ti ti-mail icon text-red"></i>
                             </span>
                             <span class="nav-link-title">
                                 Surat Masuk
@@ -56,7 +44,7 @@
                     <li class="nav-item <?= strpos(current_url(), 'disposisi') !== false ? 'active' : '' ?>">
                         <a class="nav-link" href="<?= base_url('disposisi') ?>">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                <i class="ti ti-directions icon"></i>
+                                <i class="ti ti-directions icon text-yellow"></i>
                             </span>
                             <span class="nav-link-title">
                                 Disposisi
@@ -67,7 +55,7 @@
                     <li class="nav-item <?= strpos(current_url(), 'prestasi-siswa') !== false ? 'active' : '' ?>">
                         <a class="nav-link" href="<?= base_url('prestasi-siswa') ?>">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                <i class="ti ti-award icon"></i>
+                                <i class="ti ti-award icon text-cyan"></i>
                             </span>
                             <span class="nav-link-title">
                                 Prestasi Siswa
@@ -79,7 +67,7 @@
                     <li class="nav-item <?= strpos(current_url(), 'data-madrasah') !== false ? 'active' : '' ?>">
                         <a class="nav-link" href="<?= base_url('data-madrasah') ?>">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                <i class="ti ti-school icon"></i>
+                                <i class="ti ti-school icon text-purple"></i>
                             </span>
                             <span class="nav-link-title">
                                 Data Madrasah
@@ -93,7 +81,7 @@
                     <li class="nav-item <?= strpos(current_url(), 'admin-buku-tamu') !== false ? 'active' : '' ?>">
                         <a class="nav-link" href="<?= base_url('admin-buku-tamu') ?>">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                <i class="ti ti-address-book icon"></i>
+                                <i class="ti ti-address-book icon text-pink"></i>
                             </span>
                             <span class="nav-link-title">
                                 Rekap Tamu
@@ -104,7 +92,7 @@
                     <li class="nav-item <?= strpos(current_url(), 'buku-tamu') !== false && strpos(current_url(), 'admin-buku-tamu') === false ? 'active' : '' ?>">
                         <a class="nav-link" target="_blank" href="<?= base_url('buku-tamu') ?>">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                <i class="ti ti-users icon"></i>
+                                <i class="ti ti-users icon text-orange"></i>
                             </span>
                             <span class="nav-link-title">
                                 Kiosk Tamu
@@ -114,7 +102,7 @@
                     <li class="nav-item <?= strpos(current_url(), 'pengaturan') !== false ? 'active' : '' ?>">
                         <a class="nav-link" href="<?= base_url('pengaturan') ?>">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                <i class="ti ti-settings icon"></i>
+                                <i class="ti ti-settings icon text-secondary"></i>
                             </span>
                             <span class="nav-link-title">
                                 Pengaturan

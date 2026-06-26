@@ -178,6 +178,13 @@ $routes->group('surat-resmi', ['filter' => 'isLoggedIn'], function ($routes) {
     $routes->post('save-kop', 'SuratResmi::saveKop');
     $routes->post('previewPdf', 'SuratResmi::previewPdf');
     $routes->get('printPdf/(:num)', 'SuratResmi::printPdf/$1');
+    // Template CRUD (admin & operator)
+    $routes->get('template', 'SuratResmi::template', ['filter' => 'role:admin,operator']);
+    $routes->get('template/create', 'SuratResmi::templateCreate', ['filter' => 'role:admin,operator']);
+    $routes->post('template/store', 'SuratResmi::templateStore', ['filter' => 'role:admin,operator']);
+    $routes->get('template/edit/(:num)', 'SuratResmi::templateEdit/$1', ['filter' => 'role:admin,operator']);
+    $routes->post('template/update/(:num)', 'SuratResmi::templateUpdate/$1', ['filter' => 'role:admin,operator']);
+    $routes->post('template/delete/(:num)', 'SuratResmi::templateDelete/$1', ['filter' => 'role:admin,operator']);
 });
 
 // Pengaturan Routes

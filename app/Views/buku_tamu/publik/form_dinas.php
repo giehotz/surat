@@ -271,7 +271,8 @@
                     <div class="d-flex justify-content-end align-items-center gap-2">
                         <a href="<?= base_url('buku-tamu') ?>" class="btn btn-link text-muted">Batal</a>
                         <button type="submit" class="btn btn-primary btn-lg d-flex align-items-center gap-2" id="submitBtn">
-                            <i class="ti ti-send"></i> Simpan Data Kunjungan
+                            <span id="submitText"><i class="ti ti-send"></i> Simpan Data Kunjungan</span>
+                            <span id="submitSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
                         </button>
                     </div>
                 </form>
@@ -347,13 +348,16 @@
     
     // Resize canvas agar sesuai viewport / container CSS tanpa nge-stretch tintanya
     function resizeCanvas() {
-        var ratio =  Math.max(window.devicePixelRatio || 1, 1);
+        var data = signaturePad.isEmpty() ? null : signaturePad.toData();
+        var ratio = Math.max(window.devicePixelRatio || 1, 1);
         signatureCanvas.width = signatureCanvas.offsetWidth * ratio;
         signatureCanvas.height = signatureCanvas.offsetHeight * ratio;
         signatureCanvas.getContext("2d").scale(ratio, ratio);
-        
-        // Memastikan background tetap transparan jika dibutuhkan, atau hapus jika error
+
         signaturePad.clear();
+        if (data) {
+            signaturePad.fromData(data);
+        }
     }
 
     const signaturePad = new SignaturePad(signatureCanvas, {
@@ -379,6 +383,11 @@
         
         // Simpan TTD ke input hidden
         document.getElementById('tanda_tangan_base64').value = signaturePad.toDataURL('image/png');
+
+        // Loading spinner
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('submitText').innerHTML = '<i class="ti ti-send"></i> Mengirim...';
+        document.getElementById('submitSpinner').classList.remove('d-none');
     });
 </script>
 <?= $this->endSection() ?>

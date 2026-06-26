@@ -39,6 +39,9 @@
                                     <i class="ti ti-sort-ascending icon"></i> Urutkan Ulang
                                 </button>
                             </form>
+                            <a href="<?= base_url('surat-resmi') ?>" class="btn btn-outline-info shadow-sm">
+                                <i class="ti ti-file-certificate icon"></i> Buat Surat Resmi
+                            </a>
                             <a href="<?= base_url('surat-keluar/create') ?>" class="btn btn-primary shadow-sm">
                                 <i class="ti ti-plus icon"></i> Buat Surat
                             </a>

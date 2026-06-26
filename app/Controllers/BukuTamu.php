@@ -66,8 +66,24 @@ class BukuTamu extends BaseController
 
         $jenis = $this->request->getPost('jenis_tamu'); // 'umum' atau 'khusus'
 
+        // Server-side validation
+        $validationRules = [
+            'jenis_tamu'       => 'required|in_list[umum,khusus]',
+            'nama_lengkap'     => 'required|min_length[3]',
+            'alamat_instansi'  => 'required',
+            'no_hp'            => 'required',
+            'tujuan_kunjungan' => 'required',
+            'id_pegawai_dituju' => 'required',
+        ];
+        if (!$this->validate($validationRules)) {
+            return redirect()->back()->withInput()
+                ->with('error', 'Mohon lengkapi semua field yang wajib diisi.')
+                ->with('validation', \Config\Services::validation());
+        }
+
         $tamuData = [
             'jenis_tamu'      => $jenis,
+            'sub_jenis_tamu'  => $this->request->getPost('sub_jenis_tamu'),
             'nama_lengkap'    => $this->request->getPost('nama_lengkap'),
             'alamat_instansi' => $this->request->getPost('alamat_instansi'),
             'nip'             => $this->request->getPost('nip'), // bisa null
@@ -135,6 +151,8 @@ class BukuTamu extends BaseController
             return redirect()->back()->withInput()->with('error', 'Gagal menyimpan data tamu.');
         }
 
+        $jenisForm = ($jenis === 'khusus') ? 'dinas' : 'umum';
+        session()->setFlashdata('last_form_type', $jenisForm);
         return redirect()->to('/buku-tamu/success');
     }
 
@@ -165,6 +183,7 @@ class BukuTamu extends BaseController
         if (!in_array((string)$dayNow, $workDays)) return false;
 
         // Check Time
+        if ($timeNow < $openTime || $timeNow > $closeTime) return false;
         return true;
     }
 
