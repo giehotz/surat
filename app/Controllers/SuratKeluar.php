@@ -89,9 +89,14 @@ class SuratKeluar extends BaseController
         $responseData = [];
         $no = $start + 1;
         $role = session()->get('role');
+        $isApprover = ($role === 'pimpinan' || $role === 'admin');
 
         foreach ($data as $sk) {
             $row = [];
+
+            $checkbox = '<input type="checkbox" class="form-check-input row-checkbox" data-id="' . $sk['id'] . '">';
+            $row[] = $isApprover ? $checkbox : '';
+
             $row[] = $no++;
 
             $nomorSurat = esc($sk['nomor_surat']) ?: '<i class="text-muted">Draft</i>';
@@ -132,10 +137,10 @@ class SuratKeluar extends BaseController
             $row[] = esc($sk['pengupdate'] ?? '-');
 
             $btn = '<div class="btn-list flex-nowrap justify-content-center">';
-            $btn .= '<a href="' . base_url('surat-keluar/show/' . $sk['id']) . '" class="btn btn-outline-info btn-icon" title="Detail"><i class="ti ti-eye icon"></i></a>';
+            $btn .= '<a href="' . base_url('surat-keluar/show/' . $sk['id']) . '" class="btn btn-icon btn-sm btn-outline-info" title="Detail"><i class="ti ti-eye"></i></a>';
             if ($role !== 'pimpinan') {
-                $btn .= '<a href="' . base_url('surat-keluar/edit/' . $sk['id']) . '" class="btn btn-outline-primary btn-icon" title="Edit"><i class="ti ti-edit icon"></i></a>';
-                $btn .= '<form action="' . base_url('surat-keluar/delete/' . $sk['id']) . '" method="post" style="display:inline;">' . csrf_field() . '<button type="submit" class="btn btn-outline-danger btn-icon" title="Hapus" onclick="return confirm(\'Apakah Anda yakin?\');"><i class="ti ti-trash icon"></i></button></form>';
+                $btn .= '<a href="' . base_url('surat-keluar/edit/' . $sk['id']) . '" class="btn btn-icon btn-sm btn-outline-primary" title="Edit"><i class="ti ti-edit"></i></a>';
+                $btn .= '<form action="' . base_url('surat-keluar/delete/' . $sk['id']) . '" method="post" style="display:inline;">' . csrf_field() . '<button type="submit" class="btn btn-icon btn-sm btn-outline-danger" title="Hapus" onclick="return confirm(\'Apakah Anda yakin?\');"><i class="ti ti-trash"></i></button></form>';
             }
             $btn .= '</div>';
             $row[] = $btn;
@@ -572,6 +577,89 @@ class SuratKeluar extends BaseController
         ]);
 
         return redirect()->to('/surat-keluar')->with('success', $msg);
+    }
+
+    public function bulkApprove()
+    {
+        $userRole = session('role');
+        if ($userRole !== 'pimpinan' && $userRole !== 'admin') {
+            return $this->response->setStatusCode(403)->setJSON([
+                'success' => false,
+                'message' => 'Akses ditolak. Hanya pimpinan atau administrator.'
+            ]);
+        }
+
+        $ids = $this->request->getPost('ids');
+        $actionType = $this->request->getPost('action_type');
+
+        if (empty($ids) || !is_array($ids)) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Tidak ada surat yang dipilih.'
+            ]);
+        }
+
+        if (!in_array($actionType, ['approve', 'reject'])) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Action type tidak valid.'
+            ]);
+        }
+
+        $suratKeluarModel = new \App\Models\SuratKeluarModel();
+        $logModel = new \App\Models\LogAktivitasModel();
+        $userId = session()->get('user_id');
+        $now = date('Y-m-d H:i:s');
+
+        $processed = 0;
+        $errors = [];
+
+        foreach ($ids as $id) {
+            $id = (int) $id;
+            $surat = $suratKeluarModel->find($id);
+
+            if (empty($surat)) {
+                $errors[] = ['id' => $id, 'message' => 'Data tidak ditemukan.'];
+                continue;
+            }
+
+            if ($actionType === 'approve') {
+                $newStatus = 'disetujui';
+                $logAksi = 'approve';
+                $logDetail = 'Menyetujui surat keluar nomor ' . $surat['nomor_surat'];
+            } else {
+                $newStatus = 'ditolak';
+                $logAksi = 'reject';
+                $logDetail = 'Menolak surat keluar nomor ' . $surat['nomor_surat'];
+            }
+
+            $suratKeluarModel->update($id, [
+                'status' => $newStatus,
+                'approved_by' => $userId,
+                'approved_at' => $now,
+            ]);
+
+            $logModel->save([
+                'user_id'    => $userId,
+                'surat_id'   => $id,
+                'aksi'       => $logAksi,
+                'tipe_surat' => 'surat_keluar',
+                'detail'     => $logDetail,
+                'ip_address' => $this->request->getIPAddress(),
+                'user_agent' => $this->request->getUserAgent()->getAgentString(),
+            ]);
+
+            $processed++;
+        }
+
+        $actionLabel = $actionType === 'approve' ? 'disetujui' : 'ditolak';
+
+        return $this->response->setJSON([
+            'success'   => true,
+            'message'   => "$processed surat berhasil $actionLabel.",
+            'processed' => $processed,
+            'errors'    => $errors,
+        ]);
     }
 
     public function reject($id = null)

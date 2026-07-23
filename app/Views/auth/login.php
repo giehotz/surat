@@ -7,14 +7,12 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Login | Sistem Layanan Surat</title>
 
-    <!-- CSS files -->
-    <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta19/dist/css/tabler.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta19/dist/css/tabler-flags.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta19/dist/css/tabler-payments.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta19/dist/css/tabler-vendors.min.css" rel="stylesheet" />
+    <!-- CSS files (Local Tabler UI Assets) -->
+    <link href="<?= base_url('assets/tabler/css/tabler.min.css') ?>" rel="stylesheet" />
+    <link href="<?= base_url('assets/tabler/css/tabler-vendors.min.css') ?>" rel="stylesheet" />
 
-    <!-- Tabler Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <!-- Tabler Icons (Local Webfont) -->
+    <link rel="stylesheet" href="<?= base_url('assets/tabler/icons/tabler-icons.min.css') ?>">
 
     <style>
         @import url('https://rsms.me/inter/inter.css');

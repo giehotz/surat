@@ -53,6 +53,7 @@ $routes->group('surat-keluar', function ($routes) {
     $routes->post('update/(:num)', 'SuratKeluar::update/$1', ['filter' => 'role:admin,operator']);
     $routes->get('show/(:num)', 'SuratKeluar::show/$1');
     $routes->post('approve/(:num)', 'SuratKeluar::approve/$1'); // pimpinan can approve
+    $routes->post('bulk-approve', 'SuratKeluar::bulkApprove');
     $routes->post('delete/(:num)', 'SuratKeluar::delete/$1', ['filter' => 'role:admin,operator']);
     $routes->get('export-excel', 'SuratKeluar::exportExcel');
     $routes->get('export-pdf', 'SuratKeluar::exportPdf');

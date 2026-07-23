@@ -68,16 +68,18 @@ class BukuTamu extends BaseController
 
         // Server-side validation
         $validationRules = [
-            'jenis_tamu'       => 'required|in_list[umum,khusus]',
-            'nama_lengkap'     => 'required|min_length[3]',
-            'alamat_instansi'  => 'required',
-            'no_hp'            => 'required',
-            'tujuan_kunjungan' => 'required',
+            'jenis_tamu'        => 'required|in_list[umum,khusus]',
+            'nama_lengkap'      => 'required|min_length[3]|max_length[100]',
+            'alamat_instansi'   => 'required|max_length[255]',
+            'no_hp'             => 'required|max_length[20]',
+            'tujuan_kunjungan'  => 'required|max_length[500]',
             'id_pegawai_dituju' => 'required',
+            'dokumen_pendukung' => 'permit_empty|max_size[dokumen_pendukung,5120]|ext_in[dokumen_pendukung,pdf,jpg,jpeg,png,doc,docx]',
+            'foto_wajah_file'   => 'permit_empty|max_size[foto_wajah_file,2048]|ext_in[foto_wajah_file,jpg,jpeg,png,webp]|is_image[foto_wajah_file]',
         ];
         if (!$this->validate($validationRules)) {
             return redirect()->back()->withInput()
-                ->with('error', 'Mohon lengkapi semua field yang wajib diisi.')
+                ->with('error', 'Mohon lengkapi semua field yang wajib diisi dan pastikan format file/foto sesuai.')
                 ->with('validation', \Config\Services::validation());
         }
 
@@ -188,29 +190,55 @@ class BukuTamu extends BaseController
     }
 
     /**
-     * Konversi Base64 ke File dan simpan di folder uploads/tamu
+     * Konversi Base64 ke File dan simpan di folder uploads/tamu dengan validasi keamanan
      */
     private function saveBase64Image($base64, $subfolder)
     {
-        if (empty($base64)) return null;
+        if (empty($base64) || !is_string($base64)) return null;
+
+        // Limit base64 payload size (max 4MB string length)
+        if (strlen($base64) > 4000000) return null;
+
+        $extension = 'png';
+        $data = $base64;
 
         // Pisahkan header dan data
         if (strpos($base64, ',') !== false) {
-            $parts = explode(',', $base64);
+            $parts = explode(',', $base64, 2);
+            $header = strtolower($parts[0]);
             $data = $parts[1];
-            $extension = 'png';
-            if (strpos($parts[0], 'jpeg') !== false) $extension = 'jpg';
-        } else {
-            $data = $base64;
-            $extension = 'png';
+
+            if (strpos($header, 'jpeg') !== false || strpos($header, 'jpg') !== false) {
+                $extension = 'jpg';
+            } elseif (strpos($header, 'webp') !== false) {
+                $extension = 'webp';
+            } elseif (strpos($header, 'png') !== false) {
+                $extension = 'png';
+            } else {
+                return null;
+            }
         }
 
-        $decodedData = base64_decode(str_replace(' ', '+', $data));
+        $decodedData = base64_decode(str_replace(' ', '+', $data), true);
         if (!$decodedData) return null;
 
-        $filename = $subfolder . '_' . time() . '_' . uniqid() . '.' . $extension;
+        // Validasi biner gambar jika GD library aktif
+        if (function_exists('imagecreatefromstring')) {
+            $img = @imagecreatefromstring($decodedData);
+            if ($img === false) {
+                return null;
+            }
+            imagedestroy($img);
+        }
+
+        $filename = $subfolder . '_' . time() . '_' . bin2hex(random_bytes(8)) . '.' . $extension;
         $relativePath = 'uploads/tamu/' . $subfolder . '/' . $filename;
         $absolutePath = FCPATH . $relativePath;
+
+        $dir = dirname($absolutePath);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
 
         if (file_put_contents($absolutePath, $decodedData)) {
             return $relativePath;

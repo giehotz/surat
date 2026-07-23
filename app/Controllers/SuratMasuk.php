@@ -112,7 +112,7 @@ class SuratMasuk extends BaseController
             $row[] = esc($sm['pengirim']);
             $row[] = function_exists('format_tanggal_indo') ? format_tanggal_indo($sm['tanggal_terima']) : date('d M Y', strtotime($sm['tanggal_terima']));
 
-            $row[] = '<div class="text-truncate" style="max-width: 200px;" title="' . esc($sm['perihal']) . '">' . esc($sm['perihal']) . '</div>';
+            $row[] = '<div class="text-truncate" style="max-width: 250px;" title="' . esc($sm['perihal']) . '">' . esc($sm['perihal']) . '</div>';
 
             $statusBadge = '';
             if ($sm['status'] == 'tercatat') {
@@ -130,13 +130,13 @@ class SuratMasuk extends BaseController
             $row[] = esc($sm['pengupdate'] ?? '-');
 
             $btn = '<div class="btn-list flex-nowrap justify-content-center">';
-            $btn .= '<a href="' . base_url('surat-masuk/show/' . $sm['id']) . '" class="btn btn-outline-info btn-icon" title="Detail"><i class="ti ti-eye icon"></i></a>';
+            $btn .= '<a href="' . base_url('surat-masuk/show/' . $sm['id']) . '" class="btn btn-icon btn-sm btn-outline-info" title="Detail"><i class="ti ti-eye"></i></a>';
             if ($role !== 'pimpinan') {
-                $btn .= '<a href="' . base_url('disposisi/create/' . $sm['id']) . '" class="btn btn-outline-warning btn-icon" title="Disposisi"><i class="ti ti-share icon"></i></a>';
-                $btn .= '<a href="' . base_url('surat-masuk/edit/' . $sm['id']) . '" class="btn btn-outline-primary btn-icon" title="Edit"><i class="ti ti-edit icon"></i></a>';
+                $btn .= '<a href="' . base_url('disposisi/create/' . $sm['id']) . '" class="btn btn-icon btn-sm btn-outline-warning" title="Disposisi"><i class="ti ti-share"></i></a>';
+                $btn .= '<a href="' . base_url('surat-masuk/edit/' . $sm['id']) . '" class="btn btn-icon btn-sm btn-outline-primary" title="Edit"><i class="ti ti-edit"></i></a>';
 
                 // Gunakan form untuk method post delete
-                $btn .= '<form action="' . base_url('surat-masuk/delete/' . $sm['id']) . '" method="post" style="display:inline;">' . csrf_field() . '<button type="submit" class="btn btn-outline-danger btn-icon" title="Hapus" onclick="return confirm(\'Apakah Anda yakin?\');"><i class="ti ti-trash icon"></i></button></form>';
+                $btn .= '<form action="' . base_url('surat-masuk/delete/' . $sm['id']) . '" method="post" style="display:inline;">' . csrf_field() . '<button type="submit" class="btn btn-icon btn-sm btn-outline-danger" title="Hapus" onclick="return confirm(\'Apakah Anda yakin?\');"><i class="ti ti-trash"></i></button></form>';
             }
             $btn .= '</div>';
             $row[] = $btn;

@@ -2,48 +2,69 @@
 
 <?= $this->section('content') ?>
 
-<div class="row row-cards">
+<div class="row">
     <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Daftar Surat Masuk</h3>
-                <div class="card-actions">
+        <div class="">
+            <!-- Header -->
+            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between g-3 mb-3 pb-3 border-bottom">
+                <div>
+                    <h3 class="mb-1">Daftar Surat Masuk</h3>
+                    <p class="text-muted small mb-0">Manajemen dan pelacakan arsip surat masuk</p>
+                </div>
+                <div class="mt-3 mt-md-0">
                     <div class="btn-list">
+                        <!-- Group Export -->
+                        <div class="dropdown">
+                            <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="ti ti-download icon"></i> Export
+                            </button>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="<?= base_url('surat-masuk/export-excel') ?>">
+                                    <i class="ti ti-file-spreadsheet icon me-2 text-success"></i> Excel
+                                </a>
+                                <a class="dropdown-item" href="<?= base_url('surat-masuk/export-pdf') ?>" target="_blank">
+                                    <i class="ti ti-file-type-pdf icon me-2 text-danger"></i> PDF
+                                </a>
+                            </div>
+                        </div>
+
                         <?php if (session()->get('role') === 'admin'): ?>
                             <button type="button" id="btn-reassign-agenda" class="btn btn-outline-warning" title="Urutkan ulang nomor agenda berdasarkan tanggal surat">
                                 <i class="ti ti-arrows-sort icon"></i> Urutkan Agenda
                             </button>
                         <?php endif; ?>
-                        <a href="<?= base_url('surat-masuk/export-excel') ?>" class="btn btn-outline-success">
-                            <i class="ti ti-file-spreadsheet icon"></i> Excel
-                        </a>
-                        <a href="<?= base_url('surat-masuk/export-pdf') ?>" target="_blank" class="btn btn-outline-danger">
-                            <i class="ti ti-file-type-pdf icon"></i> PDF
-                        </a>
+
                         <?php if (session()->get('role') !== 'pimpinan'): ?>
-                            <a href="<?= base_url('surat-masuk/import') ?>" class="btn btn-success">
-                                <i class="ti ti-upload icon"></i> Import Excel
+                            <a href="<?= base_url('surat-masuk/import') ?>" class="btn btn-outline-primary">
+                                <i class="ti ti-upload icon"></i> Import
                             </a>
-                            <a href="<?= base_url('surat-masuk/create') ?>" class="btn btn-primary">
-                                <i class="ti ti-plus icon"></i> Tambah Surat Masuk
+                            <a href="<?= base_url('surat-masuk/create') ?>" class="btn btn-primary shadow-sm">
+                                <i class="ti ti-plus icon"></i> Tambah Surat
                             </a>
                         <?php endif; ?>
                     </div>
                 </div>
             </div>
 
-            <div class="card-body border-bottom py-3">
-                <div class="row gx-2 gy-2 align-items-center">
+            <!-- Filter Area -->
+            <div class="border-bottom pb-4 mb-3">
+                <div class="row g-2 align-items-end">
                     <div class="col-md-3">
-                        <label class="form-label mb-1">Dari Tanggal</label>
-                        <input type="date" id="filter_start_date" class="form-control">
+                        <label class="form-label small fw-bold text-uppercase text-muted">Dari Tanggal</label>
+                        <div class="input-icon">
+                            <span class="input-icon-addon"><i class="ti ti-calendar icon"></i></span>
+                            <input type="date" id="filter_start_date" class="form-control">
+                        </div>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label mb-1">Sampai Tanggal</label>
-                        <input type="date" id="filter_end_date" class="form-control">
+                        <label class="form-label small fw-bold text-uppercase text-muted">Sampai Tanggal</label>
+                        <div class="input-icon">
+                            <span class="input-icon-addon"><i class="ti ti-calendar icon"></i></span>
+                            <input type="date" id="filter_end_date" class="form-control">
+                        </div>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label mb-1">Status</label>
+                        <label class="form-label small fw-bold text-uppercase text-muted">Status</label>
                         <select id="filter_status" class="form-select">
                             <option value="">Semua Status</option>
                             <option value="tercatat">Tercatat</option>
@@ -52,55 +73,54 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label mb-1 d-none d-md-block">&nbsp;</label>
-                        <button type="button" id="btn-filter" class="btn btn-primary w-100">
-                            <i class="ti ti-filter icon"></i> Terapkan Filter
+                        <button type="button" id="btn-filter" class="btn btn-dark w-100">
+                            <i class="ti ti-filter icon"></i> Filter Data
                         </button>
                     </div>
                 </div>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table id="table-surat-masuk" class="table card-table table-vcenter table-striped" style="width: 100%;">
-                        <thead>
-                            <tr>
-                                <th class="w-1">No.</th>
-                                <th>No. Agenda / No. Surat</th>
-                                <th>Pengirim</th>
-                                <th>Tanggal Terima</th>
-                                <th>Perihal</th>
-                                <th>Status</th>
-                                <th>Dibuat Oleh</th>
-                                <th>Diupdate Oleh</th>
-                                <th class="text-center w-5">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Data ditarik oleh DataTables via AJAX -->
-                        </tbody>
-                    </table>
-                </div>
+
+            <!-- Table Area -->
+            <div class="p-0">
+                <table id="table-surat-masuk" class="table table-sm table-vcenter table-striped table-hover mt-0 w-100">
+                    <thead>
+                        <tr>
+                            <th class="text-nowrap" style="width:45px">No.</th>
+                            <th class="text-nowrap">No. Agenda / Surat</th>
+                            <th>Pengirim</th>
+                            <th class="text-nowrap">Tgl Terima</th>
+                            <th>Perihal</th>
+                            <th class="text-nowrap">Status</th>
+                            <th>Pembuat</th>
+                            <th>Update</th>
+                            <th class="text-center text-nowrap">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- AJAX content -->
+                    </tbody>
+                </table>
             </div>
-            <!-- Nanti tambahkan pagination disini .card-footer -->
         </div>
     </div>
 </div>
+
 <!-- Modal Preview Dokumen -->
 <div class="modal modal-blur fade" id="modal-preview" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
-        <div class="modal-content">
+        <div class="modal-content shadow-lg">
             <div class="modal-header">
-                <h5 class="modal-title">Preview Dokumen</h5>
+                <h5 class="modal-title">Pratinjau Dokumen</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-0" style="height: 80vh;">
+            <div class="modal-body p-0 bg-dark-lt" style="height: 75vh;">
                 <iframe id="preview-iframe" src="" width="100%" height="100%" frameborder="0"></iframe>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Tutup</button>
                 <a id="btn-open-new-tab" href="#" target="_blank" class="btn btn-primary">
-                    <i class="ti ti-external-link icon"></i> Buka di Tab Baru
+                    <i class="ti ti-external-link icon"></i> Buka Penuh
                 </a>
-                <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>
@@ -109,16 +129,74 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<!-- DataTables CSS & JS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+
+<style>
+    #table-surat-masuk {
+        border-collapse: collapse !important;
+        margin-top: 0 !important;
+    }
+
+    #table-surat-masuk thead th {
+        background: var(--tblr-bg-surface-secondary, #f6f8fb);
+        text-transform: uppercase;
+        font-size: 0.70rem;
+        letter-spacing: 0.02em;
+        color: var(--tblr-muted, #616876);
+        padding: 8px 10px !important;
+        border-top: none !important;
+        border-bottom: 1px solid var(--tblr-border-color, #e6e8eb) !important;
+    }
+
+    [data-bs-theme="dark"] #table-surat-masuk thead th,
+    html[data-bs-theme="dark"] #table-surat-masuk thead th {
+        background: var(--tblr-bg-surface, #1e293b);
+        color: var(--tblr-muted, #94a3b8);
+        border-bottom-color: var(--tblr-border-color, #334155) !important;
+    }
+
+    #table-surat-masuk td.perihal-wrap {
+        max-width: 250px;
+        word-wrap: break-word;
+        white-space: normal !important;
+    }
+
+    #table-surat-masuk td {
+        font-size: 0.75rem;
+        vertical-align: middle;
+        padding: 8px 10px;
+    }
+
+    #table-surat-masuk td.text-nowrap, #table-surat-masuk th.text-nowrap {
+        white-space: nowrap !important;
+    }
+
+    #table-surat-masuk td:last-child {
+        padding-right: 1.5rem !important;
+    }
+
+    .table-responsive::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #e0e0e0;
+        border-radius: 10px;
+    }
+</style>
 
 <script>
     $(document).ready(function() {
         var table = $('#table-surat-masuk').DataTable({
             processing: true,
             serverSide: true,
+            responsive: true,
+            autoWidth: false,
             ajax: {
                 url: "<?= base_url('surat-masuk/ajax-list') ?>",
                 type: "POST",
@@ -129,16 +207,30 @@
                     d.status = $('#filter_status').val();
                 }
             },
-            columnDefs: [{
-                targets: [0, 8],
-                orderable: false,
-                searchable: false
-            }],
-            // Urutkan berdasarkan No. Agenda ASC agar urutan kronologis terlihat jelas
+            columnDefs: [
+                {
+                    targets: [0, 8],
+                    orderable: false,
+                    searchable: false
+                },
+                {
+                    className: "text-nowrap",
+                    targets: [0, 1, 3, 5, 8]
+                },
+                {
+                    width: "250px",
+                    className: "perihal-wrap",
+                    targets: 4
+                }
+            ],
             order: [[1, 'asc']],
             language: {
-                url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/id.json"
-            }
+                url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/id.json",
+                searchPlaceholder: "Cari nomor surat atau perihal..."
+            },
+            dom: "<'row px-3 pt-3'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                "<'row'<'col-sm-12'tr>>" +
+                "<'row px-3 pb-3'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
         });
 
         $('#btn-filter').click(function() {
@@ -175,7 +267,7 @@
                                     timer: 2500,
                                     showConfirmButton: false
                                 });
-                                table.draw(); // Refresh tabel
+                                table.draw();
                             } else {
                                 Swal.fire('Gagal', response.message, 'error');
                             }
@@ -193,9 +285,8 @@
     });
 
     function previewDokumen(url) {
-        // Deteksi link cloud/eksternal yang tidak bisa di-embed dalam iframe
         var isExternal = url.match(/drive\.google\.com|docs\.google\.com|onedrive\.live\.com|dropbox\.com|sharepoint\.com/i);
-        
+
         if (isExternal) {
             window.open(url, '_blank');
         } else {

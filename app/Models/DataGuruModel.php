@@ -41,4 +41,43 @@ class DataGuruModel extends Model
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
+
+    // Validation
+    protected $validationRules = [
+        'nama_pegawai'        => 'required|min_length[3]|max_length[100]',
+        'nip'                 => 'permit_empty|numeric|max_length[30]',
+        'peg_id_nuptk'        => 'permit_empty|numeric|max_length[30]',
+        'tempat_lahir'        => 'permit_empty|max_length[50]',
+        'tanggal_lahir'       => 'permit_empty|valid_date',
+        'jabatan_mengajar'    => 'permit_empty|max_length[100]',
+        'pangkat_golongan'    => 'permit_empty|max_length[50]',
+        'pendidikan_terakhir' => 'permit_empty|max_length[50]',
+        'perguruan_tinggi'    => 'permit_empty|max_length[100]',
+        'mulai_tugas'         => 'permit_empty|valid_date',
+        'tmt_cpns_honorer'    => 'permit_empty|valid_date',
+        'status_kepegawaian'  => 'permit_empty|max_length[50]',
+        'email'               => 'permit_empty|valid_email|max_length[100]',
+        'no_handphone'        => 'permit_empty|max_length[20]',
+    ];
+
+    protected $validationMessages = [
+        'nama_pegawai' => [
+            'required'   => 'Nama pegawai wajib diisi.',
+            'min_length' => 'Nama pegawai minimal 3 karakter.',
+            'max_length' => 'Nama pegawai maksimal 100 karakter.',
+        ],
+        'email' => [
+            'valid_email' => 'Format alamat email tidak valid.',
+        ],
+        'tanggal_lahir' => [
+            'valid_date' => 'Format tanggal lahir tidak valid.',
+        ],
+        'mulai_tugas' => [
+            'valid_date' => 'Format tanggal mulai tugas tidak valid.',
+        ],
+        'tmt_cpns_honorer' => [
+            'valid_date' => 'Format TMT CPNS/Honorer tidak valid.',
+        ],
+    ];
 }
+

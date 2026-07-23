@@ -16,34 +16,34 @@
                         <!-- Group Export -->
                         <div class="dropdown">
                             <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                                <i class="ti ti-download icon"></i> Export
+                                <i class="ti ti-download me-1.5"></i> Export
                             </button>
                             <div class="dropdown-menu">
                                 <a class="dropdown-item" href="<?= base_url('surat-keluar/export-excel') ?>">
-                                    <i class="ti ti-file-spreadsheet icon me-2 text-success"></i> Excel
+                                    <i class="ti ti-file-spreadsheet me-2 text-success"></i> Excel
                                 </a>
                                 <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modal-export-pdf">
-                                    <i class="ti ti-file-type-pdf icon me-2 text-danger"></i> PDF
+                                    <i class="ti ti-file-type-pdf me-2 text-danger"></i> PDF
                                 </a>
                             </div>
                         </div>
 
                         <?php if (session()->get('role') !== 'pimpinan'): ?>
                             <a href="<?= base_url('surat-keluar/import') ?>" class="btn btn-outline-primary">
-                                <i class="ti ti-upload icon"></i> Import
+                                <i class="ti ti-upload me-1.5"></i> Import
                             </a>
                             <form action="<?= base_url('surat-keluar/renumber') ?>" method="post" style="display:inline;" 
                                   onsubmit="return confirm('Urutkan ulang nomor surat? Data yang ada akan diurutkan ulang secara berurutan.');">
                                 <?= csrf_field() ?>
                                 <button type="submit" class="btn btn-outline-warning">
-                                    <i class="ti ti-sort-ascending icon"></i> Urutkan Ulang
+                                    <i class="ti ti-sort-ascending me-1.5"></i> Urutkan Ulang
                                 </button>
                             </form>
                             <a href="<?= base_url('surat-resmi') ?>" class="btn btn-outline-info shadow-sm">
-                                <i class="ti ti-file-certificate icon"></i> Buat Surat Resmi
+                                <i class="ti ti-file-certificate me-1.5"></i> Buat Surat Resmi
                             </a>
                             <a href="<?= base_url('surat-keluar/create') ?>" class="btn btn-primary shadow-sm">
-                                <i class="ti ti-plus icon"></i> Buat Surat
+                                <i class="ti ti-plus me-1.5"></i> Buat Surat
                             </a>
                         <?php endif; ?>
                     </div>
@@ -56,14 +56,14 @@
                     <div class="col-md-3">
                         <label class="form-label small fw-bold text-uppercase text-muted ">Dari Tanggal</label>
                         <div class="input-icon">
-                            <span class="input-icon-addon"><i class="ti ti-calendar icon"></i></span>
+                            <span class="input-icon-addon"><i class="ti ti-calendar"></i></span>
                             <input type="date" id="filter_start_date" class="form-control">
                         </div>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label small fw-bold text-uppercase text-muted">Sampai Tanggal</label>
                         <div class="input-icon">
-                            <span class="input-icon-addon"><i class="ti ti-calendar icon"></i></span>
+                            <span class="input-icon-addon"><i class="ti ti-calendar"></i></span>
                             <input type="date" id="filter_end_date" class="form-control">
                         </div>
                     </div>
@@ -78,8 +78,8 @@
                             </select>
                     </div>
                     <div class="col-md-3">
-                        <button type="button" id="btn-filter" class="btn btn-dark w-100">
-                            <i class="ti ti-filter icon"></i> Filter Data
+                        <button type="button" id="btn-filter" class="btn btn-primary w-100">
+                            <i class="ti ti-filter me-1.5"></i> Filter Data
                         </button>
                     </div>
                 </div>
@@ -87,9 +87,30 @@
 
             <!-- Table Area -->
             <div class="p-0">
+                <!-- Bulk Action Bar -->
+                <?php if (session()->get('role') === 'pimpinan' || session()->get('role') === 'admin'): ?>
+                <div id="bulk-actions" class="d-none px-3 py-2 mb-3 bg-primary-lt rounded-2 border border-primary-subtle shadow-sm d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-secondary fw-medium">Dipilih:</span>
+                        <span id="bulk-count" class="badge bg-primary text-primary-fg fs-6 px-2.5 py-1">0</span>
+                    </div>
+                    <div class="btn-list">
+                        <button type="button" id="btn-bulk-approve" class="btn btn-success btn-sm">
+                            <i class="ti ti-check me-1.5"></i> Setujui
+                        </button>
+                        <button type="button" id="btn-bulk-reject" class="btn btn-danger btn-sm">
+                            <i class="ti ti-x me-1.5"></i> Tolak
+                        </button>
+                        <button type="button" id="btn-bulk-clear" class="btn btn-ghost-secondary btn-sm">
+                            <i class="ti ti-rotate-2 me-1.5"></i> Batal
+                        </button>
+                    </div>
+                </div>
+                <?php endif; ?>
                 <table id="table-surat-keluar" class="table table-sm table-vcenter table-striped table-hover mt-0 w-100">
                     <thead>
                         <tr>
+                            <th class="text-center" style="width:40px"><input type="checkbox" id="select-all" class="form-check-input m-0"></th>
                             <th class="text-nowrap">No.</th>
                             <th class="text-nowrap">No. Agenda / Surat</th>
                             <th>Tujuan</th>
@@ -252,11 +273,14 @@
 
 <script>
     $(document).ready(function() {
+        var role = '<?= session()->get("role") ?>';
+        var isApprover = (role === 'pimpinan' || role === 'admin');
+
         var table = $('#table-surat-keluar').DataTable({
             processing: true,
             serverSide: true,
             responsive: true,
-            autoWidth: false, // Matikan autowidth agar CSS kita yang bekerja
+            autoWidth: false,
             ajax: {
                 url: "<?= base_url('surat-keluar/ajax-list') ?>",
                 type: "POST",
@@ -267,20 +291,29 @@
                     d.status = $('#filter_status').val();
                 }
             },
-            columnDefs: [{
-                    targets: [0, 8],
+            columnDefs: [
+                {
+                    targets: 0,
+                    orderable: false,
+                    searchable: false,
+                    className: 'text-center',
+                    width: '40px',
+                    visible: isApprover
+                },
+                {
+                    targets: [0, 1, 9],
                     orderable: false,
                     searchable: false
                 },
                 {
                     className: "text-nowrap",
-                    targets: [0, 1, 3, 5, 8]
+                    targets: [0, 1, 2, 4, 6, 9]
                 },
                 {
                     width: "250px",
                     className: "perihal-wrap",
-                    targets: 4
-                } // Kunci lebar kolom Perihal
+                    targets: 5
+                }
             ],
             language: {
                 url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/id.json",
@@ -289,7 +322,134 @@
             dom: "<'row px-3 pt-3'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
                 "<'row'<'col-sm-12'tr>>" +
                 "<'row px-3 pb-3'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            drawCallback: function() {
+                updateBulkUI();
+            }
         });
+
+        // Select All
+        $(document).on('click', '#select-all', function() {
+            var checked = $(this).prop('checked');
+            $('.row-checkbox:visible').prop('checked', checked);
+            updateBulkUI();
+        });
+
+        // Individual checkbox
+        $(document).on('change', '.row-checkbox', function() {
+            updateBulkUI();
+            var total = $('.row-checkbox:visible').length;
+            var selected = $('.row-checkbox:visible:checked').length;
+            $('#select-all').prop('checked', total > 0 && total === selected);
+        });
+
+        function updateBulkUI() {
+            var count = $('.row-checkbox:visible:checked').length;
+            if (isApprover && count > 0) {
+                $('#bulk-actions').removeClass('d-none');
+                $('#bulk-count').text(count);
+            } else {
+                $('#bulk-actions').addClass('d-none');
+            }
+        }
+
+        // Clear selection
+        $('#btn-bulk-clear').on('click', function() {
+            $('.row-checkbox').prop('checked', false);
+            $('#select-all').prop('checked', false);
+            updateBulkUI();
+        });
+
+        // Bulk Approve
+        $('#btn-bulk-approve').on('click', function() {
+            var ids = getSelectedIds();
+            if (!ids.length) return;
+
+            Swal.fire({
+                title: 'Setujui ' + ids.length + ' surat?',
+                text: 'Semua surat yang dipilih akan disetujui.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, Setujui',
+                cancelButtonText: 'Batal'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    doBulkAction(ids, 'approve');
+                }
+            });
+        });
+
+        // Bulk Reject
+        $('#btn-bulk-reject').on('click', function() {
+            var ids = getSelectedIds();
+            if (!ids.length) return;
+
+            Swal.fire({
+                title: 'Tolak ' + ids.length + ' surat?',
+                text: 'Semua surat yang dipilih akan ditolak.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, Tolak',
+                cancelButtonText: 'Batal'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    doBulkAction(ids, 'reject');
+                }
+            });
+        });
+
+        function getSelectedIds() {
+            var ids = [];
+            $('.row-checkbox:visible:checked').each(function() {
+                ids.push($(this).data('id'));
+            });
+            return ids;
+        }
+
+        function doBulkAction(ids, actionType) {
+            var csrfName = '<?= csrf_token() ?>';
+            var csrfHash = '<?= csrf_hash() ?>';
+
+            Swal.fire({
+                title: 'Memproses...',
+                allowOutsideClick: false,
+                didOpen: function() { Swal.showLoading(); }
+            });
+
+            $.ajax({
+                url: "<?= base_url('surat-keluar/bulk-approve') ?>",
+                type: "POST",
+                data: {
+                    ids: ids,
+                    action_type: actionType,
+                    [csrfName]: csrfHash
+                },
+                dataType: 'json',
+                success: function(response) {
+                    Swal.close();
+                    if (response.success) {
+                        Toast.fire({
+                            icon: 'success',
+                            title: response.message
+                        });
+                        // Clear checkboxes and reload
+                        $('.row-checkbox').prop('checked', false);
+                        $('#select-all').prop('checked', false);
+                        updateBulkUI();
+                        table.ajax.reload(null, false);
+                    } else {
+                        Swal.fire('Gagal', response.message, 'error');
+                    }
+                },
+                error: function() {
+                    Swal.close();
+                    Swal.fire('Gagal', 'Terjadi kesalahan server.', 'error');
+                }
+            });
+        }
 
         $('#btn-filter').click(function() {
             table.draw();
@@ -297,15 +457,11 @@
     });
 
     function previewDokumen(url) {
-        // Deteksi link cloud/eksternal yang tidak bisa di-embed dalam iframe
-        // (Google Drive, Docs, OneDrive, dll menolak koneksi via X-Frame-Options)
         var isExternal = url.match(/drive\.google\.com|docs\.google\.com|onedrive\.live\.com|dropbox\.com|sharepoint\.com/i);
         
         if (isExternal) {
-            // Buka langsung di tab baru
             window.open(url, '_blank');
         } else {
-            // File lokal/server — tampilkan di iframe modal
             $('#preview-iframe').attr('src', url);
             $('#btn-open-new-tab').attr('href', url);
             $('#modal-preview').modal('show');

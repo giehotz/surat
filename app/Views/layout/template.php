@@ -14,15 +14,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title><?= esc($appSettings['app_nama'] ?? 'Sistem Layanan Surat') ?> | <?= $title ?? 'Dashboard' ?></title>
-    <!-- CSS files -->
-    <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta19/dist/css/tabler.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta19/dist/css/tabler-flags.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta19/dist/css/tabler-payments.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta19/dist/css/tabler-vendors.min.css" rel="stylesheet" />
-    <!-- FontAwesome (Optional, if you still want to use FA icons) -->
+    <!-- CSS files (Local Tabler UI Assets) -->
+    <link href="<?= base_url('assets/tabler/css/tabler.min.css') ?>" rel="stylesheet" />
+    <link href="<?= base_url('assets/tabler/css/tabler-vendors.min.css') ?>" rel="stylesheet" />
+    <!-- FontAwesome (Optional) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <!-- Tabler Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <!-- Tabler Icons (Local Webfont) -->
+    <link rel="stylesheet" href="<?= base_url('assets/tabler/icons/tabler-icons.min.css') ?>">
     <style>
         @import url('https://rsms.me/inter/inter.css');
 
@@ -32,6 +30,36 @@
 
         body {
             font-feature-settings: "cv03", "cv04", "cv11";
+        }
+
+        /* Standardize Tabler Webfont Icons inside Buttons */
+        i.ti {
+            line-height: 1;
+            vertical-align: -0.125em;
+            display: inline-block;
+        }
+
+        .btn i.ti {
+            font-size: 1.1rem;
+            vertical-align: -0.15em;
+        }
+
+        .btn-sm i.ti {
+            font-size: 0.95rem;
+        }
+
+        .btn-lg i.ti {
+            font-size: 1.25rem;
+        }
+
+        .btn-icon i.ti {
+            font-size: 1.15rem;
+            margin: 0 !important;
+            vertical-align: middle;
+        }
+
+        .btn-icon.btn-sm i.ti {
+            font-size: 1rem;
         }
     </style>
 </head>
@@ -94,8 +122,8 @@
 
     <!-- jQuery (Optional if you still have old scripts) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <!-- Tabler Core -->
-    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta19/dist/js/tabler.min.js" defer></script>
+    <!-- Tabler Core (Local Asset) -->
+    <script src="<?= base_url('assets/tabler/js/tabler.min.js') ?>" defer></script>
 
     <?php if (session()->get('isLoggedIn')): ?>
         <script>

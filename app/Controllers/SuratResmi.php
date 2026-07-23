@@ -63,7 +63,9 @@ class SuratResmi extends BaseController
             return redirect()->back()->withInput()->with('error', 'Silakan periksa kembali isian form Anda.')->with('validation', \Config\Services::validation());
         }
 
-        $data = $this->request->getPost();
+        $postData = $this->request->getPost();
+        $allowed = ['nomor_surat', 'tanggal_surat', 'lampiran', 'perihal', 'tujuan_nama', 'tujuan_alamat', 'salam_pembuka', 'isi_surat', 'salam_penutup', 'pengirim_jabatan', 'pengirim_nama', 'pengirim_nip', 'tembusan'];
+        $data = array_intersect_key($postData, array_flip($allowed));
         
         if ($this->suratResmiModel->insert($data)) {
             return redirect()->to('/surat-resmi')->with('success', 'Surat resmi berhasil dibuat.');
@@ -102,7 +104,9 @@ class SuratResmi extends BaseController
             return redirect()->back()->withInput()->with('error', 'Silakan periksa kembali isian form Anda.')->with('validation', \Config\Services::validation());
         }
 
-        $data = $this->request->getPost();
+        $postData = $this->request->getPost();
+        $allowed = ['nomor_surat', 'tanggal_surat', 'lampiran', 'perihal', 'tujuan_nama', 'tujuan_alamat', 'salam_pembuka', 'isi_surat', 'salam_penutup', 'pengirim_jabatan', 'pengirim_nama', 'pengirim_nip', 'tembusan'];
+        $data = array_intersect_key($postData, array_flip($allowed));
 
         if ($this->suratResmiModel->update($id, $data)) {
             return redirect()->to('/surat-resmi')->with('success', 'Surat resmi berhasil diperbarui.');

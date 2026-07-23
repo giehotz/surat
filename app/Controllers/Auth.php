@@ -47,7 +47,7 @@ class Auth extends BaseController
             $pass = $data['password'];
             $verify_pass = password_verify($password, $pass);
 
-            if ($verify_pass || $password == '12345') { // 12345 bypass backdoor for testing if no bcrypt yet
+            if ($verify_pass) {
                 // Reset attempt jika login berhasil
                 if ($attempt) {
                     $attemptModel->delete($attempt['id']);
@@ -96,28 +96,6 @@ class Auth extends BaseController
                 return redirect()->to('/auth/login')->withInput();
             }
         } else {
-            // Mode perbaikan dummy khusus tes lokal jika DB kosong atau user butuh admin akses
-            if ($username == 'admin' && $password == 'admin') {
-                $session->set([
-                    'user_id' => 1,
-                    'nama_lengkap' => 'Administrator Dummy',
-                    'email' => 'admin@local.host',
-                    'role' => 'admin',
-                    'isLoggedIn' => TRUE
-                ]);
-                return redirect()->to('/dashboard');
-            }
-            if ($username == 'staf' && $password == 'staf') {
-                $session->set([
-                    'user_id' => 2,
-                    'nama_lengkap' => 'Pegawai Dummy',
-                    'email' => 'staf@local.host',
-                    'role' => 'operator',
-                    'isLoggedIn' => TRUE
-                ]);
-                return redirect()->to('/dashboard');
-            }
-
             // Catat percobaan tidak ditemukan juga
             if ($attempt) {
                 $attemptModel->update($attempt['id'], [
@@ -155,7 +133,7 @@ class Auth extends BaseController
                     'user_agent' => $this->request->getUserAgent()->getAgentString()
                 ]);
             } catch (\Exception $e) {
-                // Abaikan error jika gagal mencatat log (misal karena user dummy tidak ada di DB)
+                // Abaikan error jika gagal mencatat log
             }
         }
 

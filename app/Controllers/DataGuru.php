@@ -22,6 +22,11 @@ class DataGuru extends BaseController
     public function store()
     {
         $model = new \App\Models\DataGuruModel();
+        
+        if (!$this->validate($model->getValidationRules())) {
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+
         $data = $this->request->getPost();
         
         // Manual sync for legacy field if needed
@@ -56,6 +61,11 @@ class DataGuru extends BaseController
     public function update($id = null)
     {
         $model = new \App\Models\DataGuruModel();
+        
+        if (!$this->validate($model->getValidationRules())) {
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+
         $data = $this->request->getPost();
         
         // Manual sync for legacy field if needed
@@ -136,21 +146,40 @@ class DataGuru extends BaseController
 
     public function storeImport()
     {
+        $validationRules = [
+            'file_excel' => [
+                'rules' => 'uploaded[file_excel]|max_size[file_excel,5120]|ext_in[file_excel,xls,xlsx]',
+                'errors' => [
+                    'uploaded' => 'File Excel wajib diunggah.',
+                    'max_size' => 'Ukuran file Excel maksimal 5MB.',
+                    'ext_in'   => 'Format file harus .xls atau .xlsx.',
+                ]
+            ]
+        ];
+
+        if (!$this->validate($validationRules)) {
+            return redirect()->back()->with('error', $this->validator->getError('file_excel'));
+        }
+
         $file = $this->request->getFile('file_excel');
 
         if (!$file->isValid()) {
             return redirect()->back()->with('error', $file->getErrorString());
         }
 
-        $ext = $file->getClientExtension();
-        if ($ext == 'xls') {
+        $ext = strtolower($file->getClientExtension());
+        if ($ext === 'xls') {
             $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xls();
         } else {
             $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
         }
 
-        $spreadsheet = $reader->load($file);
-        $sheetData = $spreadsheet->getActiveSheet()->toArray();
+        try {
+            $spreadsheet = $reader->load($file->getTempName());
+            $sheetData = $spreadsheet->getActiveSheet()->toArray();
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal membaca file Excel: ' . $e->getMessage());
+        }
 
         $model = new \App\Models\DataGuruModel();
         $successCount = 0;
@@ -165,20 +194,20 @@ class DataGuru extends BaseController
             }
 
             $data = [
-                'nama_pegawai'        => $row[0],
-                'nip'                 => $row[1],
-                'peg_id_nuptk'        => $row[2],
-                'tempat_lahir'        => $row[3],
-                'tanggal_lahir'       => $row[4],
-                'jabatan_mengajar'    => $row[5],
-                'pangkat_golongan'    => $row[6],
-                'pendidikan_terakhir' => $row[7],
-                'perguruan_tinggi'    => $row[8],
-                'mulai_tugas'         => !empty($row[9]) ? $row[9] : null,
-                'tmt_cpns_honorer'    => !empty($row[10]) ? $row[10] : null,
-                'status_kepegawaian'  => $row[11],
-                'email'               => $row[12],
-                'no_handphone'        => $row[13],
+                'nama_pegawai'        => trim((string)($row[0] ?? '')),
+                'nip'                 => trim((string)($row[1] ?? '')),
+                'peg_id_nuptk'        => trim((string)($row[2] ?? '')),
+                'tempat_lahir'        => trim((string)($row[3] ?? '')),
+                'tanggal_lahir'       => !empty($row[4]) ? date('Y-m-d', strtotime((string)$row[4])) : null,
+                'jabatan_mengajar'    => trim((string)($row[5] ?? '')),
+                'pangkat_golongan'    => trim((string)($row[6] ?? '')),
+                'pendidikan_terakhir' => trim((string)($row[7] ?? '')),
+                'perguruan_tinggi'    => trim((string)($row[8] ?? '')),
+                'mulai_tugas'         => !empty($row[9]) ? date('Y-m-d', strtotime((string)$row[9])) : null,
+                'tmt_cpns_honorer'    => !empty($row[10]) ? date('Y-m-d', strtotime((string)$row[10])) : null,
+                'status_kepegawaian'  => trim((string)($row[11] ?? '')),
+                'email'               => trim((string)($row[12] ?? '')),
+                'no_handphone'        => trim((string)($row[13] ?? '')),
             ];
 
             // Sync legacy field
