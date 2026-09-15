@@ -85,18 +85,27 @@ class SuratMasukModel extends Model
                 [$yr]
             )->getResultArray();
 
-            // Tahap 1: Set semua ke nilai sementara untuk menghindari constraint UNIQUE
-            foreach ($suratList as $idx => $surat) {
-                $tempAgenda = 'TEMP-REASSIGN-' . $surat['id'];
-                $db->query("UPDATE surat_masuk SET nomor_agenda = ? WHERE id = ?", [$tempAgenda, $surat['id']]);
+            if (empty($suratList)) {
+                continue;
             }
 
-            // Tahap 2: Set ke nilai kronologis yang benar
+            // Tahap 1: Set semua ke nilai sementara dalam 1 single query untuk menghindari constraint UNIQUE
+            $db->query("UPDATE surat_masuk SET nomor_agenda = CONCAT('TEMP-REASSIGN-', id) WHERE YEAR(tanggal_surat) = ?", [$yr]);
+
+            // Tahap 2: Set ke nilai kronologis yang benar menggunakan batch update
+            $batchData = [];
             $counter = 1;
             foreach ($suratList as $surat) {
                 $newAgenda = 'IN-' . $yr . '-' . sprintf('%03d', $counter);
-                $db->query("UPDATE surat_masuk SET nomor_agenda = ? WHERE id = ?", [$newAgenda, $surat['id']]);
+                $batchData[] = [
+                    'id'           => $surat['id'],
+                    'nomor_agenda' => $newAgenda
+                ];
                 $counter++;
+            }
+
+            if (!empty($batchData)) {
+                $this->updateBatch($batchData, 'id');
             }
         }
     }

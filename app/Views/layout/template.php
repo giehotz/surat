@@ -24,8 +24,13 @@
     <style>
         @import url('https://rsms.me/inter/inter.css');
 
-        :root {
-            --tblr-font-sans-serif: 'Inter Var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
+        :root,
+        [data-bs-theme="light"],
+        [data-bs-theme="dark"],
+        body {
+            --tblr-font-sans-serif: 'Inter Var', 'Inter', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
+            --tblr-body-font-family: var(--tblr-font-sans-serif);
+            font-family: var(--tblr-font-sans-serif);
         }
 
         body {
@@ -76,6 +81,11 @@
             localStorage.setItem(themeStorageKey, theme);
             document.documentElement.setAttribute('data-bs-theme', theme);
             document.body.setAttribute('data-bs-theme', theme);
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+                var instance = bootstrap.Tooltip.getInstance(el);
+                if (instance) instance.dispose();
+            });
+            document.querySelectorAll('.tooltip').forEach(function (t) { t.remove(); });
         }
     </script>
     <div class="page">
@@ -213,6 +223,15 @@
                 title: '<?= esc(stripslashes((string)session()->getFlashdata("error"))) ?>'
             });
         <?php endif; ?>
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.forEach(function (el) {
+                new bootstrap.Tooltip(el, { trigger: 'hover focus' });
+            });
+        });
     </script>
 
     <?= $this->renderSection('scripts') ?>

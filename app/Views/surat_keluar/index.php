@@ -43,7 +43,7 @@
                                 <i class="ti ti-file-certificate me-1.5"></i> Buat Surat Resmi
                             </a>
                             <a href="<?= base_url('surat-keluar/create') ?>" class="btn btn-primary shadow-sm">
-                                <i class="ti ti-plus me-1.5"></i> Buat Surat
+                                <i class="ti ti-plus me-1.5"></i> Catat Surat Keluar
                             </a>
                         <?php endif; ?>
                     </div>

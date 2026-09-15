@@ -15,7 +15,10 @@ class DataMadrasah extends BaseController
             'title'           => 'Data Madrasah',
             'active_tab'      => session()->getFlashdata('active_tab') ?? 'kelas',
             'kelas'           => [],
-            'data_guru'       => (new \App\Models\DataGuruModel())->findAll(),
+            'data_guru'       => (new \App\Models\DataGuruModel())
+                ->select('id, nama_pegawai, nip, peg_id_nuptk, tempat_tanggal_lahir, status_kepegawaian, jabatan_mengajar, pangkat_golongan, pendidikan_terakhir, perguruan_tinggi, mulai_tugas, tmt_cpns_honorer, tanggal_lahir, email, no_handphone')
+                ->orderBy('nama_pegawai', 'ASC')
+                ->findAll(),
             'siswa'           => [],
             'kelasList'       => [],
             'keyword'         => '',

@@ -119,17 +119,8 @@ class AdminBukuTamu extends BaseController
 
         $html = view('buku_tamu/admin/export_pdf', $viewData);
 
-        $options = new Options();
-        $options->set('isRemoteEnabled', true);
-        $options->set('defaultFont', 'Times-Roman');
-
-        $dompdf = new Dompdf($options);
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'landscape'); // Menggunakan orientasi landscape agar tabel lebar cukup
-        $dompdf->render();
-
-        $dompdf->stream("Rekap_Buku_Tamu_{$tahun}.pdf", ["Attachment" => false]);
-        exit;
+        $exportService = new \App\Services\ExportService();
+        $exportService->exportPdf($html, "Rekap_Buku_Tamu_{$tahun}", 'A4', 'landscape');
     }
 
     private function getKunjunganFilter($tahun, $bulanAwal, $bulanAkhir)

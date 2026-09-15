@@ -2,358 +2,462 @@
 
 <?= $this->section('styles') ?>
 <style>
-    /* Penyempurnaan styling signature pad agar lebih rapi & terkesan timbul */
-    .signature-container {
-        background-color: #f8f9fa;
-        border: 1px dashed #cbd5e1;
-        border-radius: 8px;
-        padding: 10px;
+    .form-hero-badge-dinas {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #ecfdf5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+        padding: 4px 14px;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
-    .signature-pad {
-        position: relative;
+
+    .section-title-badge-dinas {
         display: flex;
-        flex-direction: column;
-        width: 100%;
-        min-height: 250px; /* Paksa minimal tinggi */
-        max-width: 100%;
-        border-radius: 6px;
-        background-color: #fff;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        align-items: center;
+        gap: 10px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #1e293b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 1.25rem;
     }
-    .signature-pad--body {
-        position: relative;
-        flex: 1;
-        min-height: 220px;
-        border: 2px solid #000000; /* Border hitam penuh agar TTD jelas */
-        border-radius: 6px;
+    .section-number-dinas {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        background: #10b981;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        font-weight: 800;
+    }
+
+    .form-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
         overflow: hidden;
     }
-    .signature-pad--body canvas {
-        width: 100%;
-        height: 220px; /* Diperlebar & ditinggikan untuk kenyamanan TTD di desktop */
-        cursor: crosshair;
-        touch-action: none; /* Mencegah layar tergeser/scroll ketika corat-coret di ponsel */
+
+    .form-section-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
     }
-    
-    /* Styling area kamera */
-    .webcam-container {
-        background-color: #f8f9fa;
-        border: 1px dashed #cbd5e1;
-        border-radius: 8px;
-        padding: 10px;
-        text-align: center;
+
+    /* Webcam Container */
+    .webcam-card {
+        background: #0f172a;
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
     }
     #player, #canvas {
         width: 100%;
-        max-height: 280px; /* Diperbesar agar tampilan kamera lebih luas di desktop */
+        height: 240px;
         object-fit: cover;
-        border-radius: 6px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        display: block;
     }
-    #player { background: #000; }
+    .camera-overlay-frame {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 150px;
+        height: 180px;
+        border: 2px dashed rgba(255, 255, 255, 0.6);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    /* Signature Container */
+    .signature-card {
+        background: #ffffff;
+        border: 2px dashed #cbd5e1;
+        border-radius: 16px;
+        padding: 8px;
+        position: relative;
+        transition: border-color 0.2s;
+    }
+    .signature-card:focus-within {
+        border-color: #10b981;
+    }
+    .signature-pad-body {
+        position: relative;
+        width: 100%;
+        height: 180px;
+        border-radius: 10px;
+        background: #ffffff;
+        overflow: hidden;
+    }
+    .signature-pad-body canvas {
+        width: 100%;
+        height: 100%;
+        cursor: crosshair;
+        touch-action: none;
+    }
+    .signature-watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #cbd5e1;
+        font-size: 0.9rem;
+        font-weight: 500;
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .btn-submit-dinas {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: none;
+        color: #fff;
+        padding: 14px 32px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+    .btn-submit-dinas:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        color: #fff;
+    }
 </style>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 
-<!-- Page Header Modern -->
-<div class="page-header d-print-none mb-4 mt-3">
-    <div class="container-xl p-0">
-        <div class="row g-2 align-items-center">
-            <div class="col">
-                <div class="page-pretitle text-muted text-uppercase tracking-wide mb-1">
-                    Layanan Publik Terpadu
+<div class="row justify-content-center">
+    <div class="col-12 col-xl-11">
+        <!-- Top Navigation & Title -->
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <div class="form-hero-badge-dinas mb-1">
+                    <i class="ti ti-briefcase"></i> Kategori Tamu Dinas / Instansi
                 </div>
-                <h2 class="page-title text-dark fw-bold">
-                    <i class="ti ti-briefcase me-2 text-blue"></i> Pengisian Buku Tamu Dinas
-                </h2>
+                <h1 class="h2 fw-bold text-dark m-0">Formulir Buku Tamu Dinas</h1>
             </div>
-            <div class="col-auto ms-auto d-print-none">
-                <a href="<?= base_url('buku-tamu') ?>" class="btn btn-outline-secondary d-none d-sm-inline-block">
-                    <i class="ti ti-arrow-left icon me-2"></i> Kembali ke Menu Utama
-                </a>
-                <a href="<?= base_url('buku-tamu') ?>" class="btn btn-outline-secondary d-sm-none btn-icon" aria-label="Kembali" title="Kembali">
-                    <i class="ti ti-arrow-left icon"></i>
-                </a>
-            </div>
+            <a href="<?= base_url('buku-tamu') ?>" class="btn btn-outline-secondary rounded-pill px-3">
+                <i class="ti ti-arrow-left me-1"></i> Kembali
+            </a>
         </div>
-    </div>
-</div>
 
-<div class="row">
-    <div class="col-12">
-        <?php if (session()->getFlashdata('error')) : ?>
-            <div class="alert alert-important alert-danger alert-dismissible mb-4" role="alert">
-                <div class="d-flex">
-                    <div><i class="ti ti-alert-circle icon me-2"></i></div>
-                    <div><?= session()->getFlashdata('error') ?></div>
-                </div>
-                <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-            </div>
-        <?php endif; ?>
+        <div class="form-card shadow-sm p-4 p-md-5">
+            <form action="<?= base_url('buku-tamu/store') ?>" method="post" id="tamuForm" autocomplete="off" enctype="multipart/form-data">
+                <?= csrf_field() ?>
+                <input type="hidden" name="jenis_tamu" value="khusus">
+                <input type="hidden" name="sub_jenis_tamu" value="dinas">
+                <input type="hidden" name="foto_wajah_base64" id="foto_wajah_base64">
+                <input type="hidden" name="tanda_tangan_base64" id="tanda_tangan_base64">
 
-        <div class="card shadow-sm border-0 rounded-3">
-            <div class="card-header bg-white border-bottom p-4">
-                <h3 class="card-title mb-0 fw-semibold text-muted">
-                    <i class="ti ti-edit-circle me-2"></i> Form Registrasi Tamu Instansi
-                </h3>
-            </div>
-            
-            <div class="card-body p-4 p-md-5">
-                <form action="<?= base_url('buku-tamu/store') ?>" method="post" enctype="multipart/form-data" id="tamuForm" autocomplete="off">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="jenis_tamu" value="khusus">
-                    <input type="hidden" name="foto_wajah_base64" id="foto_wajah_base64">
-                    <input type="hidden" name="tanda_tangan_base64" id="tanda_tangan_base64">
-
-                    <div class="row">
-                        <!-- KOLOM KIRI: Form Input (Diperlebar menjadi 8 kolom di Desktop) -->
-                        <div class="col-lg-8">
-                            
-                            <!-- BAGIAN 1: Identitas Diri & Instansi -->
-                            <div class="mb-4 text-blue fw-bold text-uppercase tracking-wide" style="font-size: 0.85rem;">
-                                <i class="ti ti-id me-1"></i> 1. Identitas Diri & Instansi
+                <div class="row g-4">
+                    <!-- KOLOM KIRI: Data Tamu Dinas (7 Kolom) -->
+                    <div class="col-lg-7">
+                        <!-- BAGIAN 1: Identitas Tamu Kedinasan -->
+                        <div class="form-section-box">
+                            <div class="section-title-badge-dinas">
+                                <span class="section-number-dinas">1</span>
+                                <span>Identitas Tamu & Instansi</span>
                             </div>
-                            
-                            <div class="row bg-light rounded-3 p-3 mb-5 mx-0 border">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label required">Nama Lengkap</label>
-                                    <div class="input-group input-group-flat">
-                                        <span class="input-group-text"><i class="ti ti-user"></i></span>
-                                        <input type="text" class="form-control" name="nama_lengkap" placeholder="Bpk/Ibu..." required>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label required fw-semibold">Nama Lengkap & Gelar</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="ti ti-user text-muted"></i></span>
+                                        <input type="text" class="form-control" name="nama_lengkap" placeholder="Contoh: Drs. H. Ahmad Fauzi, M.Pd" required>
                                     </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">NIP / NIK <span class="text-muted fw-normal">(Opsional)</span></label>
-                                    <input type="text" class="form-control" name="nip" placeholder="Masukkan Nomor Induk (Jika ada)">
-                                </div>
-                                <div class="col-md-6 mb-3 mb-md-0">
-                                    <label class="form-label required">Jabatan</label>
-                                    <input type="text" class="form-control" name="jabatan" placeholder="Misal: Pengawas Madrasah" required>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label required">Asal Instansi</label>
-                                    <div class="input-group input-group-flat">
-                                        <span class="input-group-text"><i class="ti ti-building"></i></span>
-                                        <input type="text" class="form-control" name="alamat_instansi" placeholder="Misal: Kemenag Kota" required>
+                                    <label class="form-label fw-semibold">NIP / NIK / NUPTK <span class="text-muted fw-normal">(Opsional)</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="ti ti-id-badge-2 text-muted"></i></span>
+                                        <input type="text" class="form-control" name="nip" placeholder="Contoh: 198001012005011001">
                                     </div>
                                 </div>
-                                <div class="col-12 mt-3">
-                                    <label class="form-label required">No. HP / Kontak Aktif (WA)</label>
-                                    <div class="input-group input-group-flat">
-                                        <span class="input-group-text"><i class="ti ti-phone"></i></span>
-                                        <input type="text" class="form-control" name="no_hp" placeholder="08xxxxxxxxx" required>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Jabatan / Golongan</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="ti ti-badge text-muted"></i></span>
+                                        <input type="text" class="form-control" name="jabatan" placeholder="Contoh: Pengawas Madrasah / Auditor">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label required fw-semibold">No. HP / WhatsApp Aktif</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="ti ti-brand-whatsapp text-success"></i></span>
+                                        <input type="text" class="form-control" name="no_hp" placeholder="Contoh: 081234567890" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label required fw-semibold">Nama Instansi / Kantor Asal</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="ti ti-building text-muted"></i></span>
+                                        <input type="text" class="form-control" name="alamat_instansi" placeholder="Contoh: Kantor Kementerian Agama Kab. Tanggamus" required>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- BAGIAN 2: Detail Kunjungan -->
-                            <div class="mb-4 text-blue fw-bold text-uppercase tracking-wide" style="font-size: 0.85rem;">
-                                <i class="ti ti-calendar-event me-1"></i> 2. Rincian Kunjungan
+                        <!-- BAGIAN 2: Maksud & Rincian Kedinasan -->
+                        <div class="form-section-box mb-0">
+                            <div class="section-title-badge-dinas">
+                                <span class="section-number-dinas">2</span>
+                                <span>Maksud & Tujuan Kedinasan</span>
                             </div>
 
-                            <div class="row mb-5">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label required">Tujuan Kunjungan Resmi</label>
-                                    <input type="text" class="form-control" name="tujuan_kunjungan" placeholder="Supervisi / Visitasi / Rapat..." required>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label required fw-semibold">Tujuan / Agenda Kunjungan</label>
+                                    <select class="form-select" id="tujuan_kunjungan_select" name="tujuan_kunjungan" required onchange="toggleTujuanLainnya()">
+                                        <option value="" hidden>-- Pilih Agenda Kunjungan --</option>
+                                        <option value="Supervisi / Monitoring Pengawas">Supervisi / Monitoring Pengawas</option>
+                                        <option value="Pemeriksaan / Audit / Monev">Pemeriksaan / Audit / Monev</option>
+                                        <option value="Koordinasi Kedinasan / Kemenag">Koordinasi Kedinasan / Kemenag</option>
+                                        <option value="Sosialisasi / Pelatihan / Workshop">Sosialisasi / Pelatihan / Workshop</option>
+                                        <option value="Penyerahan Surat / Dokumen Resmi">Penyerahan Surat / Dokumen Resmi</option>
+                                        <option value="Lainnya">Lainnya...</option>
+                                    </select>
+                                    <input type="text" class="form-control mt-2" id="tujuan_kunjungan_lainnya" placeholder="Sebutkan agenda spesifik..." style="display: none;">
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label required">Ingin Bertemu Dengan</label>
-                                    <select class="form-select" name="id_pegawai_dituju" required>
-                                        <option value="" hidden>-- Pilih Pegawai/Guru --</option>
-                                        <?php foreach($guruList as $guru): ?>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Pejabat / Pegawai Dituju</label>
+                                    <select class="form-select" name="id_pegawai_dituju">
+                                        <option value="">-- Kepala Madrasah / Umum --</option>
+                                        <?php foreach ($guruList as $guru): ?>
                                             <option value="<?= $guru['id'] ?>"><?= esc($guru['nama_pegawai']) ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-                                <div class="col-12 mb-3">
-                                    <label class="form-label">Dokumen Pendukung <span class="text-muted fw-normal">(Opsional)</span></label>
-                                    <input type="file" class="form-control" name="dokumen_pendukung" accept=".pdf,.jpg,.jpeg,.png">
-                                    <small class="form-hint">Unggah surat tugas atau dokumen terkait (PDF/Gambar, max 2MB).</small>
+
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold">Unggah Surat Tugas / Berkas Lampiran <span class="text-muted fw-normal">(Opsional)</span></label>
+                                    <input type="file" class="form-control" name="dokumen_pendukung" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                    <div class="form-text small text-muted">Format yang didukung: PDF, DOC, DOCX, JPG, PNG (Maks. 5MB).</div>
                                 </div>
+
                                 <div class="col-12 mt-2">
-                                    <label class="form-check bg-light p-3 rounded border">
-                                        <input class="form-check-input ms-0 me-3" type="checkbox" name="consent_wa" checked>
-                                        <span class="form-check-label fw-medium">
-                                            Saya setuju untuk dihubungi terkait urusan dinas (Sesuai UU Pelindungan Data Pribadi).
+                                    <label class="form-check bg-white p-3 rounded-3 border d-flex align-items-center mb-0 cursor-pointer">
+                                        <input class="form-check-input ms-0 me-3" type="checkbox" name="consent_wa" value="1" checked>
+                                        <span class="form-check-label text-muted small">
+                                            <strong class="text-dark d-block">Persetujuan Notifikasi Kedinasan</strong>
+                                            Saya menyetujui kontak ini digunakan untuk konfirmasi agenda dinas dan korespondensi resmi madrasah.
                                         </span>
                                     </label>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- KOLOM KANAN: Verifikasi (Kamera & TTD, disesuaikan menjadi 4 kolom) -->
-                        <div class="col-lg-4 ps-lg-4 border-start-lg">
-                            
-                            <!-- BAGIAN 3: Verifikasi Kehadiran -->
-                            <div class="mb-4 text-blue fw-bold text-uppercase tracking-wide" style="font-size: 0.85rem;">
-                                <i class="ti ti-camera-check me-1"></i> 3. Verifikasi Kehadiran
-                            </div>
-
-                            <!-- Foto -->
-                            <div class="mb-4">
-                                <label class="form-label">Identitas Foto <span class="text-muted fw-normal">(Opsional)</span></label>
-                                
-                                <!-- Toggle Source -->
-                                <div class="form-selectgroup form-selectgroup-boxes d-flex mb-3">
-                                    <label class="form-selectgroup-item flex-fill">
-                                        <input type="radio" name="foto_source" value="webcam" class="form-selectgroup-input" checked onchange="toggleFotoMethod()">
-                                        <span class="form-selectgroup-label d-flex align-items-center p-2">
-                                            <span class="me-3">
-                                                <span class="form-selectgroup-check"></span>
-                                            </span>
-                                            <span class="form-selectgroup-label-content">
-                                                <span class="d-block fw-medium">Ambil Foto</span>
-                                            </span>
-                                        </span>
-                                    </label>
-                                    <label class="form-selectgroup-item flex-fill">
-                                        <input type="radio" name="foto_source" value="upload" class="form-selectgroup-input" onchange="toggleFotoMethod()">
-                                        <span class="form-selectgroup-label d-flex align-items-center p-2">
-                                            <span class="me-3">
-                                                <span class="form-selectgroup-check"></span>
-                                            </span>
-                                            <span class="form-selectgroup-label-content">
-                                                <span class="d-block fw-medium">Unggah File</span>
-                                            </span>
-                                        </span>
-                                    </label>
-                                </div>
-
-                                <!-- Container Webcam -->
-                                <div id="container_webcam" class="webcam-container">
-                                    <video id="player" autoplay playsinline></video>
-                                    <canvas id="canvas" style="display:none;"></canvas>
-                                    <div class="mt-3">
-                                        <button type="button" class="btn btn-primary w-100" id="captureBtn">
-                                            <i class="ti ti-camera me-2"></i> Ambil Foto Wajah
-                                        </button>
-                                        <button type="button" class="btn btn-warning w-100" id="retakeBtn" style="display:none;">
-                                            <i class="ti ti-refresh me-2"></i> Ulangi Foto
-                                        </button>
-                                    </div>
-                                    <small class="text-muted d-block mt-2" style="font-size: 0.75rem;">Pastikan wajah terlihat jelas di kamera.</small>
-                                </div>
-
-                                <!-- Container Upload -->
-                                <div id="container_upload" class="bg-light p-3 rounded-3 border" style="display: none;">
-                                    <div class="mb-2">
-                                        <label class="form-label small">Pilih File Foto (JPG/PNG, Max 2MB)</label>
-                                        <input type="file" class="form-control" name="foto_wajah_file" id="foto_wajah_file" accept="image/*">
-                                    </div>
-                                    <small class="text-muted" style="font-size: 0.75rem;">Unggah dokumen identitas atau foto diri sebagai verifikasi resmi.</small>
-                                </div>
-                            </div>
-
-                            <!-- TTD -->
-                            <div class="mb-3">
-                                <label class="form-label required">Tanda Tangan Digital</label>
-                                <div class="signature-container">
-                                    <div class="signature-pad">
-                                        <div class="signature-pad--body">
-                                            <canvas id="signature-canvas"></canvas>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center mt-2">
-                                        <small class="text-muted" style="font-size: 0.75rem;">Tanda tangan di dalam kotak</small>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" id="clear-signature">
-                                            <i class="ti ti-eraser me-1"></i> Bersihkan
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
                         </div>
                     </div>
 
-                    <!-- Footer / Actions -->
-                    <hr class="mt-4 mb-4">
-                    <div class="d-flex justify-content-end align-items-center gap-2">
-                        <a href="<?= base_url('buku-tamu') ?>" class="btn btn-link text-muted">Batal</a>
-                        <button type="submit" class="btn btn-primary btn-lg d-flex align-items-center gap-2" id="submitBtn">
-                            <span id="submitText"><i class="ti ti-send"></i> Simpan Data Kunjungan</span>
-                            <span id="submitSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                    <!-- KOLOM KANAN: Verifikasi Foto & Tanda Tangan (5 Kolom) -->
+                    <div class="col-lg-5">
+                        <!-- BAGIAN 3: Verifikasi Foto -->
+                        <div class="form-section-box">
+                            <div class="section-title-badge-dinas">
+                                <span class="section-number-dinas">3</span>
+                                <span>Foto Kehadiran</span>
+                            </div>
+
+                            <div class="form-selectgroup w-100 d-flex mb-3">
+                                <label class="form-selectgroup-item flex-fill">
+                                    <input type="radio" name="foto_source" value="webcam" class="form-selectgroup-input" checked onchange="toggleFotoMethod()">
+                                    <span class="form-selectgroup-label py-2">
+                                        <i class="ti ti-camera me-1 text-success"></i> Ambil Kamera
+                                    </span>
+                                </label>
+                                <label class="form-selectgroup-item flex-fill">
+                                    <input type="radio" name="foto_source" value="upload" class="form-selectgroup-input" onchange="toggleFotoMethod()">
+                                    <span class="form-selectgroup-label py-2">
+                                        <i class="ti ti-upload me-1 text-success"></i> Unggah File
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- Webcam View -->
+                            <div id="container_webcam">
+                                <div class="webcam-card mb-2">
+                                    <video id="player" autoplay playsinline></video>
+                                    <canvas id="canvas" style="display: none;"></canvas>
+                                    <div class="camera-overlay-frame" id="cameraFrame"></div>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-success flex-fill" id="captureBtn">
+                                        <i class="ti ti-camera me-1"></i> Ambil Foto
+                                    </button>
+                                    <button type="button" class="btn btn-warning flex-fill" id="retakeBtn" style="display: none;">
+                                        <i class="ti ti-rotate me-1"></i> Ambil Ulang
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Upload File Fallback -->
+                            <div id="container_upload" style="display: none;">
+                                <input type="file" class="form-control" name="foto_wajah_file" id="foto_wajah_file" accept="image/*">
+                                <div class="form-text text-muted small">Format: JPG, PNG, atau WEBP. Maksimal 2MB.</div>
+                            </div>
+                        </div>
+
+                        <!-- BAGIAN 4: Tanda Tangan Digital -->
+                        <div class="form-section-box">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="section-title-badge-dinas mb-0">
+                                    <span class="section-number-dinas">4</span>
+                                    <span>Tanda Tangan Pejabat / Tamu</span>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger" id="clear-signature">
+                                    <i class="ti ti-eraser me-1"></i> Hapus
+                                </button>
+                            </div>
+
+                            <div class="signature-card">
+                                <div class="signature-pad-body">
+                                    <canvas id="signature-canvas"></canvas>
+                                    <div class="signature-watermark" id="signatureHint">
+                                        <i class="ti ti-pencil me-1"></i> Goreskan tanda tangan di sini
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-text text-muted small mt-1">Gunakan jari di layar sentuh atau mouse untuk membubuhkan tanda tangan resmi.</div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-submit-dinas w-100" id="submitBtn">
+                            <span class="spinner-border spinner-border-sm d-none" id="submitSpinner" role="status"></span>
+                            <span id="submitText"><i class="ti ti-send me-1"></i> Simpan Kunjungan Dinas</span>
                         </button>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<!-- Signature Pad Library dari CDN -->
-<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 <script>
-    // --- WEBCAM LOGIC ---
+    function toggleTujuanLainnya() {
+        const sel = document.getElementById('tujuan_kunjungan_select');
+        const input = document.getElementById('tujuan_kunjungan_lainnya');
+
+        if (sel.value === 'Lainnya') {
+            input.style.display = 'block';
+            input.setAttribute('required', 'required');
+            sel.removeAttribute('name');
+            input.setAttribute('name', 'tujuan_kunjungan');
+            input.focus();
+        } else {
+            input.style.display = 'none';
+            input.removeAttribute('required');
+            input.removeAttribute('name');
+            sel.setAttribute('name', 'tujuan_kunjungan');
+        }
+    }
+
+    // Kamera Logic
     const player = document.getElementById('player');
     const canvas = document.getElementById('canvas');
     const context = canvas.getContext('2d');
     const captureBtn = document.getElementById('captureBtn');
     const retakeBtn = document.getElementById('retakeBtn');
+    const cameraFrame = document.getElementById('cameraFrame');
     const fotoBase64 = document.getElementById('foto_wajah_base64');
     let isCaptured = false;
- 
+
     function toggleFotoMethod() {
         const method = document.querySelector('input[name="foto_source"]:checked').value;
         const containerWebcam = document.getElementById('container_webcam');
         const containerUpload = document.getElementById('container_upload');
-        const inputBase64 = document.getElementById('foto_wajah_base64');
         const inputFile = document.getElementById('foto_wajah_file');
 
         if (method === 'webcam') {
             containerWebcam.style.display = 'block';
             containerUpload.style.display = 'none';
-            inputFile.value = ''; 
+            inputFile.value = '';
         } else {
             containerWebcam.style.display = 'none';
             containerUpload.style.display = 'block';
-            inputBase64.value = '';
+            fotoBase64.value = '';
             player.style.display = 'block';
             canvas.style.display = 'none';
             captureBtn.style.display = 'block';
             retakeBtn.style.display = 'none';
+            if (cameraFrame) cameraFrame.style.display = 'block';
             isCaptured = false;
         }
     }
 
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-        .then((stream) => { player.srcObject = stream; })
-        .catch((err) => { 
-            console.error("Camera error:", err); 
-            // Fallback UI jika kamera ditolak / error
-            player.parentElement.innerHTML = '<div class="p-4 text-muted"><i class="ti ti-camera-off fs-1 d-block mb-2"></i>Akses kamera ditolak atau tidak ditemukan.</div>';
-        });
+    // Start Camera
+    navigator.mediaDevices?.getUserMedia({
+        video: { facingMode: "user" }
+    }).then((stream) => {
+        player.srcObject = stream;
+    }).catch((err) => {
+        console.warn("Webcam unavailable:", err);
+        const methodUpload = document.querySelector('input[name="foto_source"][value="upload"]');
+        if (methodUpload) {
+            methodUpload.checked = true;
+            toggleFotoMethod();
+        }
+    });
 
     captureBtn.addEventListener('click', () => {
-        canvas.width = player.videoWidth; canvas.height = player.videoHeight;
+        canvas.width = player.videoWidth || 640;
+        canvas.height = player.videoHeight || 480;
         context.drawImage(player, 0, 0, canvas.width, canvas.height);
-        fotoBase64.value = canvas.toDataURL('image/jpeg', 0.8);
-        player.style.display = 'none'; canvas.style.display = 'block';
-        captureBtn.style.display = 'none'; retakeBtn.style.display = 'block';
+        fotoBase64.value = canvas.toDataURL('image/jpeg', 0.85);
+        player.style.display = 'none';
+        canvas.style.display = 'block';
+        if (cameraFrame) cameraFrame.style.display = 'none';
+        captureBtn.style.display = 'none';
+        retakeBtn.style.display = 'block';
         isCaptured = true;
     });
 
     retakeBtn.addEventListener('click', () => {
         fotoBase64.value = '';
-        player.style.display = 'block'; canvas.style.display = 'none';
-        captureBtn.style.display = 'block'; retakeBtn.style.display = 'none';
+        player.style.display = 'block';
+        canvas.style.display = 'none';
+        if (cameraFrame) cameraFrame.style.display = 'block';
+        captureBtn.style.display = 'block';
+        retakeBtn.style.display = 'none';
         isCaptured = false;
     });
 
-    // --- SIGNATURE PAD LOGIC ---
+    // Signature Pad
     const signatureCanvas = document.getElementById('signature-canvas');
-    
-    // Resize canvas agar sesuai viewport / container CSS tanpa nge-stretch tintanya
+    const signatureHint = document.getElementById('signatureHint');
+
     function resizeCanvas() {
-        var data = signaturePad.isEmpty() ? null : signaturePad.toData();
-        var ratio = Math.max(window.devicePixelRatio || 1, 1);
+        const data = signaturePad.isEmpty() ? null : signaturePad.toData();
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
         signatureCanvas.width = signatureCanvas.offsetWidth * ratio;
         signatureCanvas.height = signatureCanvas.offsetHeight * ratio;
         signatureCanvas.getContext("2d").scale(ratio, ratio);
-
         signaturePad.clear();
         if (data) {
             signaturePad.fromData(data);
@@ -362,31 +466,36 @@
 
     const signaturePad = new SignaturePad(signatureCanvas, {
         backgroundColor: 'rgba(255, 255, 255, 0)',
-        penColor: 'rgb(0, 0, 0)'
+        penColor: '#0f172a',
+        minWidth: 1.5,
+        maxWidth: 3.5
     });
 
-    window.onresize = resizeCanvas;
-    // Panggil saat document ready agar canvas tidak bug ukuran
-    setTimeout(resizeCanvas, 200);
+    signaturePad.addEventListener("beginStroke", () => {
+        if (signatureHint) signatureHint.style.display = 'none';
+    });
 
-    document.getElementById('clear-signature').addEventListener('click', function () {
+    window.addEventListener('resize', resizeCanvas);
+    setTimeout(resizeCanvas, 250);
+
+    document.getElementById('clear-signature').addEventListener('click', function() {
         signaturePad.clear();
+        if (signatureHint) signatureHint.style.display = 'block';
     });
 
-    // --- SUBMISSION LOGIC ---
+    // Form Submit Listener
     document.getElementById('tamuForm').addEventListener('submit', function(e) {
         if (signaturePad.isEmpty()) {
             e.preventDefault();
-            alert("Mohon isi tanda tangan Anda pada kotak yang disediakan!");
+            alert("Mohon bubuhkan tanda tangan Anda terlebih dahulu pada kotak yang disediakan.");
+            signatureCanvas.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return false;
         }
-        
-        // Simpan TTD ke input hidden
+
         document.getElementById('tanda_tangan_base64').value = signaturePad.toDataURL('image/png');
 
-        // Loading spinner
         document.getElementById('submitBtn').disabled = true;
-        document.getElementById('submitText').innerHTML = '<i class="ti ti-send"></i> Mengirim...';
+        document.getElementById('submitText').innerHTML = 'Menyimpan Kunjungan Dinas...';
         document.getElementById('submitSpinner').classList.remove('d-none');
     });
 </script>

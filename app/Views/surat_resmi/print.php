@@ -78,13 +78,14 @@
         /* Tanda Tangan */
         .ttd-box {
             width: 300px;
-            float: right;
-            text-align: center;
+            float: right !important;
+            text-align: center !important;
+            padding-left: 2.5cm;
             margin-top: 20px;
             font-size: 11pt;
         }
         .ttd-space {
-            height: 80px; /* Ruang untuk stempel dan tanda tangan */
+            height: 60px; /* Ruang untuk stempel dan tanda tangan */
         }
         .ttd-nama {
             font-weight: bold;

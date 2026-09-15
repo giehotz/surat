@@ -6,6 +6,19 @@
 $isEdit = isset($template);
 $actionUrl = $isEdit ? base_url('surat-resmi/template/update/' . $template['id']) : base_url('surat-resmi/template/store');
 $validation = \Config\Services::validation();
+
+$pimpinanOptions = [
+    'kepsek' => [
+        'jabatan' => 'Kepala',
+        'nama'    => $appSettings['pejabat_kepsek_nama'] ?? '',
+        'nip'     => $appSettings['pejabat_kepsek_nip'] ?? '',
+    ],
+    'tu' => [
+        'jabatan' => 'Kepala Tata Usaha',
+        'nama'    => $appSettings['pejabat_tu_nama'] ?? '',
+        'nip'     => $appSettings['pejabat_tu_nip'] ?? '',
+    ],
+];
 ?>
 
 <div class="row">
@@ -97,18 +110,33 @@ $validation = \Config\Services::validation();
                     <div class="card bg-light mb-3">
                         <div class="card-body">
                             <h5 class="card-title mb-3">Pengirim / Penandatangan</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Pilih Data Pimpinan (Otomatis Mengisi Form)</label>
+                                <select class="form-select" id="pilih-pimpinan" onchange="isiDataPimpinan(this)">
+                                    <option value="">-- Pilih / Biarkan Kosong --</option>
+                                    <?php foreach ($pimpinanOptions as $key => $p): ?>
+                                        <option value="<?= $key ?>"
+                                            data-jabatan="<?= esc($p['jabatan']) ?>"
+                                            data-nama="<?= esc($p['nama']) ?>"
+                                            data-nip="<?= esc($p['nip']) ?>">
+                                            <?= esc($p['jabatan']) ?> — <?= esc($p['nama'] ?: '-') ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <small class="text-muted">Field di bawah tetap dapat diedit manual setelah dipilih.</small>
+                            </div>
                             <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Jabatan Pengirim</label>
-                                    <input type="text" class="form-control" name="pengirim_jabatan" value="<?= old('pengirim_jabatan', $template['pengirim_jabatan'] ?? '') ?>">
+                                    <input type="text" class="form-control" name="pengirim_jabatan" value="<?= old('pengirim_jabatan', $template['pengirim_jabatan'] ?? ($pimpinanOptions['kepsek']['jabatan'] ?? 'Kepala')) ?>">
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Nama Pengirim</label>
-                                    <input type="text" class="form-control" name="pengirim_nama" value="<?= old('pengirim_nama', $template['pengirim_nama'] ?? '') ?>">
+                                    <input type="text" class="form-control" name="pengirim_nama" value="<?= old('pengirim_nama', $template['pengirim_nama'] ?? ($pimpinanOptions['kepsek']['nama'] ?? '')) ?>">
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">NIP Pengirim</label>
-                                    <input type="text" class="form-control" name="pengirim_nip" value="<?= old('pengirim_nip', $template['pengirim_nip'] ?? '') ?>">
+                                    <input type="text" class="form-control" name="pengirim_nip" value="<?= old('pengirim_nip', $template['pengirim_nip'] ?? ($pimpinanOptions['kepsek']['nip'] ?? '')) ?>">
                                 </div>
                             </div>
                         </div>
@@ -128,4 +156,16 @@ $validation = \Config\Services::validation();
     </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script>
+    function isiDataPimpinan(el) {
+        if (!el.value) return;
+        var opt = el.options[el.selectedIndex];
+        document.getElementsByName('pengirim_jabatan')[0].value = opt.dataset.jabatan || '';
+        document.getElementsByName('pengirim_nama')[0].value = opt.dataset.nama || '';
+        document.getElementsByName('pengirim_nip')[0].value = opt.dataset.nip || '';
+    }
+</script>
 <?= $this->endSection() ?>

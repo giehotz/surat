@@ -6,6 +6,19 @@
 $isEdit = isset($surat);
 $actionUrl = $isEdit ? base_url('surat-resmi/update/'.$surat['id']) : base_url('surat-resmi/store');
 $validation = \Config\Services::validation();
+
+$pimpinanOptions = [
+    'kepsek' => [
+        'jabatan' => 'Kepala',
+        'nama'    => $appSettings['pejabat_kepsek_nama'] ?? '',
+        'nip'     => $appSettings['pejabat_kepsek_nip'] ?? '',
+    ],
+    'tu' => [
+        'jabatan' => 'Kepala Tata Usaha',
+        'nama'    => $appSettings['pejabat_tu_nama'] ?? '',
+        'nip'     => $appSettings['pejabat_tu_nip'] ?? '',
+    ],
+];
 ?>
 
 <div class="row">
@@ -101,24 +114,39 @@ $validation = \Config\Services::validation();
                     <div class="card bg-light mb-3">
                         <div class="card-body">
                             <h5 class="card-title mb-3"><i class="ti ti-signature me-2"></i>Pengirim / Penandatangan</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Pilih Data Pimpinan (Otomatis Mengisi Form)</label>
+                                <select class="form-select" id="pilih-pimpinan" onchange="isiDataPimpinan(this)">
+                                    <option value="">-- Pilih / Biarkan Kosong --</option>
+                                    <?php foreach ($pimpinanOptions as $key => $p): ?>
+                                        <option value="<?= $key ?>"
+                                            data-jabatan="<?= esc($p['jabatan']) ?>"
+                                            data-nama="<?= esc($p['nama']) ?>"
+                                            data-nip="<?= esc($p['nip']) ?>">
+                                            <?= esc($p['jabatan']) ?> — <?= esc($p['nama'] ?: '-') ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <small class="text-muted">Field di bawah tetap dapat diedit manual setelah dipilih.</small>
+                            </div>
                             <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label required">Jabatan Pengirim</label>
-                                    <input type="text" class="form-control <?= $validation->getError('pengirim_jabatan') ? 'is-invalid' : '' ?>" name="pengirim_jabatan" value="<?= old('pengirim_jabatan', $surat['pengirim_jabatan'] ?? ($user_jabatan ?? '')) ?>" placeholder="Contoh: Kepala Madrasah" required>
+                                    <input type="text" class="form-control <?= $validation->getError('pengirim_jabatan') ? 'is-invalid' : '' ?>" name="pengirim_jabatan" value="<?= old('pengirim_jabatan', $surat['pengirim_jabatan'] ?? ($pimpinanOptions['kepsek']['jabatan'] ?? 'Kepala')) ?>" placeholder="Contoh: Kepala Madrasah" required>
                                     <?php if ($validation->getError('pengirim_jabatan')): ?>
                                         <div class="invalid-feedback"><?= $validation->getError('pengirim_jabatan') ?></div>
                                     <?php endif; ?>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label required">Nama Pengirim</label>
-                                    <input type="text" class="form-control <?= $validation->getError('pengirim_nama') ? 'is-invalid' : '' ?>" name="pengirim_nama" value="<?= old('pengirim_nama', $surat['pengirim_nama'] ?? ($user_nama ?? '')) ?>" placeholder="Contoh: Nama Lengkap" required>
+                                    <input type="text" class="form-control <?= $validation->getError('pengirim_nama') ? 'is-invalid' : '' ?>" name="pengirim_nama" value="<?= old('pengirim_nama', $surat['pengirim_nama'] ?? ($pimpinanOptions['kepsek']['nama'] ?? '')) ?>" placeholder="Contoh: Nama Lengkap" required>
                                     <?php if ($validation->getError('pengirim_nama')): ?>
                                         <div class="invalid-feedback"><?= $validation->getError('pengirim_nama') ?></div>
                                     <?php endif; ?>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">NIP / NIK (Opsional)</label>
-                                    <input type="text" class="form-control" name="pengirim_nip" value="<?= old('pengirim_nip', $surat['pengirim_nip'] ?? '') ?>" placeholder="NIP. 197005272007011022">
+                                    <input type="text" class="form-control" name="pengirim_nip" value="<?= old('pengirim_nip', $surat['pengirim_nip'] ?? ($pimpinanOptions['kepsek']['nip'] ?? '')) ?>" placeholder="NIP. 197005272007011022">
                                 </div>
                             </div>
                         </div>
@@ -165,6 +193,14 @@ $validation = \Config\Services::validation();
             });
         }
     });
+
+    function isiDataPimpinan(el) {
+        if (!el.value) return;
+        var opt = el.options[el.selectedIndex];
+        document.getElementsByName('pengirim_jabatan')[0].value = opt.dataset.jabatan || '';
+        document.getElementsByName('pengirim_nama')[0].value = opt.dataset.nama || '';
+        document.getElementsByName('pengirim_nip')[0].value = opt.dataset.nip || '';
+    }
 
     function previewSurat() {
         if (tinymce.get('isi_surat_editor')) {

@@ -1,5 +1,5 @@
 <!-- Header Top (Logo & User) -->
-<header class="navbar navbar-expand-md d-print-none">
+<header class="navbar navbar-expand-md d-print-none" style="position: relative; z-index: 1035;">
     <div class="container-xl d-flex align-items-center justify-content-between">
         <!-- Mobile Menu Toggle -->
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">

@@ -68,15 +68,25 @@ class ExportService
         $sheet->getStyle('A3:' . $lastCol . $lastRow)->applyFromArray($styleArray);
 
         // Stream to browser
+        $cleanFilename = preg_replace('/[^a-zA-Z0-9_\-]/', '_', basename($filename));
+        if (empty($cleanFilename)) {
+            $cleanFilename = 'export_' . date('Ymd_His');
+        }
+
+        $safeDir = WRITEPATH . 'uploads';
+        if (!is_dir($safeDir)) {
+            mkdir($safeDir, 0755, true);
+        }
+
         $writer = new Xlsx($spreadsheet);
-        $filepath = WRITEPATH . 'uploads/' . $filename . '.xlsx';
+        $filepath = $safeDir . DIRECTORY_SEPARATOR . $cleanFilename . '.xlsx';
         $writer->save($filepath);
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="' . $filename . '.xlsx"');
+        header('Content-Disposition: attachment;filename="' . $cleanFilename . '.xlsx"');
         header('Cache-Control: max-age=0');
         readfile($filepath);
-        unlink($filepath); // Clean up temp file
+        @unlink($filepath); // Clean up temp file
         exit();
     }
 
@@ -90,18 +100,26 @@ class ExportService
      */
     public function exportPdf(string $html, string $filename, string $paperSize = 'A4', string $orientation = 'landscape')
     {
+        $cleanFilename = preg_replace('/[^a-zA-Z0-9_\-]/', '_', basename($filename));
+        if (empty($cleanFilename)) {
+            $cleanFilename = 'export_' . date('Ymd_His');
+        }
+
         $dompdf = new Dompdf();
 
-        // Optional: you can set options here, like enabling remote images
         $options = $dompdf->getOptions();
-        $options->set('isRemoteEnabled', true);
+        // Disable remote file inclusion to prevent SSRF and external asset inclusion vulnerabilities
+        $options->set('isRemoteEnabled', false);
+        $options->set('isHtml5ParserEnabled', true);
+        // Restrict Dompdf local file access strictly to application public & writable roots
+        $options->setChroot([FCPATH, WRITEPATH]);
         $dompdf->setOptions($options);
 
         $dompdf->loadHtml($html);
         $dompdf->setPaper($paperSize, $orientation);
         $dompdf->render();
 
-        $dompdf->stream($filename . ".pdf", ["Attachment" => false]);
+        $dompdf->stream($cleanFilename . ".pdf", ["Attachment" => false]);
         exit();
     }
 }

@@ -17,8 +17,13 @@
     <style>
         @import url('https://rsms.me/inter/inter.css');
 
-        :root {
-            --tblr-font-sans-serif: 'Inter Var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
+        :root,
+        [data-bs-theme="light"],
+        [data-bs-theme="dark"],
+        body {
+            --tblr-font-sans-serif: 'Inter Var', 'Inter', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
+            --tblr-body-font-family: var(--tblr-font-sans-serif);
+            font-family: var(--tblr-font-sans-serif);
         }
 
         body {
