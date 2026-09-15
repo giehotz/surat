@@ -426,6 +426,7 @@ class SuratMasuk extends BaseController
             $builder->where('YEAR(tanggal_terima)', $tahunAnggaran);
         }
 
+        $data['appSettings'] = $settings;
         $data['surat_masuk'] = $builder->orderBy('tanggal_terima', 'ASC')->get()->getResultArray();
         $html = view('surat_masuk/print_pdf', $data);
         $this->exportService->exportPdf($html, 'Laporan_Surat_Masuk_' . date('Ymd'));

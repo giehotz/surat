@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\CatatanPrestasiSiswaModel;
+use App\Models\PengaturanModel;
 use CodeIgniter\RESTful\ResourceController;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -408,7 +409,9 @@ class PrestasiSiswa extends BaseController
 
     public function exportPdf()
     {
-        $data['prestasi'] = $this->prestasiModel->orderBy('tanggal', 'DESC')->findAll();
+        $pengaturanModel     = new PengaturanModel();
+        $data['appSettings'] = $this->appSettings ?: $pengaturanModel->getSettings();
+        $data['prestasi']    = $this->prestasiModel->orderBy('tanggal', 'DESC')->findAll();
 
         $html = view('prestasi_siswa/print_pdf', $data);
 

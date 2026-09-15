@@ -110,19 +110,120 @@ Aplikasi ini menangani:
 - `honeypot` aktif khusus pada route `buku-tamu/*`.
 - Aplikasi menggunakan session CodeIgniter untuk manajemen pengguna.
 
-## Setup dan Jalankan
+## Prasyarat Sistem
 
-1. Install dependencies:
-   ```bash
-   composer install
-   ```
-2. Salin `env` ke `.env` dan atur konfigurasi:
-   - `app.baseURL`
-   - database
-   - env, debug, dan session
-3. Pastikan web server diarahkan ke folder `public/`.
-4. Pastikan direktori `writable/` dan `public/uploads/` dapat ditulis.
-5. Jalankan migrasi database jika tersedia.
+Sebelum melakukan clone dan instalasi, pastikan sistem Anda memenuhi persyaratan berikut:
+- **PHP**: Versi 8.1+ (disarankan PHP 8.2 atau 8.4)
+- **Ekstensi PHP Wajib**: `php-intl`, `php-mbstring`, `php-gd` (untuk logo & gambar), `php-curl`, `php-mysqli`, `php-fileinfo`
+- **Database**: MySQL 5.7+ / MariaDB 10.3+
+- **Composer**: Versi 2.x
+- **Web Server**: Apache / Nginx / PHP Built-in Server
+
+---
+
+## Panduan Instalasi Step-by-Step (Setelah Clone)
+
+Ikuti langkah-langkah berikut secara berurutan untuk menjalankan proyek setelah di-clone dari repository:
+
+### 1. Clone Repository
+Buka terminal dan clone repository ke direktori lokal Anda:
+```bash
+git clone https://github.com/giehotz/surat.git
+cd surat
+```
+
+### 2. Install Dependensi Composer
+Jalankan composer untuk mengunduh semua library dan vendor yang dibutuhkan:
+```bash
+composer install
+```
+
+### 3. Salin dan Atur Konfigurasi Environment (`.env`)
+Salin file template `.env.example` menjadi `.env`:
+- **Windows (CMD / PowerShell):**
+  ```bash
+  copy .env.example .env
+  ```
+- **Linux / macOS:**
+  ```bash
+  cp .env.example .env
+  ```
+
+Buka file `.env` menggunakan text editor dan sesuaikan:
+```ini
+# Ubah ke 'development' untuk lokal atau 'production' untuk live server
+CI_ENVIRONMENT = development
+
+# Sesuaikan URL lokal Anda (akhiri dengan garis miring '/')
+app.baseURL = 'http://localhost:8080/'
+
+# Konfigurasi Database
+database.default.hostname = localhost
+database.default.database = nama_database_anda
+database.default.username = root
+database.default.password = 
+database.default.DBDriver = MySQLi
+database.default.port = 3306
+```
+
+### 4. Buat Database MySQL
+Buat database baru di MySQL (melalui phpMyAdmin, MySQL Workbench, atau terminal):
+```sql
+CREATE DATABASE nama_database_anda CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+### 5. Jalankan Migrasi Database
+Jalankan perintah spark untuk membuat seluruh struktur tabel:
+```bash
+php spark migrate
+```
+
+### 6. Isi Data Awal (Seeding)
+Jalankan seeder untuk mengisi akun pengguna bawaan dan identitas madrasah/sekolah:
+```bash
+php spark db:seed UserSeeder
+php spark db:seed PengaturanSeeder
+```
+
+> **Akun Default untuk Login:**
+> | Role | Username | Password Default | Keterangan |
+> | :--- | :--- | :--- | :--- |
+> | **Admin** | `admin` | `admin123` | Hak akses penuh & pengaturan sistem |
+> | **Pimpinan** | `pimpinan` | `pimpinan123` | Persetujuan surat keluar & disposisi |
+> | **Operator** | `operator` | `operator123` | Pencatatan surat masuk & buku tamu |
+
+*Catatan: Segera ubah password akun default setelah berhasil masuk ke sistem melalui menu profil.*
+
+### 7. Atur Izin Akses Direktori (Permissions)
+Pastikan folder `writable/` dan `public/uploads/` memiliki izin baca dan tulis:
+- **Linux / macOS / VPS / Shared Hosting:**
+  ```bash
+  chmod -R 775 writable public/uploads
+  # Atau jika web server menggunakan user www-data:
+  chown -R www-data:www-data writable public/uploads
+  ```
+- **Windows (Laragon / XAMPP):** Secara umum izin sudah otomatis terbuka, pastikan folder tidak berstatus *Read-Only*.
+
+### 8. Jalankan Aplikasi
+
+- **Menggunakan Local Spark Server (Rekomendasi Cepat):**
+  ```bash
+  php spark serve
+  ```
+  Buka browser Anda dan akses: **[http://localhost:8080](http://localhost:8080)**
+
+- **Menggunakan Laragon / XAMPP / Apache VirtualHost:**
+  Arahkan **DocumentRoot** langsung ke direktori `public/` (bukan root folder proyek). Contoh konfigurasi VirtualHost:
+  ```apache
+  <VirtualHost *:80>
+      ServerName surat.local
+      DocumentRoot "D:/surat/public"
+      <Directory "D:/surat/public">
+          AllowOverride All
+          Require all granted
+      </Directory>
+  </VirtualHost>
+  ```
 
 ## Catatan Penting
 
