@@ -119,57 +119,66 @@ class SuratService
         $formatModel = new FormatSuratModel();
         $updated = 0;
 
+        $hasFormatCol = $suratKeluarModel->db->fieldExists('format_surat_id', 'surat_keluar');
+        $hasNomorUrutCol = $suratKeluarModel->db->fieldExists('nomor_urut', 'surat_keluar');
+
         // 1. Proses record yang memiliki format_surat_id (pakai template)
-        $withFormat = $suratKeluarModel
-            ->where('format_surat_id IS NOT NULL', null, false)
-            ->where('nomor_urut !=', '')
-            ->where('nomor_urut IS NOT NULL', null, false)
-            ->orderBy('format_surat_id', 'ASC')
-            ->orderBy('YEAR(tanggal_surat)', 'ASC')
-            ->orderBy("CAST(nomor_urut AS UNSIGNED)", 'ASC')
-            ->orderBy('id', 'ASC')
-            ->findAll();
+        if ($hasFormatCol && $hasNomorUrutCol) {
+            $withFormat = $suratKeluarModel
+                ->where('format_surat_id IS NOT NULL', null, false)
+                ->where('nomor_urut !=', '')
+                ->where('nomor_urut IS NOT NULL', null, false)
+                ->orderBy('format_surat_id', 'ASC')
+                ->orderBy('YEAR(tanggal_surat)', 'ASC')
+                ->orderBy("CAST(nomor_urut AS UNSIGNED)", 'ASC')
+                ->orderBy('id', 'ASC')
+                ->findAll();
 
-        $grouped = [];
-        foreach ($withFormat as $s) {
-            if (!empty($s['format_surat_id']) && !empty($s['tanggal_surat'])) {
-                $tahun = date('Y', strtotime($s['tanggal_surat']));
-                $key = $s['format_surat_id'] . '-' . $tahun;
-                $grouped[$key][] = $s;
-            }
-        }
-
-        foreach ($grouped as $list) {
-            $no = 1;
-            foreach ($list as $rec) {
-                $nomorUrutBaru = str_pad($no, 3, '0', STR_PAD_LEFT);
-
-                if ($rec['nomor_urut'] === $nomorUrutBaru) {
-                    $no++;
-                    continue;
+            $grouped = [];
+            foreach ($withFormat as $s) {
+                if (!empty($s['format_surat_id']) && !empty($s['tanggal_surat'])) {
+                    $tahun = date('Y', strtotime($s['tanggal_surat']));
+                    $key = $s['format_surat_id'] . '-' . $tahun;
+                    $grouped[$key][] = $s;
                 }
+            }
 
-                $format = $formatModel->find($rec['format_surat_id']);
-                $tahun = date('Y', strtotime($rec['tanggal_surat']));
-                $nomorSuratBaru = $format
-                    ? $this->generateNomorSurat($format['template'], $nomorUrutBaru, $rec['bulan'], $tahun)
-                    : '';
+            foreach ($grouped as $list) {
+                $no = 1;
+                foreach ($list as $rec) {
+                    $nomorUrutBaru = str_pad($no, 3, '0', STR_PAD_LEFT);
 
-                $suratKeluarModel->update($rec['id'], [
-                    'nomor_urut' => $nomorUrutBaru,
-                    'nomor_surat' => $nomorSuratBaru,
-                ]);
-                $updated++;
-                $no++;
+                    if ($rec['nomor_urut'] === $nomorUrutBaru) {
+                        $no++;
+                        continue;
+                    }
+
+                    $format = $formatModel->find($rec['format_surat_id']);
+                    $tahun = date('Y', strtotime($rec['tanggal_surat']));
+                    $nomorSuratBaru = $format
+                        ? $this->generateNomorSurat($format['template'], $nomorUrutBaru, $rec['bulan'] ?? null, $tahun)
+                        : '';
+
+                    $suratKeluarModel->update($rec['id'], [
+                        'nomor_urut' => $nomorUrutBaru,
+                        'nomor_surat' => $nomorSuratBaru,
+                    ]);
+                    $updated++;
+                    $no++;
+                }
             }
         }
 
         // 2. Proses record legacy (format_surat_id IS NULL)
-        $legacy = $suratKeluarModel
-            ->where('format_surat_id IS NULL', null, false)
+        $legacyQuery = $suratKeluarModel
             ->where('nomor_surat !=', '')
-            ->where('nomor_surat IS NOT NULL', null, false)
-            ->findAll();
+            ->where('nomor_surat IS NOT NULL', null, false);
+
+        if ($hasFormatCol) {
+            $legacyQuery->where('format_surat_id IS NULL', null, false);
+        }
+
+        $legacy = $legacyQuery->findAll();
 
         $legacyGrouped = [];
         foreach ($legacy as $rec) {
@@ -205,10 +214,11 @@ class SuratService
                     $newNomorSurat = $prefix . '-' . $nomorBaru . $rest;
 
                     if ($rec['nomor_surat'] !== $newNomorSurat) {
-                        $suratKeluarModel->update($rec['id'], [
-                            'nomor_urut' => $nomorBaru,
-                            'nomor_surat' => $newNomorSurat,
-                        ]);
+                        $updateData = ['nomor_surat' => $newNomorSurat];
+                        if ($hasNomorUrutCol) {
+                            $updateData['nomor_urut'] = $nomorBaru;
+                        }
+                        $suratKeluarModel->update($rec['id'], $updateData);
                         $updated++;
                     }
                 }
