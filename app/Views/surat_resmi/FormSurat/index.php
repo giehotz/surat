@@ -177,7 +177,7 @@ $pimpinanOptions = [
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<script src="https://cdn.tiny.cloud/1/4wj73q4szc3rdlnlsj744qe11xih3cmbai3g0b7eoheca3d1/tinymce/8/tinymce.min.js" referrerpolicy="origin"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js" referrerpolicy="origin"></script>
 <?= $this->include('surat_resmi/FormSurat/Partial/_template_selector_js') ?>
 
 <script>
