@@ -117,155 +117,180 @@ class SuratService
     {
         $suratKeluarModel = new SuratKeluarModel();
         $formatModel = new FormatSuratModel();
+        $db = $suratKeluarModel->db;
         $updated = 0;
 
         $hasFormatCol = $suratKeluarModel->db->fieldExists('format_surat_id', 'surat_keluar');
         $hasNomorUrutCol = $suratKeluarModel->db->fieldExists('nomor_urut', 'surat_keluar');
 
-        // 1. Proses record yang memiliki format_surat_id (pakai template)
-        if ($hasFormatCol && $hasNomorUrutCol) {
-            $withFormat = $suratKeluarModel
-                ->where('format_surat_id IS NOT NULL', null, false)
-                ->where('nomor_urut !=', '')
-                ->where('nomor_urut IS NOT NULL', null, false)
-                ->orderBy('format_surat_id', 'ASC')
-                ->orderBy('YEAR(tanggal_surat)', 'ASC')
-                ->orderBy("CAST(nomor_urut AS UNSIGNED)", 'ASC')
+        $db->transBegin();
+
+        try {
+            // 1. Proses record yang memiliki format_surat_id (pakai template)
+            if ($hasFormatCol && $hasNomorUrutCol) {
+                $withFormat = $suratKeluarModel
+                    ->where('format_surat_id IS NOT NULL', null, false)
+                    ->where('nomor_urut !=', '')
+                    ->where('nomor_urut IS NOT NULL', null, false)
+                    ->orderBy('format_surat_id', 'ASC')
+                    ->orderBy('YEAR(tanggal_surat)', 'ASC')
+                    ->orderBy("CAST(nomor_urut AS UNSIGNED)", 'ASC')
+                    ->orderBy('id', 'ASC')
+                    ->findAll();
+
+                if (!empty($withFormat)) {
+                    // Set temporary nomor_surat to avoid duplicate entry on unique key
+                    foreach ($withFormat as $rec) {
+                        $suratKeluarModel->update($rec['id'], [
+                            'nomor_surat' => 'TEMP-FMT-' . $rec['id'] . '-' . uniqid()
+                        ]);
+                    }
+
+                    $grouped = [];
+                    foreach ($withFormat as $s) {
+                        if (!empty($s['format_surat_id']) && !empty($s['tanggal_surat'])) {
+                            $tahun = date('Y', strtotime($s['tanggal_surat']));
+                            $key = $s['format_surat_id'] . '-' . $tahun;
+                            $grouped[$key][] = $s;
+                        }
+                    }
+
+                    foreach ($grouped as $list) {
+                        $no = 1;
+                        foreach ($list as $rec) {
+                            $nomorUrutBaru = str_pad($no, 3, '0', STR_PAD_LEFT);
+                            $format = $formatModel->find($rec['format_surat_id']);
+                            $tahun = date('Y', strtotime($rec['tanggal_surat']));
+                            $nomorSuratBaru = $format
+                                ? $this->generateNomorSurat($format['template'], $nomorUrutBaru, $rec['bulan'] ?? null, $tahun)
+                                : '';
+
+                            $suratKeluarModel->update($rec['id'], [
+                                'nomor_urut' => $nomorUrutBaru,
+                                'nomor_surat' => $nomorSuratBaru,
+                            ]);
+                            if ($rec['nomor_urut'] !== $nomorUrutBaru || $rec['nomor_surat'] !== $nomorSuratBaru) {
+                                $updated++;
+                            }
+                            $no++;
+                        }
+                    }
+                }
+            }
+
+            // 2. Proses record legacy (format_surat_id IS NULL)
+            $legacyQuery = $suratKeluarModel
+                ->where('nomor_surat !=', '')
+                ->where('nomor_surat IS NOT NULL', null, false);
+
+            if ($hasFormatCol) {
+                $legacyQuery->where('format_surat_id IS NULL', null, false);
+            }
+
+            $legacy = $legacyQuery->findAll();
+
+            if (!empty($legacy)) {
+                // Set temporary nomor_surat to avoid unique key collisions
+                foreach ($legacy as $rec) {
+                    $suratKeluarModel->update($rec['id'], [
+                        'nomor_surat' => 'TEMP-LEG-' . $rec['id'] . '-' . uniqid()
+                    ]);
+                }
+
+                $legacyGrouped = [];
+                foreach ($legacy as $rec) {
+                    $tahun = date('Y', strtotime($rec['tanggal_surat']));
+                    if (!$tahun || $tahun == '0000') {
+                        preg_match('/(\d{4})$/', $rec['nomor_surat'], $m);
+                        $tahun = $m[1] ?? 'unknown';
+                    }
+                    preg_match('/^([A-Za-z]+)-\d+/', $rec['nomor_surat'], $m);
+                    $prefix = $m[1] ?? 'unknown';
+                    $key = $prefix . '-' . $tahun;
+                    $legacyGrouped[$key][] = $rec;
+                }
+
+                foreach ($legacyGrouped as &$list) {
+                    usort($list, function ($a, $b) {
+                        preg_match('/^[A-Za-z]+-(\d+)/', $a['nomor_surat'], $ma);
+                        preg_match('/^[A-Za-z]+-(\d+)/', $b['nomor_surat'], $mb);
+                        $na = (int) ($ma[1] ?? 0);
+                        $nb = (int) ($mb[1] ?? 0);
+                        return $na === $nb ? $a['id'] - $b['id'] : $na - $nb;
+                    });
+                }
+
+                foreach ($legacyGrouped as $list) {
+                    $no = 1;
+                    foreach ($list as $rec) {
+                        $nomorBaru = str_pad($no, 3, '0', STR_PAD_LEFT);
+                        preg_match('/^([A-Za-z]+)-(\d+)(.*)$/', $rec['nomor_surat'], $m);
+                        if ($m) {
+                            $prefix = $m[1];
+                            $rest = $m[3];
+                            $newNomorSurat = $prefix . '-' . $nomorBaru . $rest;
+
+                            $updateData = ['nomor_surat' => $newNomorSurat];
+                            if ($hasNomorUrutCol) {
+                                $updateData['nomor_urut'] = $nomorBaru;
+                            }
+                            $suratKeluarModel->update($rec['id'], $updateData);
+
+                            if ($rec['nomor_surat'] !== $newNomorSurat) {
+                                $updated++;
+                            }
+                        }
+                        $no++;
+                    }
+                }
+            }
+
+            // 3. Renumber nomor_agenda (OUT-YYYY-NNN)
+            $allSurat = $suratKeluarModel
+                ->where('nomor_agenda !=', '')
+                ->where('nomor_agenda IS NOT NULL', null, false)
                 ->orderBy('id', 'ASC')
                 ->findAll();
 
-            $grouped = [];
-            foreach ($withFormat as $s) {
-                if (!empty($s['format_surat_id']) && !empty($s['tanggal_surat'])) {
-                    $tahun = date('Y', strtotime($s['tanggal_surat']));
-                    $key = $s['format_surat_id'] . '-' . $tahun;
-                    $grouped[$key][] = $s;
-                }
+            foreach ($allSurat as $s) {
+                $suratKeluarModel->update($s['id'], [
+                    'nomor_agenda' => 'OUT-TEMP-' . $s['id'] . '-' . uniqid()
+                ]);
             }
 
-            foreach ($grouped as $list) {
+            $chronological = $suratKeluarModel
+                ->orderBy('YEAR(tanggal_surat)', 'ASC')
+                ->orderBy('tanggal_surat', 'ASC')
+                ->orderBy('id', 'ASC')
+                ->findAll();
+
+            $groupedByYear = [];
+            foreach ($chronological as $s) {
+                $tahun = date('Y', strtotime($s['tanggal_surat']));
+                if (!$tahun || $tahun == '0000') {
+                    $tahun = date('Y');
+                }
+                $groupedByYear[$tahun][] = $s;
+            }
+
+            foreach ($groupedByYear as $tahun => $list) {
                 $no = 1;
                 foreach ($list as $rec) {
-                    $nomorUrutBaru = str_pad($no, 3, '0', STR_PAD_LEFT);
-
-                    if ($rec['nomor_urut'] === $nomorUrutBaru) {
-                        $no++;
-                        continue;
-                    }
-
-                    $format = $formatModel->find($rec['format_surat_id']);
-                    $tahun = date('Y', strtotime($rec['tanggal_surat']));
-                    $nomorSuratBaru = $format
-                        ? $this->generateNomorSurat($format['template'], $nomorUrutBaru, $rec['bulan'] ?? null, $tahun)
-                        : '';
-
-                    $suratKeluarModel->update($rec['id'], [
-                        'nomor_urut' => $nomorUrutBaru,
-                        'nomor_surat' => $nomorSuratBaru,
-                    ]);
-                    $updated++;
-                    $no++;
-                }
-            }
-        }
-
-        // 2. Proses record legacy (format_surat_id IS NULL)
-        $legacyQuery = $suratKeluarModel
-            ->where('nomor_surat !=', '')
-            ->where('nomor_surat IS NOT NULL', null, false);
-
-        if ($hasFormatCol) {
-            $legacyQuery->where('format_surat_id IS NULL', null, false);
-        }
-
-        $legacy = $legacyQuery->findAll();
-
-        $legacyGrouped = [];
-        foreach ($legacy as $rec) {
-            $tahun = date('Y', strtotime($rec['tanggal_surat']));
-            if (!$tahun || $tahun == '0000') {
-                preg_match('/(\d{4})$/', $rec['nomor_surat'], $m);
-                $tahun = $m[1] ?? 'unknown';
-            }
-            preg_match('/^([A-Za-z]+)-\d+/', $rec['nomor_surat'], $m);
-            $prefix = $m[1] ?? 'unknown';
-            $key = $prefix . '-' . $tahun;
-            $legacyGrouped[$key][] = $rec;
-        }
-
-        foreach ($legacyGrouped as &$list) {
-            usort($list, function ($a, $b) {
-                preg_match('/^[A-Za-z]+-(\d+)/', $a['nomor_surat'], $ma);
-                preg_match('/^[A-Za-z]+-(\d+)/', $b['nomor_surat'], $mb);
-                $na = (int) ($ma[1] ?? 0);
-                $nb = (int) ($mb[1] ?? 0);
-                return $na === $nb ? $a['id'] - $b['id'] : $na - $nb;
-            });
-        }
-
-        foreach ($legacyGrouped as $list) {
-            $no = 1;
-            foreach ($list as $rec) {
-                $nomorBaru = str_pad($no, 3, '0', STR_PAD_LEFT);
-                preg_match('/^([A-Za-z]+)-(\d+)(.*)$/', $rec['nomor_surat'], $m);
-                if ($m) {
-                    $prefix = $m[1];
-                    $rest = $m[3];
-                    $newNomorSurat = $prefix . '-' . $nomorBaru . $rest;
-
-                    if ($rec['nomor_surat'] !== $newNomorSurat) {
-                        $updateData = ['nomor_surat' => $newNomorSurat];
-                        if ($hasNomorUrutCol) {
-                            $updateData['nomor_urut'] = $nomorBaru;
-                        }
-                        $suratKeluarModel->update($rec['id'], $updateData);
-                        $updated++;
-                    }
-                }
-                $no++;
-            }
-        }
-
-        // 3. Renumber nomor_agenda (OUT-YYYY-NNN)
-        $allSurat = $suratKeluarModel
-            ->where('nomor_agenda !=', '')
-            ->where('nomor_agenda IS NOT NULL', null, false)
-            ->orderBy('id', 'ASC')
-            ->findAll();
-
-        foreach ($allSurat as $s) {
-            $suratKeluarModel->update($s['id'], [
-                'nomor_agenda' => 'OUT-TEMP-' . $s['id']
-            ]);
-        }
-
-        $chronological = $suratKeluarModel
-            ->orderBy('YEAR(tanggal_surat)', 'ASC')
-            ->orderBy('tanggal_surat', 'ASC')
-            ->orderBy('id', 'ASC')
-            ->findAll();
-
-        $groupedByYear = [];
-        foreach ($chronological as $s) {
-            $tahun = date('Y', strtotime($s['tanggal_surat']));
-            if (!$tahun || $tahun == '0000') {
-                $tahun = date('Y');
-            }
-            $groupedByYear[$tahun][] = $s;
-        }
-
-        foreach ($groupedByYear as $tahun => $list) {
-            $no = 1;
-            foreach ($list as $rec) {
-                $nomorBaru = 'OUT-' . $tahun . '-' . sprintf('%03d', $no);
-                if ($rec['nomor_agenda'] !== $nomorBaru) {
+                    $nomorBaru = 'OUT-' . $tahun . '-' . sprintf('%03d', $no);
                     $suratKeluarModel->update($rec['id'], [
                         'nomor_agenda' => $nomorBaru
                     ]);
-                    $updated++;
+                    if ($rec['nomor_agenda'] !== $nomorBaru) {
+                        $updated++;
+                    }
+                    $no++;
                 }
-                $no++;
             }
+
+            $db->transCommit();
+        } catch (\Throwable $e) {
+            $db->transRollback();
+            throw $e;
         }
 
         return $updated;

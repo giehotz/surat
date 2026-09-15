@@ -807,9 +807,15 @@ class SuratKeluar extends BaseController
             return redirect()->to('/surat-keluar')->with('error', 'Metode tidak diizinkan.');
         }
 
-        $updated = $this->suratService->renumberSuratKeluar();
+        try {
+            $updated = $this->suratService->renumberSuratKeluar();
 
-        return redirect()->to('/surat-keluar')
-            ->with('success', "Berhasil merapikan nomor urut $updated surat keluar.");
+            return redirect()->to('/surat-keluar')
+                ->with('success', "Berhasil merapikan nomor urut $updated surat keluar.");
+        } catch (\Throwable $e) {
+            log_message('error', 'Error renumber surat keluar: ' . $e->getMessage());
+            return redirect()->to('/surat-keluar')
+                ->with('error', 'Gagal merapikan nomor surat: ' . $e->getMessage());
+        }
     }
 }
