@@ -138,6 +138,20 @@ Jalankan composer untuk mengunduh semua library dan vendor yang dibutuhkan:
 composer install
 ```
 
+> [!TIP]
+> **Tips Hosting dengan Versi Default PHP Lama (misal PHP 7.2):**
+> Jika default CLI server hosting Anda menggunakan versi PHP lama (misal PHP 7.2 untuk web utama), alihkan versi PHP terminal sementara ke PHP 8.4 saat menjalankan `composer install` / `composer update`, atau jalankan composer langsung dengan path binary PHP 8.4:
+> ```bash
+> ea-php84 $(which composer) install
+> # atau
+> /usr/local/bin/php84 $(which composer) install
+> ```
+> Setelah instalasi composer selesai, versi default hosting dapat dikembalikan ke PHP 7.2. Di sisi web server, file `public/.htaccess` sudah dikonfigurasi dengan:
+> ```apache
+> AddHandler application/x-httpd-php84 .php
+> ```
+> sehingga web server LiteSpeed otomatis mengeksekusi proyek ini menggunakan PHP 8.4 tanpa terpengaruh oleh default PHP 7.2 domain utama.
+
 ### 3. Salin dan Atur Konfigurasi Environment (`.env`)
 Salin file template `.env.example` menjadi `.env`:
 - **Windows (CMD / PowerShell):**
