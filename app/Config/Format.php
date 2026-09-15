@@ -61,4 +61,9 @@ class Format extends BaseConfig
         'application/xml'  => 0,
         'text/xml'         => 0,
     ];
+
+    public int $jsonEncodeOptions = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
+    public bool $jsonDecodeAssociative = true;
+    public int $jsonEncodeDepth = 512;
+    public int $jsonDecodeDepth = 512;
 }
