@@ -12,6 +12,7 @@
     <link href="<?= base_url('assets/tabler/css/tabler-vendors.min.css') ?>" rel="stylesheet" />
 
     <!-- Tabler Icons (Local Webfont) -->
+    <link rel="preload" href="<?= base_url('assets/tabler/fonts/tabler-icons.woff2?v2.47.0') ?>" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="<?= base_url('assets/tabler/icons/tabler-icons.min.css') ?>">
 
     <style>
