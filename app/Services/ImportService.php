@@ -7,6 +7,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx as XlsxReader;
 use PhpOffice\PhpSpreadsheet\Reader\Xls as XlsReader;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use App\Models\SuratMasukModel;
 use App\Models\SuratKeluarModel;
 use App\Models\LogAktivitasModel;
@@ -162,9 +163,19 @@ class ImportService
      */
     public function parseExcelSuratMasuk($file): array
     {
-        $extension = $file->getExtension();
-        $reader = ($extension === 'xls') ? new XlsReader() : new XlsxReader();
-        $spreadsheet = $reader->load($file->getTempName());
+        $filePath = $file->getTempName();
+        if (empty($filePath) || !is_file($filePath)) {
+            throw new \RuntimeException('File Excel tidak ditemukan di temporary directory.');
+        }
+
+        try {
+            $reader = IOFactory::createReaderForFile($filePath);
+            $reader->setReadDataOnly(true);
+            $spreadsheet = $reader->load($filePath);
+        } catch (\Throwable $e) {
+            throw new \RuntimeException('Gagal membaca file Excel surat masuk: ' . $e->getMessage());
+        }
+
         $sheetData = $spreadsheet->getActiveSheet()->toArray();
 
         $importData = [];
@@ -208,9 +219,19 @@ class ImportService
      */
     public function parseExcelSuratKeluar($file): array
     {
-        $extension = $file->getExtension();
-        $reader = ($extension === 'xls') ? new XlsReader() : new XlsxReader();
-        $spreadsheet = $reader->load($file->getTempName());
+        $filePath = $file->getTempName();
+        if (empty($filePath) || !is_file($filePath)) {
+            throw new \RuntimeException('File Excel tidak ditemukan di temporary directory.');
+        }
+
+        try {
+            $reader = IOFactory::createReaderForFile($filePath);
+            $reader->setReadDataOnly(true);
+            $spreadsheet = $reader->load($filePath);
+        } catch (\Throwable $e) {
+            throw new \RuntimeException('Gagal membaca file Excel surat keluar: ' . $e->getMessage());
+        }
+
         $sheetData = $spreadsheet->getActiveSheet()->toArray(null, true, false, false);
 
         $importData = [];
