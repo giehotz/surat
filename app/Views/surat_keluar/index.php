@@ -635,6 +635,82 @@
             });
         }
 
+        // Konfirmasi Hapus Satuan (Single Delete) menggunakan SweetAlert2
+        $(document).on('click', '.btn-delete-single', function(e) {
+            e.preventDefault();
+            var btn = $(this);
+            var form = btn.closest('form');
+            var nomorSurat = btn.data('nomor') ? ('nomor "' + btn.data('nomor') + '"') : 'surat keluar ini';
+
+            Swal.fire({
+                title: 'Hapus Surat Keluar?',
+                html: `
+                    <div class="text-center">
+                        <div class="alert alert-danger py-2 px-3 text-start small mb-3">
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="ti ti-alert-triangle fs-2 text-danger me-2"></i>
+                                <strong class="text-danger">PERINGATAN!</strong>
+                            </div>
+                            <div class="text-secondary">
+                                Data ${nomorSurat} akan dihapus secara permanen beserta berkas lampiran yang tersimpan.
+                            </div>
+                        </div>
+                        <p class="text-muted small mb-0">Tindakan ini <strong>tidak dapat dibatalkan</strong>. Apakah Anda yakin ingin menghapus surat ini?</p>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d63939',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="ti ti-trash me-1"></i> Ya, Hapus',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                focusCancel: true
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Menghapus...',
+                        text: 'Mohon tunggu sebentar.',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: function() { Swal.showLoading(); }
+                    });
+
+                    $.ajax({
+                        url: form.attr('action'),
+                        type: 'POST',
+                        data: form.serialize(),
+                        dataType: 'json',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        success: function(response) {
+                            Swal.close();
+                            if (response.success) {
+                                Toast.fire({
+                                    icon: 'success',
+                                    title: response.message || 'Surat berhasil dihapus'
+                                });
+                                table.ajax.reload(null, false);
+                            } else {
+                                Swal.fire('Gagal Menghapus', response.message || 'Gagal menghapus surat.', 'error');
+                            }
+                        },
+                        error: function(xhr) {
+                            if (xhr.status === 200 || xhr.status === 302) {
+                                form.submit();
+                                return;
+                            }
+                            Swal.close();
+                            var errorMsg = 'Terjadi kesalahan server saat memproses penghapusan.';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errorMsg = xhr.responseJSON.message;
+                            }
+                            Swal.fire('Gagal', errorMsg, 'error');
+                        }
+                    });
+                }
+            });
+        });
+
         // Tombol Filter: terapkan filter dan kembali ke halaman pertama
         $('#btn-filter').on('click', function() {
             table.page(0).draw(false);

@@ -148,8 +148,12 @@ class SuratKeluar extends BaseController
             $btn = '<div class="btn-list flex-nowrap justify-content-center">';
             $btn .= '<a href="' . base_url('surat-keluar/show/' . $sk['id']) . '" class="btn btn-icon btn-sm btn-outline-info" title="Detail"><i class="ti ti-eye"></i></a>';
             if ($role !== 'pimpinan') {
+                $nomorLabel = esc($sk['nomor_surat'] ?: ($sk['nomor_agenda'] ?? ''));
                 $btn .= '<a href="' . base_url('surat-keluar/edit/' . $sk['id']) . '" class="btn btn-icon btn-sm btn-outline-primary" title="Edit"><i class="ti ti-edit"></i></a>';
-                $btn .= '<form action="' . base_url('surat-keluar/delete/' . $sk['id']) . '" method="post" style="display:inline;">' . csrf_field() . '<button type="submit" class="btn btn-icon btn-sm btn-outline-danger" title="Hapus" onclick="return confirm(\'Apakah Anda yakin?\');"><i class="ti ti-trash"></i></button></form>';
+                $btn .= '<form action="' . base_url('surat-keluar/delete/' . $sk['id']) . '" method="post" style="display:inline;" class="form-delete-single">'
+                    . csrf_field()
+                    . '<button type="button" class="btn btn-icon btn-sm btn-outline-danger btn-delete-single" title="Hapus" data-id="' . $sk['id'] . '" data-nomor="' . $nomorLabel . '"><i class="ti ti-trash"></i></button>'
+                    . '</form>';
             }
             $btn .= '</div>';
             $row[] = $btn;
@@ -461,6 +465,12 @@ class SuratKeluar extends BaseController
         $surat = $this->suratKeluarModel->find($id);
 
         if (empty($surat)) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(404)->setJSON([
+                    'success' => false,
+                    'message' => 'Data Surat Keluar tidak ditemukan.'
+                ]);
+            }
             return redirect()->back()->with('error', 'Data Surat Keluar tidak ditemukan.');
         }
 
@@ -470,16 +480,24 @@ class SuratKeluar extends BaseController
 
         $this->suratKeluarModel->delete($id);
 
+        $nomorInfo = !empty($surat['nomor_surat']) ? $surat['nomor_surat'] : ($surat['nomor_agenda'] ?? "ID #{$id}");
         $logModel = new LogAktivitasModel();
         $logModel->save([
             'user_id'    => session()->get('user_id'),
             'surat_id'   => $id,
             'aksi'       => 'delete',
             'tipe_surat' => 'surat_keluar',
-            'detail'     => 'Menghapus surat keluar nomor ' . $surat['nomor_surat'],
+            'detail'     => 'Menghapus surat keluar nomor ' . $nomorInfo,
             'ip_address' => $this->request->getIPAddress(),
             'user_agent' => $this->request->getUserAgent()->getAgentString()
         ]);
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Surat Keluar berhasil dihapus.'
+            ]);
+        }
 
         return redirect()->to('/surat-keluar')->with('success', 'Surat Keluar berhasil dihapus');
     }
