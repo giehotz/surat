@@ -616,6 +616,68 @@ class SuratKeluar extends BaseController
         ]);
     }
 
+    public function bulkDelete(): ResponseInterface
+    {
+        $userRole = session('role');
+        if ($userRole !== 'pimpinan' && $userRole !== 'admin') {
+            return $this->response->setStatusCode(403)->setJSON([
+                'success' => false,
+                'message' => 'Akses ditolak. Hanya pimpinan atau administrator yang dapat menghapus surat.'
+            ]);
+        }
+
+        $ids = $this->request->getPost('ids');
+        if (empty($ids) || !is_array($ids)) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Tidak ada surat yang dipilih untuk dihapus.'
+            ]);
+        }
+
+        $logModel     = new LogAktivitasModel();
+        $userId       = session()->get('user_id');
+        $deletedCount = 0;
+        $errors       = [];
+
+        foreach ($ids as $id) {
+            $id = (int) $id;
+            $surat = $this->suratKeluarModel->find($id);
+
+            if (empty($surat)) {
+                $errors[] = ['id' => $id, 'message' => 'Data tidak ditemukan.'];
+                continue;
+            }
+
+            // Hapus file fisik jika menggunakan penyimpanan lokal
+            if ($surat['tipe_penyimpanan'] === 'lokal' && !empty($surat['file_path'])) {
+                $this->suratService->deleteFile($surat['file_path']);
+            }
+
+            // Hapus record dari database
+            $this->suratKeluarModel->delete($id);
+
+            $nomorInfo = !empty($surat['nomor_surat']) ? $surat['nomor_surat'] : ($surat['nomor_agenda'] ?? "ID #{$id}");
+            $logModel->save([
+                'user_id'    => $userId,
+                'surat_id'   => $id,
+                'aksi'       => 'delete',
+                'tipe_surat' => 'surat_keluar',
+                'detail'     => 'Menghapus surat keluar nomor ' . $nomorInfo,
+                'ip_address' => $this->request->getIPAddress(),
+                'user_agent' => $this->request->getUserAgent()->getAgentString()
+            ]);
+
+            $deletedCount++;
+        }
+
+        return $this->response->setJSON([
+            'success'   => true,
+            'message'   => "Sebanyak {$deletedCount} surat keluar berhasil dihapus secara permanen.",
+            'processed' => $deletedCount,
+            'errors'    => $errors
+        ]);
+    }
+
     public function reject($id = null)
     {
         $userRole = session('role');

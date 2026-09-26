@@ -78,9 +78,14 @@
                             </select>
                     </div>
                     <div class="col-md-3">
-                        <button type="button" id="btn-filter" class="btn btn-primary w-100">
-                            <i class="ti ti-filter me-1.5"></i> Filter Data
-                        </button>
+                        <div class="d-flex gap-2">
+                            <button type="button" id="btn-filter" class="btn btn-primary flex-fill">
+                                <i class="ti ti-filter me-1.5"></i> Filter Data
+                            </button>
+                            <button type="button" id="btn-reset-filter" class="btn btn-outline-secondary" title="Reset Filter & Pagination">
+                                <i class="ti ti-rotate-2"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -279,67 +284,89 @@
         var role = '<?= session()->get("role") ?>';
         var isApprover = (role === 'pimpinan' || role === 'admin');
 
-        // ✨ PAGINATION STATE MANAGER - LocalStorage
+        // ✨ PAGINATION & FILTER STATE MANAGER - LocalStorage
         const paginationKey = 'surat_keluar_pagination_state';
-        const pageSize = 10;
 
-        // Fungsi untuk simpan state ke localStorage
-        function savePaginationState(pageIndex, pageLength, startDate, endDate, status) {
-            const state = {
-                page: pageIndex,
-                pageLength: pageLength,
-                startDate: startDate,
-                endDate: endDate,
-                status: status,
-                timestamp: new Date().getTime()
-            };
-            localStorage.setItem(paginationKey, JSON.stringify(state));
-        }
+        // Pulihkan nilai input filter dari localStorage SEBELUM inisialisasi DataTable
+        // Agar request AJAX perdana langsung mengirim filter yang aktif
+        function restoreFiltersFromStorage() {
+            try {
+                const raw = localStorage.getItem(paginationKey);
+                if (!raw) return;
+                const state = JSON.parse(raw);
+                if (state) {
+                    const startDate = state.filter_start_date || state.startDate || '';
+                    const endDate   = state.filter_end_date   || state.endDate   || '';
+                    const status    = state.filter_status     || state.status    || '';
 
-        // Fungsi untuk ambil state dari localStorage
-        function getPaginationState() {
-            const state = localStorage.getItem(paginationKey);
-            return state ? JSON.parse(state) : null;
-        }
-
-        // Fungsi untuk clear state
-        function clearPaginationState() {
-            localStorage.removeItem(paginationKey);
-        }
-
-        // Restore filter values dari localStorage saat page load
-        function restoreFilterState() {
-            const state = getPaginationState();
-            if (state) {
-                if (state.startDate) $('#filter_start_date').val(state.startDate);
-                if (state.endDate) $('#filter_end_date').val(state.endDate);
-                if (state.status) $('#filter_status').val(state.status);
+                    if (startDate) $('#filter_start_date').val(startDate);
+                    if (endDate)   $('#filter_end_date').val(endDate);
+                    if (status)    $('#filter_status').val(status);
+                }
+            } catch (e) {
+                console.warn('Gagal membaca state filter:', e);
             }
         }
+
+        restoreFiltersFromStorage();
 
         var table = $('#table-surat-keluar').DataTable({
             processing: true,
             serverSide: true,
             responsive: true,
             autoWidth: false,
-            pageLength: pageSize,
+            pageLength: 10,
+            stateSave: true,
+            stateDuration: 0, // 0 = simpan permanen di localStorage tanpa kedaluwarsa waktu
+            stateSaveCallback: function(settings, data) {
+                // Simpan filter kustom bersama state internal DataTables
+                data.filter_start_date = $('#filter_start_date').val();
+                data.filter_end_date   = $('#filter_end_date').val();
+                data.filter_status     = $('#filter_status').val();
+
+                // Hapus state columns agar tidak bentrok dengan visibilitas role (admin vs non-admin)
+                delete data.columns;
+
+                try {
+                    localStorage.setItem(paginationKey, JSON.stringify(data));
+                } catch (e) {
+                    console.warn('Gagal menyimpan state tabel:', e);
+                }
+            },
+            stateLoadCallback: function(settings) {
+                try {
+                    const raw = localStorage.getItem(paginationKey);
+                    if (!raw) return null;
+                    const data = JSON.parse(raw);
+
+                    // Kompatibilitas dengan data state format lama
+                    if (data.page !== undefined && data.start === undefined) {
+                        data.start = data.page;
+                    }
+                    if (data.pageLength !== undefined && data.length === undefined) {
+                        data.length = data.pageLength;
+                    }
+                    if (data.timestamp && !data.time) {
+                        data.time = data.timestamp;
+                    }
+
+                    // Hapus state columns
+                    delete data.columns;
+
+                    return data;
+                } catch (e) {
+                    console.warn('Gagal memuat state tabel:', e);
+                    return null;
+                }
+            },
             ajax: {
                 url: "<?= base_url('surat-keluar/ajax-list') ?>",
                 type: "POST",
                 data: function(d) {
                     d.<?= csrf_token() ?> = "<?= csrf_hash() ?>";
                     d.start_date = $('#filter_start_date').val();
-                    d.end_date = $('#filter_end_date').val();
-                    d.status = $('#filter_status').val();
-
-                    // Simpan state setiap kali ada request
-                    savePaginationState(
-                        d.start,
-                        d.length,
-                        d.start_date,
-                        d.end_date,
-                        d.status
-                    );
+                    d.end_date   = $('#filter_end_date').val();
+                    d.status     = $('#filter_status').val();
                 }
             },
             columnDefs: [
@@ -373,38 +400,19 @@
             dom: "<'row px-3 pt-3'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
                 "<'row'<'col-sm-12'tr>>" +
                 "<'row px-3 pb-3'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
-            drawCallback: function(settings) {
+            drawCallback: function() {
                 updateBulkUI();
-
-                // Setelah table di-render, restore ke halaman yang disimpan
-                const state = getPaginationState();
-                if (state && state.page > 0) {
-                    const api = this.api();
-                    const currentStart = api.settings()[0]._iDisplayStart;
-                    
-                    // Jika berbeda dari state yang disimpan, scroll ke halaman sebelumnya
-                    if (currentStart !== state.page) {
-                        // Cek apakah ini pagination event atau filter event
-                        if (table.settings()[0].json && 
-                            table.settings()[0].json.recordsFiltered >= 0) {
-                            // Gunakan page dari state jika tersedia
-                            const pageNum = Math.floor(state.page / settings._iDisplayLength);
-                            if (pageNum >= 0) {
-                                api.page(pageNum).draw('page');
-                            }
-                        }
-                    }
-                }
+                $('#select-all').prop('checked', false);
             }
         });
 
-        // Restore filter dan pagination saat halaman load
-        $(window).on('load', function() {
-            restoreFilterState();
-            const state = getPaginationState();
-            if (state && table && state.page > 0) {
-                const pageNum = Math.floor(state.page / pageSize);
-                table.page(pageNum).draw('page');
+        // Penyesuaian otomatis jika posisi start melebihi total data hasil filter (misal setelah hapus data)
+        table.on('xhr.dt', function(e, settings, json) {
+            if (json && json.recordsFiltered !== undefined && json.recordsFiltered > 0) {
+                if (settings._iDisplayStart >= json.recordsFiltered) {
+                    var lastPage = Math.floor((json.recordsFiltered - 1) / settings._iDisplayLength);
+                    table.page(lastPage).draw(false);
+                }
             }
         });
 
@@ -482,20 +490,44 @@
             });
         });
 
-        // Bulk Delete
+        // Bulk Delete dengan Konfirmasi Peringatan
         $('#btn-bulk-delete').on('click', function() {
             var ids = getSelectedIds();
-            if (!ids.length) return;
+            if (!ids.length) {
+                Swal.fire({
+                    title: 'Peringatan',
+                    text: 'Silakan pilih setidaknya satu surat keluar yang ingin dihapus.',
+                    icon: 'warning',
+                    confirmButtonColor: '#206bc4',
+                    confirmButtonText: 'Mengerti'
+                });
+                return;
+            }
 
             Swal.fire({
-                title: 'Hapus ' + ids.length + ' surat?',
-                text: 'Semua surat yang dipilih akan dihapus secara permanen.',
+                title: 'Konfirmasi Hapus Massal',
+                html: `
+                    <div class="text-center">
+                        <div class="alert alert-danger py-2 px-3 text-start small mb-3">
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="ti ti-alert-triangle fs-2 text-danger me-2"></i>
+                                <strong class="text-danger">PERINGATAN: TINDAKAN PERMANEN!</strong>
+                            </div>
+                            <div class="text-secondary">
+                                Anda akan menghapus <strong class="text-dark">${ids.length} surat keluar</strong> yang dipilih. File berkas lampiran yang tersimpan di server lokal juga akan ikut terhapus.
+                            </div>
+                        </div>
+                        <p class="text-muted small mb-0">Data yang sudah dihapus <strong>tidak dapat dipulihkan kembali</strong>. Apakah Anda benar-benar yakin ingin melanjutkan?</p>
+                    </div>
+                `,
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#dc3545',
+                confirmButtonColor: '#d63939',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Ya, Hapus',
-                cancelButtonText: 'Batal'
+                confirmButtonText: '<i class="ti ti-trash me-1"></i> Ya, Hapus ' + ids.length + ' Surat',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                focusCancel: true
             }).then(function(result) {
                 if (result.isConfirmed) {
                     doBulkDelete(ids);
@@ -546,9 +578,13 @@
                         Swal.fire('Gagal', response.message, 'error');
                     }
                 },
-                error: function() {
+                error: function(xhr) {
                     Swal.close();
-                    Swal.fire('Gagal', 'Terjadi kesalahan server.', 'error');
+                    var errorMsg = 'Terjadi kesalahan server.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    Swal.fire('Gagal', errorMsg, 'error');
                 }
             });
         }
@@ -559,7 +595,9 @@
 
             Swal.fire({
                 title: 'Memproses penghapusan...',
+                text: 'Mohon tunggu, sedang menghapus ' + ids.length + ' data.',
                 allowOutsideClick: false,
+                allowEscapeKey: false,
                 didOpen: function() { Swal.showLoading(); }
             });
 
@@ -583,20 +621,39 @@
                         updateBulkUI();
                         table.ajax.reload(null, false);
                     } else {
-                        Swal.fire('Gagal', response.message, 'error');
+                        Swal.fire('Gagal Menghapus', response.message || 'Terjadi kesalahan saat menghapus data.', 'error');
                     }
                 },
-                error: function() {
+                error: function(xhr) {
                     Swal.close();
-                    Swal.fire('Gagal', 'Terjadi kesalahan server.', 'error');
+                    var errorMsg = 'Terjadi kesalahan server saat memproses penghapusan.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    Swal.fire('Gagal', errorMsg, 'error');
                 }
             });
         }
 
-        // Filter button - reset pagination to first page
-        $('#btn-filter').click(function() {
-            clearPaginationState(); // Clear previous state
-            table.page(0).draw(); // Go to first page
+        // Tombol Filter: terapkan filter dan kembali ke halaman pertama
+        $('#btn-filter').on('click', function() {
+            table.page(0).draw(false);
+        });
+
+        // Terapkan filter saat tekan Enter di input tanggal
+        $('#filter_start_date, #filter_end_date').on('keypress', function(e) {
+            if (e.which === 13) {
+                table.page(0).draw(false);
+            }
+        });
+
+        // Tombol Reset Filter & Pagination
+        $('#btn-reset-filter').on('click', function() {
+            $('#filter_start_date').val('');
+            $('#filter_end_date').val('');
+            $('#filter_status').val('');
+            localStorage.removeItem(paginationKey);
+            table.search('').page(0).draw(false);
         });
     });
 
