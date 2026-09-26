@@ -64,6 +64,14 @@ class BukuTamu extends BaseController
             }
         }
 
+        // 3. Honeypot (Bot Trapping)
+        if (($this->appSettings['buku_tamu_honeypot'] ?? '1') == '1') {
+            $honeypotValue = $this->request->getPost('website_trap');
+            if (!empty($honeypotValue)) {
+                return redirect()->to('/buku-tamu')->with('error', 'Terdeteksi pengiriman formulir otomatis (Bot).');
+            }
+        }
+
         $jenis = $this->request->getPost('jenis_tamu'); // 'umum' atau 'khusus'
 
         // Server-side validation

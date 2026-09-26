@@ -17,9 +17,16 @@
                 </div>
                 <div class="col-auto">
                     <select class="form-select w-auto" name="buku_tamu_mode">
-                        <option value="auto" <?= ($settings['buku_tamu_mode'] ?? 'auto') == 'auto' ? 'selected' : '' ?>>Otomatis (Ikuti Jadwal)</option>
-                        <option value="open" <?= ($settings['buku_tamu_mode'] ?? 'auto') == 'open' ? 'selected' : '' ?>>Buka Paksa (Selalu Buka)</option>
-                        <option value="closed" <?= ($settings['buku_tamu_mode'] ?? 'auto') == 'closed' ? 'selected' : '' ?>>Tutup Paksa (Layanan Libur)</option>
+                        <?php
+                        $modes = [
+                            'auto'   => 'Otomatis (Ikuti Jadwal)',
+                            'open'   => 'Buka Paksa (Selalu Buka)',
+                            'closed' => 'Tutup Paksa (Layanan Libur)',
+                        ];
+                        $currMode = $settings['buku_tamu_mode'] ?? 'auto';
+                        foreach ($modes as $val => $lbl): ?>
+                            <option value="<?= $val ?>" <?= $currMode === $val ? 'selected' : '' ?>><?= $lbl ?></option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
             </div>
@@ -41,14 +48,15 @@
                     <label class="form-label">Hari Operasional</label>
                     <div class="form-selectgroup">
                         <?php 
-                        $workDays = explode(',', $settings['buku_tamu_work_days'] ?? '1,2,3,4,5,6');
+                        $savedDays = $settings['buku_tamu_work_days'] ?? null;
+                        $workDays  = $savedDays !== null ? array_filter(explode(',', $savedDays), 'strlen') : ['1', '2', '3', '4', '5', '6'];
                         $days = [
                             1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 0 => 'Minggu'
                         ];
                         foreach ($days as $val => $label):
                         ?>
                         <label class="form-selectgroup-item">
-                            <input type="checkbox" name="buku_tamu_work_days[]" value="<?= $val ?>" class="form-selectgroup-input" <?= in_array((string)$val, $workDays) ? 'checked' : '' ?>>
+                            <input type="checkbox" name="buku_tamu_work_days[]" value="<?= $val ?>" class="form-selectgroup-input" <?= in_array((string)$val, $workDays, true) ? 'checked' : '' ?>>
                             <span class="form-selectgroup-label"><?= $label ?></span>
                         </label>
                         <?php endforeach; ?>
@@ -66,7 +74,7 @@
                         <input class="form-check-input" type="checkbox" name="buku_tamu_honeypot" value="1" <?= ($settings['buku_tamu_honeypot'] ?? '1') == '1' ? 'checked' : '' ?>>
                         <span class="form-check-label fw-bold">Aktifkan Honeypot (Bot Trapping)</span>
                     </label>
-                    <p class="text-muted small ms-4">Menambahkan kolom jebakan tersembunyi yang hanya bisa dilihat oleh Bot. Jika sistem mendeteksiBot mengisi kolom ini, kiriman akan ditolak otomatis.</p>
+                    <p class="text-muted small ms-4">Menambahkan kolom jebakan tersembunyi yang hanya bisa dilihat oleh Bot. Jika sistem mendeteksi Bot mengisi kolom ini, kiriman akan ditolak otomatis.</p>
                 </div>
                 <div class="col-12 border-top pt-2">
                     <label class="form-check form-switch mb-2">

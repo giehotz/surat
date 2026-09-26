@@ -169,6 +169,12 @@
                 <input type="hidden" name="foto_wajah_base64" id="foto_wajah_base64">
                 <input type="hidden" name="tanda_tangan_base64" id="tanda_tangan_base64">
 
+                <?php if (($appSettings['buku_tamu_honeypot'] ?? '1') == '1'): ?>
+                    <div style="display:none !important;" aria-hidden="true">
+                        <input type="text" name="website_trap" value="" tabindex="-1" autocomplete="off">
+                    </div>
+                <?php endif; ?>
+
                 <div class="row g-4">
                     <!-- KOLOM KIRI: Data Tamu Dinas (7 Kolom) -->
                     <div class="col-lg-7">
