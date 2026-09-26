@@ -163,11 +163,15 @@ $routes->group('buku-tamu', function ($routes) {
 $routes->get('test-admin-buku-tamu', 'AdminBukuTamu::index');
 $routes->group('admin-buku-tamu', ['filter' => 'role:admin,operator,admin_tamu'], function ($routes) {
     $routes->get('/', 'AdminBukuTamu::index');
+    $routes->post('ajax-list', 'AdminBukuTamu::ajaxList');
     $routes->get('show/(:num)', 'AdminBukuTamu::show/$1');
+    $routes->post('quick-update-status', 'AdminBukuTamu::quickUpdateStatus');
     $routes->post('update-kunjungan/(:num)', 'AdminBukuTamu::updateKunjungan/$1');
     $routes->post('export-excel', 'AdminBukuTamu::exportExcel');
     $routes->post('export-pdf', 'AdminBukuTamu::exportPdf');
     $routes->post('delete/(:num)', 'AdminBukuTamu::delete/$1');
+    $routes->post('bulk-delete', 'AdminBukuTamu::bulkDelete');
+    $routes->post('bulk-update-status', 'AdminBukuTamu::bulkUpdateStatus');
 });
 
 $routes->group('surat-resmi', ['filter' => 'isLoggedIn'], function ($routes) {
