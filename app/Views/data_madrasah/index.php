@@ -62,7 +62,7 @@
     </div>
 </div>
 
-/* Tambahan CSS sedikit untuk mempercantik transisi tab */
+  <!--  Tambahan CSS sedikit untuk mempercantik transisi tab -->
 <style>
     .nav-tabs .nav-link {
         transition: all 0.3s ease;
