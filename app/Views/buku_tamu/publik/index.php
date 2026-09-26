@@ -283,27 +283,27 @@
     </div>
 </div>
 
-<!-- 3 Langkah Mudah -->
-<div class="row justify-content-center g-3" style="max-width: 900px; margin: 0 auto;">
+<!-- 3 Langkah Alur Buku Tamu -->
+<div class="row justify-content-center g-3" style="max-width: 920px; margin: 0 auto;">
     <div class="col-12 col-md-4">
         <div class="step-box shadow-sm">
             <div class="step-number">1</div>
-            <div class="fw-bold text-dark">Pilih Kategori</div>
-            <div class="text-muted small">Tentukan jenis kunjungan Umum atau Kedinasan</div>
+            <div class="fw-bold text-dark fs-3 mb-1">Pilih Kategori</div>
+            <div class="text-muted small">Tentukan jenis kunjungan Anda (Tamu Umum atau Kedinasan).</div>
         </div>
     </div>
     <div class="col-12 col-md-4">
         <div class="step-box shadow-sm">
             <div class="step-number">2</div>
-            <div class="fw-bold text-dark">Isi Identitas & Foto</div>
-            <div class="text-muted small">Lengkapi data kunjungan dan ambil foto selfie</div>
+            <div class="fw-bold text-dark fs-3 mb-1">Isi Data & Keperluan</div>
+            <div class="text-muted small">Lengkapi identitas diri, kontak, dan agenda kunjungan.</div>
         </div>
     </div>
     <div class="col-12 col-md-4">
         <div class="step-box shadow-sm">
             <div class="step-number">3</div>
-            <div class="fw-bold text-dark">Selesai & Konfirmasi</div>
-            <div class="text-muted small">Data tersimpan langsung dan notifikasi terkirim</div>
+            <div class="fw-bold text-dark fs-3 mb-1">Verifikasi & Selesai</div>
+            <div class="text-muted small">Ambil foto kehadiran, tanda tangan digital, dan selesai.</div>
         </div>
     </div>
 </div>
