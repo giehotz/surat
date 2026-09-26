@@ -101,6 +101,9 @@
                         <button type="button" id="btn-bulk-reject" class="btn btn-danger btn-sm">
                             <i class="ti ti-x me-1.5"></i> Tolak
                         </button>
+                        <button type="button" id="btn-bulk-delete" class="btn btn-outline-danger btn-sm">
+                            <i class="ti ti-trash me-1.5"></i> Hapus
+                        </button>
                         <button type="button" id="btn-bulk-clear" class="btn btn-ghost-secondary btn-sm">
                             <i class="ti ti-rotate-2 me-1.5"></i> Batal
                         </button>
@@ -401,6 +404,27 @@
             });
         });
 
+        // Bulk Delete
+        $('#btn-bulk-delete').on('click', function() {
+            var ids = getSelectedIds();
+            if (!ids.length) return;
+
+            Swal.fire({
+                title: 'Hapus ' + ids.length + ' surat?',
+                text: 'Semua surat yang dipilih akan dihapus secara permanen.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    doBulkDelete(ids);
+                }
+            });
+        });
+
         function getSelectedIds() {
             var ids = [];
             $('.row-checkbox:visible:checked').each(function() {
@@ -436,6 +460,46 @@
                             title: response.message
                         });
                         // Clear checkboxes and reload
+                        $('.row-checkbox').prop('checked', false);
+                        $('#select-all').prop('checked', false);
+                        updateBulkUI();
+                        table.ajax.reload(null, false);
+                    } else {
+                        Swal.fire('Gagal', response.message, 'error');
+                    }
+                },
+                error: function() {
+                    Swal.close();
+                    Swal.fire('Gagal', 'Terjadi kesalahan server.', 'error');
+                }
+            });
+        }
+
+        function doBulkDelete(ids) {
+            var csrfName = '<?= csrf_token() ?>';
+            var csrfHash = '<?= csrf_hash() ?>';
+
+            Swal.fire({
+                title: 'Memproses penghapusan...',
+                allowOutsideClick: false,
+                didOpen: function() { Swal.showLoading(); }
+            });
+
+            $.ajax({
+                url: "<?= base_url('surat-keluar/bulk-delete') ?>",
+                type: "POST",
+                data: {
+                    ids: ids,
+                    [csrfName]: csrfHash
+                },
+                dataType: 'json',
+                success: function(response) {
+                    Swal.close();
+                    if (response.success) {
+                        Toast.fire({
+                            icon: 'success',
+                            title: response.message
+                        });
                         $('.row-checkbox').prop('checked', false);
                         $('#select-all').prop('checked', false);
                         updateBulkUI();
