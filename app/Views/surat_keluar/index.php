@@ -279,11 +279,50 @@
         var role = '<?= session()->get("role") ?>';
         var isApprover = (role === 'pimpinan' || role === 'admin');
 
+        // ✨ PAGINATION STATE MANAGER - LocalStorage
+        const paginationKey = 'surat_keluar_pagination_state';
+        const pageSize = 10;
+
+        // Fungsi untuk simpan state ke localStorage
+        function savePaginationState(pageIndex, pageLength, startDate, endDate, status) {
+            const state = {
+                page: pageIndex,
+                pageLength: pageLength,
+                startDate: startDate,
+                endDate: endDate,
+                status: status,
+                timestamp: new Date().getTime()
+            };
+            localStorage.setItem(paginationKey, JSON.stringify(state));
+        }
+
+        // Fungsi untuk ambil state dari localStorage
+        function getPaginationState() {
+            const state = localStorage.getItem(paginationKey);
+            return state ? JSON.parse(state) : null;
+        }
+
+        // Fungsi untuk clear state
+        function clearPaginationState() {
+            localStorage.removeItem(paginationKey);
+        }
+
+        // Restore filter values dari localStorage saat page load
+        function restoreFilterState() {
+            const state = getPaginationState();
+            if (state) {
+                if (state.startDate) $('#filter_start_date').val(state.startDate);
+                if (state.endDate) $('#filter_end_date').val(state.endDate);
+                if (state.status) $('#filter_status').val(state.status);
+            }
+        }
+
         var table = $('#table-surat-keluar').DataTable({
             processing: true,
             serverSide: true,
             responsive: true,
             autoWidth: false,
+            pageLength: pageSize,
             ajax: {
                 url: "<?= base_url('surat-keluar/ajax-list') ?>",
                 type: "POST",
@@ -292,6 +331,15 @@
                     d.start_date = $('#filter_start_date').val();
                     d.end_date = $('#filter_end_date').val();
                     d.status = $('#filter_status').val();
+
+                    // Simpan state setiap kali ada request
+                    savePaginationState(
+                        d.start,
+                        d.length,
+                        d.start_date,
+                        d.end_date,
+                        d.status
+                    );
                 }
             },
             columnDefs: [
@@ -325,8 +373,38 @@
             dom: "<'row px-3 pt-3'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
                 "<'row'<'col-sm-12'tr>>" +
                 "<'row px-3 pb-3'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
-            drawCallback: function() {
+            drawCallback: function(settings) {
                 updateBulkUI();
+
+                // Setelah table di-render, restore ke halaman yang disimpan
+                const state = getPaginationState();
+                if (state && state.page > 0) {
+                    const api = this.api();
+                    const currentStart = api.settings()[0]._iDisplayStart;
+                    
+                    // Jika berbeda dari state yang disimpan, scroll ke halaman sebelumnya
+                    if (currentStart !== state.page) {
+                        // Cek apakah ini pagination event atau filter event
+                        if (table.settings()[0].json && 
+                            table.settings()[0].json.recordsFiltered >= 0) {
+                            // Gunakan page dari state jika tersedia
+                            const pageNum = Math.floor(state.page / settings._iDisplayLength);
+                            if (pageNum >= 0) {
+                                api.page(pageNum).draw('page');
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Restore filter dan pagination saat halaman load
+        $(window).on('load', function() {
+            restoreFilterState();
+            const state = getPaginationState();
+            if (state && table && state.page > 0) {
+                const pageNum = Math.floor(state.page / pageSize);
+                table.page(pageNum).draw('page');
             }
         });
 
@@ -515,8 +593,10 @@
             });
         }
 
+        // Filter button - reset pagination to first page
         $('#btn-filter').click(function() {
-            table.draw();
+            clearPaginationState(); // Clear previous state
+            table.page(0).draw(); // Go to first page
         });
     });
 
