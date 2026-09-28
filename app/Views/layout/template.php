@@ -14,16 +14,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title><?= esc($appSettings['app_nama'] ?? 'Sistem Layanan Surat') ?> | <?= $title ?? 'Dashboard' ?></title>
-    <!-- CSS files (Local Tabler UI Assets) -->
+    <!-- 1. High-Priority Preload for Tabler Icons Webfont (Crossorigin & High Fetch Priority) -->
+    <link rel="preload" href="<?= base_url('assets/tabler/fonts/tabler-icons.woff2') ?>" as="font" type="font/woff2" crossorigin="anonymous" fetchpriority="high">
+
+    <!-- 2. Typography: Preconnect & Load Inter -->
+    <link rel="preconnect" href="https://rsms.me" crossorigin>
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+
+    <!-- 3. Local Tabler UI Assets (No render-blocking external CDNs) -->
     <link href="<?= base_url('assets/tabler/css/tabler.min.css') ?>" rel="stylesheet" />
     <link href="<?= base_url('assets/tabler/css/tabler-vendors.min.css') ?>" rel="stylesheet" />
-    <!-- FontAwesome (Optional) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <!-- Tabler Icons (Local Webfont) -->
-    <link rel="preload" href="<?= base_url('assets/tabler/fonts/tabler-icons.woff2?v2.47.0') ?>" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="<?= base_url('assets/tabler/icons/tabler-icons.min.css') ?>">
+    <link href="<?= base_url('assets/tabler/icons/tabler-icons.min.css') ?>" rel="stylesheet" />
+
     <style>
-        @import url('https://rsms.me/inter/inter.css');
+        /* Inline Critical @font-face with font-display: block to prevent FOUT/icon pop-in */
+        @font-face {
+            font-family: "tabler-icons";
+            font-style: normal;
+            font-weight: 400;
+            font-display: block;
+            src: url("<?= base_url('assets/tabler/fonts/tabler-icons.woff2') ?>") format("woff2"),
+                 url("<?= base_url('assets/tabler/fonts/tabler-icons.woff') ?>") format("woff"),
+                 url("<?= base_url('assets/tabler/fonts/tabler-icons.ttf') ?>") format("truetype");
+        }
 
         :root,
         [data-bs-theme="light"],
@@ -38,36 +51,66 @@
             font-feature-settings: "cv03", "cv04", "cv11";
         }
 
-        /* Standardize Tabler Webfont Icons inside Buttons */
-        i.ti {
+        /* Prevent Layout Shift & Pop-in: Reserve fixed square dimensions for Tabler Icons */
+        i.ti, .ti {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.25em;
+            height: 1.25em;
             line-height: 1;
-            vertical-align: -0.125em;
-            display: inline-block;
+            vertical-align: -0.15em;
+            text-align: center;
+            font-style: normal;
+            font-variant: normal;
+            text-rendering: auto;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        .btn i.ti {
+        .btn i.ti, .btn .ti {
             font-size: 1.1rem;
+            width: 1.15em;
+            height: 1.15em;
             vertical-align: -0.15em;
         }
 
-        .btn-sm i.ti {
+        .btn-sm i.ti, .btn-sm .ti {
             font-size: 0.95rem;
+            width: 1.1em;
+            height: 1.1em;
         }
 
-        .btn-lg i.ti {
+        .btn-lg i.ti, .btn-lg .ti {
             font-size: 1.25rem;
+            width: 1.25em;
+            height: 1.25em;
         }
 
-        .btn-icon i.ti {
+        .btn-icon i.ti, .btn-icon .ti {
             font-size: 1.15rem;
+            width: 100%;
+            height: 100%;
             margin: 0 !important;
             vertical-align: middle;
         }
 
-        .btn-icon.btn-sm i.ti {
+        .btn-icon.btn-sm i.ti, .btn-icon.btn-sm .ti {
             font-size: 1rem;
         }
+
+        .nav-link i.ti, .nav-link-icon i.ti {
+            font-size: 1.2rem;
+            width: 1.25em;
+            height: 1.25em;
+        }
     </style>
+    <script>
+        // Pre-warm the font in the browser's FontFaceSet immediately before DOM render
+        if ('fonts' in document) {
+            document.fonts.load('1em "tabler-icons"');
+        }
+    </script>
 </head>
 
 <body>

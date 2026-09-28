@@ -7,16 +7,29 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Login | <?= esc($appSettings['app_nama'] ?? 'Sistem Layanan Surat') ?></title>
 
-    <!-- CSS files (Local Tabler UI Assets) -->
+    <!-- 1. High-Priority Preload for Tabler Icons Webfont (Crossorigin & High Fetch Priority) -->
+    <link rel="preload" href="<?= base_url('assets/tabler/fonts/tabler-icons.woff2') ?>" as="font" type="font/woff2" crossorigin="anonymous" fetchpriority="high">
+
+    <!-- 2. Typography: Preconnect & Load Inter -->
+    <link rel="preconnect" href="https://rsms.me" crossorigin>
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+
+    <!-- 3. Local Tabler UI Assets -->
     <link href="<?= base_url('assets/tabler/css/tabler.min.css') ?>" rel="stylesheet" />
     <link href="<?= base_url('assets/tabler/css/tabler-vendors.min.css') ?>" rel="stylesheet" />
-
-    <!-- Tabler Icons (Local Webfont) -->
-    <link rel="preload" href="<?= base_url('assets/tabler/fonts/tabler-icons.woff2?v2.47.0') ?>" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="<?= base_url('assets/tabler/icons/tabler-icons.min.css') ?>">
+    <link href="<?= base_url('assets/tabler/icons/tabler-icons.min.css') ?>" rel="stylesheet" />
 
     <style>
-        @import url('https://rsms.me/inter/inter.css');
+        /* Inline Critical @font-face with font-display: block */
+        @font-face {
+            font-family: "tabler-icons";
+            font-style: normal;
+            font-weight: 400;
+            font-display: block;
+            src: url("<?= base_url('assets/tabler/fonts/tabler-icons.woff2') ?>") format("woff2"),
+                 url("<?= base_url('assets/tabler/fonts/tabler-icons.woff') ?>") format("woff"),
+                 url("<?= base_url('assets/tabler/fonts/tabler-icons.ttf') ?>") format("truetype");
+        }
 
         :root,
         [data-bs-theme="light"],
@@ -25,6 +38,18 @@
             --tblr-font-sans-serif: 'Inter Var', 'Inter', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
             --tblr-body-font-family: var(--tblr-font-sans-serif);
             font-family: var(--tblr-font-sans-serif);
+        }
+
+        /* Prevent Layout Shift: Reserve fixed square dimensions for Tabler Icons */
+        i.ti, .ti {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.25em;
+            height: 1.25em;
+            line-height: 1;
+            vertical-align: -0.15em;
+            text-align: center;
         }
 
         body {
