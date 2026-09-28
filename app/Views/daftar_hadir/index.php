@@ -117,6 +117,9 @@
             <div class="card-header py-2 d-print-none d-flex justify-content-between align-items-center">
                 <span class="text-secondary small fw-medium">
                     <i class="ti ti-file-text me-1"></i> Pratinjau Dokumen Siap Cetak (Ukuran Kertas A4)
+                    <span class="badge bg-teal-lt ms-2" title="Daftar guru diurutkan otomatis mengikuti hierarki baku DUK">
+                        <i class="ti ti-stairs-up me-1"></i> Sesuai Urutan DUK
+                    </span>
                 </span>
                 <div class="btn-list">
                     <button type="button" class="btn btn-sm btn-outline-secondary" onclick="printHanyaDaftarHadir()">

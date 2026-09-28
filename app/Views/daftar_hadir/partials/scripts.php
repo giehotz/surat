@@ -466,8 +466,110 @@
         }
 
         if (inputLembar) inputLembar.addEventListener('input', renderLembarNotulen);
-        if (inputNotulis) inputNotulis.addEventListener('input', renderLembarNotulen);
-        if (inputNipNotulis) inputNipNotulis.addEventListener('input', renderLembarNotulen);
+
+        // Pengendali Nama Notulis: Dropdown Data Guru & Mode Manual Text
+        const selectNotulis        = document.getElementById('select-notulis');
+        const wrapSelectNotulis    = document.getElementById('wrap-select-notulis');
+        const inputManualNotulis   = document.getElementById('input-manual-notulis');
+        const wrapManualNotulis    = document.getElementById('wrap-manual-notulis');
+        const btnToggleNotulisMode = document.getElementById('btn-toggle-notulis-mode');
+        const btnKembaliDropdown   = document.getElementById('btn-kembali-dropdown-notulis');
+
+        function setNotulisMode(mode) {
+            if (mode === 'manual') {
+                if (wrapSelectNotulis) wrapSelectNotulis.style.display = 'none';
+                if (wrapManualNotulis) wrapManualNotulis.style.display = 'block';
+                if (btnToggleNotulisMode) {
+                    btnToggleNotulisMode.innerHTML = '<i class="ti ti-list me-1"></i> Pilih dari Data Guru';
+                }
+                if (inputManualNotulis && inputNotulis) {
+                    inputManualNotulis.value = inputNotulis.value;
+                    inputManualNotulis.focus();
+                }
+            } else {
+                if (wrapSelectNotulis) wrapSelectNotulis.style.display = 'block';
+                if (wrapManualNotulis) wrapManualNotulis.style.display = 'none';
+                if (btnToggleNotulisMode) {
+                    btnToggleNotulisMode.innerHTML = '<i class="ti ti-pencil me-1"></i> Mode Ketik Manual';
+                }
+                if (selectNotulis && inputNotulis) {
+                    const curVal = inputNotulis.value.trim().toLowerCase();
+                    let matched = false;
+                    for (let i = 0; i < selectNotulis.options.length; i++) {
+                        const optVal = selectNotulis.options[i].value.trim().toLowerCase();
+                        if (optVal && optVal === curVal) {
+                            selectNotulis.selectedIndex = i;
+                            matched = true;
+                            break;
+                        }
+                    }
+                    if (!matched) {
+                        selectNotulis.value = '';
+                    }
+                }
+            }
+        }
+
+        if (btnToggleNotulisMode) {
+            btnToggleNotulisMode.addEventListener('click', function() {
+                const isDropdown = (wrapSelectNotulis && wrapSelectNotulis.style.display !== 'none');
+                setNotulisMode(isDropdown ? 'manual' : 'dropdown');
+            });
+        }
+
+        if (btnKembaliDropdown) {
+            btnKembaliDropdown.addEventListener('click', function() {
+                setNotulisMode('dropdown');
+            });
+        }
+
+        if (selectNotulis) {
+            selectNotulis.addEventListener('change', function() {
+                if (this.value === '__manual__') {
+                    setNotulisMode('manual');
+                    return;
+                }
+
+                const selectedOption = this.options[this.selectedIndex];
+                const nama = this.value.trim();
+                const nip  = selectedOption ? (selectedOption.getAttribute('data-nip') || '') : '';
+
+                if (inputNotulis) inputNotulis.value = nama;
+                if (inputNipNotulis) inputNipNotulis.value = nip;
+
+                renderLembarNotulen();
+            });
+        }
+
+        if (inputManualNotulis) {
+            inputManualNotulis.addEventListener('input', function() {
+                if (inputNotulis) inputNotulis.value = this.value;
+                renderLembarNotulen();
+            });
+        }
+
+        if (inputNipNotulis) {
+            inputNipNotulis.addEventListener('input', renderLembarNotulen);
+        }
+
+        // Cek initial state saat load (misal setelah validasi form atau edit)
+        if (inputNotulis && inputNotulis.value.trim() !== '') {
+            const initVal = inputNotulis.value.trim().toLowerCase();
+            let matched = false;
+            if (selectNotulis) {
+                for (let i = 0; i < selectNotulis.options.length; i++) {
+                    const optVal = selectNotulis.options[i].value.trim().toLowerCase();
+                    if (optVal && optVal === initVal) {
+                        selectNotulis.selectedIndex = i;
+                        matched = true;
+                        break;
+                    }
+                }
+            }
+            if (!matched) {
+                setNotulisMode('manual');
+            }
+        }
 
         // Simpan konten TinyMCE ke textarea sebelum form disubmit
         const formSimpan = document.getElementById('form-simpan-notulen');

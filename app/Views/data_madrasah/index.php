@@ -59,7 +59,7 @@ $this->setData(['container_class' => $container_class ?? 'container-fluid px-3 p
                         <div class="d-flex align-items-baseline gap-2">
                             <span class="h1 mb-0 fw-bold font-tabular"><?= (int)($stats['total_guru'] ?? 0) ?></span>
                             <span class="text-secondary small">
-                                <?= (int)($stats['total_pns'] ?? 0) ?> PNS • <?= (int)($stats['total_honorer'] ?? 0) ?> Non-PNS
+                                <?= (int)($stats['total_pns'] ?? 0) ?> PNS • <?= (int)($stats['total_pppk'] ?? 0) ?> PPPK • <?= (int)($stats['total_honorer'] ?? 0) ?> Non-PNS
                             </span>
                         </div>
                     </div>
@@ -123,6 +123,13 @@ $this->setData(['container_class' => $container_class ?? 'container-fluid px-3 p
                     <span class="badge bg-azure-lt ms-2 rounded-pill"><?= (int)($stats['total_siswa_aktif'] ?? 0) ?></span>
                 </a>
             </li>
+            <li class="nav-item flex-fill" role="presentation">
+                <a href="#tab-duk" id="nav-tab-duk" class="nav-link py-3 fw-semibold text-center border-0 border-bottom <?= $active_tab === 'duk' ? 'active' : '' ?>" data-bs-toggle="tab" role="tab" aria-controls="tab-duk" aria-selected="<?= $active_tab === 'duk' ? 'true' : 'false' ?>">
+                    <i class="ti ti-stairs-up icon me-2 fs-3 text-orange"></i>
+                    <span>DUK Pegawai</span>
+                    <span class="badge bg-orange-lt ms-2 rounded-pill"><?= count($duk ?? []) ?></span>
+                </a>
+            </li>
         </ul>
     </div>
 
@@ -142,6 +149,11 @@ $this->setData(['container_class' => $container_class ?? 'container-fluid px-3 p
             <!-- Tab 3: Siswa -->
             <div class="tab-pane <?= $active_tab === 'siswa' ? 'active show' : '' ?>" id="tab-siswa" role="tabpanel" aria-labelledby="nav-tab-siswa">
                 <?= $this->include('data_madrasah/siswa/index') ?>
+            </div>
+
+            <!-- Tab 4: DUK (Urut Kepangkatan) -->
+            <div class="tab-pane <?= $active_tab === 'duk' ? 'active show' : '' ?>" id="tab-duk" role="tabpanel" aria-labelledby="nav-tab-duk">
+                <?= $this->include('data_madrasah/duk/index') ?>
             </div>
         </div>
     </div>
@@ -215,6 +227,19 @@ $this->setData(['container_class' => $container_class ?? 'container-fluid px-3 p
             });
         }
 
+        // Inisialisasi DataTable untuk DUK (menjaga urutan ranking hierarkis DUK)
+        if ($.fn.DataTable && $('.datatable-duk tbody tr td[colspan]').length === 0) {
+            $('.datatable-duk').DataTable({
+                language: {
+                    url: "https://cdn.datatables.net/plug-ins/1.13.4/i18n/id.json",
+                    search: "",
+                    searchPlaceholder: "Cari nama, NIP, atau jabatan..."
+                },
+                pageLength: 25,
+                ordering: false // Tetap patuhi urutan ranking resmi DUK
+            });
+        }
+
         // Sync tab saat diklik
         const tabLinks = document.querySelectorAll('#madrasahTabs a[data-bs-toggle="tab"]');
         tabLinks.forEach(function(tabLink) {
@@ -223,6 +248,7 @@ $this->setData(['container_class' => $container_class ?? 'container-fluid px-3 p
                 let tabKey = 'kelas';
                 if (targetId === '#tab-data-guru') tabKey = 'data_guru';
                 if (targetId === '#tab-siswa') tabKey = 'siswa';
+                if (targetId === '#tab-duk') tabKey = 'duk';
 
                 localStorage.setItem('madrasahActiveTab', tabKey);
 

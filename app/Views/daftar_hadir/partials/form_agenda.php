@@ -48,13 +48,48 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label">Nama Notulis Rapat</label>
-                            <input type="text" name="nama_notulis" id="input-nama-notulis" class="form-control" value="<?= old('nama_notulis', '') ?>" placeholder="Contoh: ARIYANI, S.Pd.I">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label mb-0">Nama Notulis Rapat</label>
+                                <button type="button" id="btn-toggle-notulis-mode" class="btn btn-link btn-sm p-0 text-decoration-none text-muted" style="font-size: 0.78rem;">
+                                    <i class="ti ti-pencil me-1"></i> Mode Ketik Manual
+                                </button>
+                            </div>
+
+                            <!-- Mode 1: Dropdown Data Guru -->
+                            <div id="wrap-select-notulis">
+                                <select id="select-notulis" class="form-select">
+                                    <option value="" data-nip="">-- Pilih Notulis dari Data Guru --</option>
+                                    <?php if (!empty($daftar_guru)): ?>
+                                        <?php foreach ($daftar_guru as $g): 
+                                            $nipDisplay = !empty($g['nip']) ? $g['nip'] : (!empty($g['peg_id_nuptk']) ? $g['peg_id_nuptk'] : '');
+                                            $nipLabel   = !empty($nipDisplay) ? ' (NIP: ' . $nipDisplay . ')' : '';
+                                        ?>
+                                            <option value="<?= esc($g['nama_pegawai']) ?>" data-nip="<?= esc($nipDisplay) ?>">
+                                                <?= esc($g['nama_pegawai']) ?><?= esc($nipLabel) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                    <option value="__manual__">✏️ Ketik Manual (Nama Lainnya)...</option>
+                                </select>
+                            </div>
+
+                            <!-- Mode 2: Input Manual Text -->
+                            <div id="wrap-manual-notulis" style="display: none;">
+                                <div class="input-group">
+                                    <input type="text" id="input-manual-notulis" class="form-control" placeholder="Ketik nama notulis manual...">
+                                    <button type="button" id="btn-kembali-dropdown-notulis" class="btn btn-outline-secondary" title="Kembali ke pilihan dropdown guru">
+                                        <i class="ti ti-list me-1"></i> Dari Guru
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Input tersembunyi yang menyimpan nilai akhir untuk POST dan live preview -->
+                            <input type="hidden" name="nama_notulis" id="input-nama-notulis" value="<?= old('nama_notulis', '') ?>">
                         </div>
 
                         <div class="col-md-5">
                             <label class="form-label">NIP Notulis (Opsional)</label>
-                            <input type="text" name="nip_notulis" id="input-nip-notulis" class="form-control" value="<?= old('nip_notulis', '') ?>" placeholder="Contoh: 198801152009032011">
+                            <input type="text" name="nip_notulis" id="input-nip-notulis" class="form-control" value="<?= old('nip_notulis', '') ?>" placeholder="Otomatis terisi jika pilih guru, atau ketik manual">
                         </div>
 
                         <!-- Pilihan Format / Sumber Notulen -->

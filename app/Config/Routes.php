@@ -112,8 +112,10 @@ $routes->group('admin', ['filter' => 'role:admin'], function ($routes) {
 $routes->get('profile', 'Profile::index');
 $routes->post('profile/update', 'Profile::update');
 $routes->post('profile/delete-photo', 'Profile::deletePhoto');
-// Data Madrasah Route
+// Data Madrasah & DUK Routes
 $routes->get('data-madrasah', 'DataMadrasah::index', ['filter' => 'role:admin,operator']);
+$routes->get('data-madrasah/duk/cetak', 'DataMadrasah::cetakDuk', ['filter' => 'role:admin,operator']);
+$routes->get('data-madrasah/duk/export-excel', 'DataMadrasah::exportDukExcel', ['filter' => 'role:admin,operator']);
 
 // Kelas Routes
 $routes->group('kelas', ['filter' => 'role:admin,operator'], function ($routes) {

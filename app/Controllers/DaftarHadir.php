@@ -11,13 +11,18 @@ class DaftarHadir extends BaseController
 {
     public function index()
     {
+        helper(['tanggal', 'duk']);
+
         $guruModel    = new DataGuruModel();
         $notulenModel = new NotulenRapatModel();
 
-        $daftarGuru = $guruModel
-            ->select('id, nama_pegawai, nip, peg_id_nuptk, jabatan_mengajar, pangkat_golongan, status_kepegawaian')
-            ->orderBy('nama_pegawai', 'ASC')
+        // Ambil data guru lengkap untuk kalkulasi DUK (Cakupan 'all': Kamad -> PNS -> PPPK -> Honorer)
+        $rawGuru = $guruModel
+            ->select('id, nama_pegawai, nip, peg_id_nuptk, tempat_lahir, tanggal_lahir, tempat_tanggal_lahir, status_kepegawaian, jabatan_mengajar, pangkat_golongan, pendidikan_terakhir, perguruan_tinggi, mulai_tugas, tmt_cpns_honorer, kenaikan_pangkat')
             ->findAll();
+
+        // Urutkan daftar guru sesuai hierarki baku DUK (Kepala Madrasah #1, PNS, PPPK, Honorer)
+        $daftarGuru = urutkan_duk($rawGuru, 'all');
 
         $riwayatNotulen = $notulenModel
             ->orderBy('tanggal_kegiatan', 'DESC')
