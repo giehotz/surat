@@ -62,6 +62,17 @@
                             </span>
                         </a>
                     </li>
+
+                    <li class="nav-item <?= strpos(current_url(), 'daftar-hadir') !== false ? 'active' : '' ?>">
+                        <a class="nav-link" href="<?= base_url('daftar-hadir') ?>">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <i class="ti ti-clipboard-list icon text-teal"></i>
+                            </span>
+                            <span class="nav-link-title">
+                                Daftar Hadir
+                            </span>
+                        </a>
+                    </li>
                     <?php endif; ?>
                     <?php if (session('role') !== 'operator' && session('role') !== 'admin_tamu'): ?>
                     <li class="nav-item <?= strpos(current_url(), 'data-madrasah') !== false ? 'active' : '' ?>">
@@ -76,29 +87,31 @@
                     </li>
                     <?php endif; ?>
                     
-                    <?php if (session('role') !== 'operator' && session('role') !== 'admin_tamu'): ?>
-                    <?php if (strpos(session('role'), 'admin') !== false || session('role') === 'piket'): ?>
-                    <li class="nav-item <?= strpos(current_url(), 'admin-buku-tamu') !== false ? 'active' : '' ?>">
-                        <a class="nav-link" href="<?= base_url('admin-buku-tamu') ?>">
+                    <!-- Menu Buku Tamu (Submenu: Rekap Tamu & Kiosk Tamu) -->
+                    <li class="nav-item dropdown <?= (strpos(current_url(), 'buku-tamu') !== false) ? 'active' : '' ?>">
+                        <a class="nav-link dropdown-toggle" href="#navbar-buku-tamu" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                <i class="ti ti-address-book icon text-pink"></i>
+                                <i class="ti ti-notebook icon text-pink"></i>
                             </span>
                             <span class="nav-link-title">
+                                Buku Tamu
+                            </span>
+                        </a>
+                        <div class="dropdown-menu">
+                            <?php if (strpos(session('role'), 'admin') !== false || session('role') === 'piket' || session('role') === 'operator' || session('role') === 'admin_tamu'): ?>
+                            <a class="dropdown-item <?= strpos(current_url(), 'admin-buku-tamu') !== false ? 'active' : '' ?>" href="<?= base_url('admin-buku-tamu') ?>">
+                                <span class="nav-link-icon d-inline-block me-1"><i class="ti ti-address-book icon text-pink"></i></span>
                                 Rekap Tamu
-                            </span>
-                        </a>
-                    </li>
-                    <?php endif; ?>
-                    <li class="nav-item <?= strpos(current_url(), 'buku-tamu') !== false && strpos(current_url(), 'admin-buku-tamu') === false ? 'active' : '' ?>">
-                        <a class="nav-link" target="_blank" href="<?= base_url('buku-tamu') ?>">
-                            <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                <i class="ti ti-users icon text-orange"></i>
-                            </span>
-                            <span class="nav-link-title">
+                            </a>
+                            <?php endif; ?>
+                            <a class="dropdown-item <?= (strpos(current_url(), 'buku-tamu') !== false && strpos(current_url(), 'admin-buku-tamu') === false) ? 'active' : '' ?>" target="_blank" href="<?= base_url('buku-tamu') ?>">
+                                <span class="nav-link-icon d-inline-block me-1"><i class="ti ti-users icon text-orange"></i></span>
                                 Kiosk Tamu
-                            </span>
-                        </a>
+                            </a>
+                        </div>
                     </li>
+
+                    <?php if (session('role') !== 'operator' && session('role') !== 'admin_tamu' && session('role') !== 'piket'): ?>
                     <li class="nav-item <?= strpos(current_url(), 'pengaturan') !== false ? 'active' : '' ?>">
                         <a class="nav-link" href="<?= base_url('pengaturan') ?>">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">

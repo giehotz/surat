@@ -1,110 +1,84 @@
-<!-- Partial View for Kelas -->
-<div class="row g-2 align-items-center mb-4">
-    <div class="col">
-        <h2 class="page-title">
-            <?= isset($title) ? esc($title) : 'Data Kelas' ?>
-        </h2>
+<!-- Toolbar Kelas -->
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div class="text-secondary small">
+        Kelola rombongan belajar (rombel), tingkat, dan alokasi peserta didik.
     </div>
-    <div class="col-auto ms-auto d-print-none">
-        <div class="btn-list">
-            <a href="<?= base_url('kelas/create') ?>" class="btn btn-primary d-none d-sm-inline-block">
-                <i class="ti ti-plus icon"></i> Tambah Kelas
-            </a>
-            <a href="<?= base_url('kelas/create') ?>" class="btn btn-primary d-sm-none btn-icon" aria-label="Tambah Kelas">
-                <i class="ti ti-plus icon"></i>
-            </a>
-        </div>
+    <div class="btn-list">
+        <a href="<?= base_url('kelas/create') ?>" class="btn btn-primary">
+            <i class="ti ti-plus icon me-1"></i> Tambah Kelas
+        </a>
     </div>
 </div>
 
-<?php if (session()->getFlashdata('success')) : ?>
-    <div class="alert alert-success alert-dismissible" role="alert">
-        <div class="d-flex">
-            <div><i class="ti ti-check icon alert-icon"></i></div>
-            <div><?= session()->getFlashdata('success') ?></div>
-        </div>
-        <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-    </div>
-<?php endif; ?>
-
-<?php if (session()->getFlashdata('error')) : ?>
-    <div class="alert alert-danger alert-dismissible" role="alert">
-        <div class="d-flex">
-            <div><i class="ti ti-alert-triangle icon alert-icon"></i></div>
-            <div><?= session()->getFlashdata('error') ?></div>
-        </div>
-        <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-    </div>
-<?php endif; ?>
-
-<div class="card">
-    <div class="table-responsive">
-        <table class="table card-table table-vcenter text-nowrap table-striped table-hover datatable">
-            <thead>
-                <tr>
-                    <th class="w-1">No.</th>
-                    <th>Nama Kelas</th>
-                    <th>Tingkat</th>
-                    <th>Jurusan</th>
-                    <th>Deskripsi</th>
-                    <th>Jumlah Siswa</th>
-                    <th class="w-1 text-center">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (isset($kelas) && count($kelas) > 0) : ?>
-                    <?php $i = 1;
-                    foreach ($kelas as $row) : ?>
-                        <tr>
-                            <td><?= $i++ ?></td>
-                            <td class="font-weight-medium fw-bold"><?= esc($row['nama_kelas']) ?></td>
-                            <td><?= esc($row['tingkat']) ?></td>
-                            <td><?= esc($row['jurusan'] ?: '-') ?></td>
-                            <td><?= esc($row['deskripsi'] ?: '-') ?></td>
-                            <td>
-                                <a href="<?= base_url('kelas/siswa/' . $row['id']) ?>" class="badge bg-blue text-decoration-none p-2">
-                                    <?= $row['jumlah_siswa'] ?> Siswa
-                                </a>
-                            </td>
-                            <td>
-                                <div class="btn-list flex-nowrap">
-                                    <a href="<?= base_url('kelas/siswa/' . $row['id']) ?>" class="btn btn-icon btn-sm btn-outline-info tooltip-info" title="Lihat Siswa">
-                                        <i class="ti ti-users icon"></i>
-                                    </a>
-                                    <a href="<?= base_url('kelas/edit/' . $row['id']) ?>" class="btn btn-icon btn-sm btn-outline-primary tooltip-info" title="Edit">
-                                        <i class="ti ti-edit icon"></i>
-                                    </a>
-                                    <form action="<?= base_url('kelas/delete/' . $row['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?');">
-                                        <?= csrf_field() ?>
-                                        <button type="submit" class="btn btn-icon btn-sm btn-outline-danger tooltip-info" title="Hapus">
-                                            <i class="ti ti-trash icon"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
+<div class="table-responsive">
+    <table class="table card-table table-vcenter text-nowrap table-hover datatable-kelas">
+        <thead>
+            <tr>
+                <th class="w-1">No.</th>
+                <th>Nama Kelas</th>
+                <th>Tingkat</th>
+                <th>Jurusan</th>
+                <th>Deskripsi</th>
+                <th>Jumlah Siswa</th>
+                <th class="w-1 text-center">Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if (!empty($kelas)) : ?>
+                <?php $i = 1; foreach ($kelas as $row) : ?>
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">Belum ada data kelas.</td>
+                        <td class="text-secondary"><?= $i++ ?></td>
+                        <td class="fw-bold"><?= esc($row['nama_kelas']) ?></td>
+                        <td>
+                            <span class="badge bg-secondary-lt fw-medium">Tingkat <?= esc($row['tingkat']) ?></span>
+                        </td>
+                        <td><?= esc($row['jurusan'] ?: '-') ?></td>
+                        <td class="text-secondary text-truncate" style="max-width: 200px;" title="<?= esc($row['deskripsi']) ?>">
+                            <?= esc($row['deskripsi'] ?: '-') ?>
+                        </td>
+                        <td>
+                            <a href="<?= base_url('kelas/siswa/' . $row['id']) ?>" class="badge bg-blue-lt text-decoration-none px-2 py-1" data-bs-toggle="tooltip" title="Lihat daftar siswa kelas ini">
+                                <i class="ti ti-users me-1"></i> <?= (int)($row['jumlah_siswa'] ?? 0) ?> Siswa
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-list flex-nowrap justify-content-center">
+                                <a href="<?= base_url('kelas/siswa/' . $row['id']) ?>" class="btn btn-icon btn-sm btn-ghost-info" data-bs-toggle="tooltip" title="Lihat Siswa">
+                                    <i class="ti ti-users icon"></i>
+                                </a>
+                                <a href="<?= base_url('kelas/edit/' . $row['id']) ?>" class="btn btn-icon btn-sm btn-ghost-primary" data-bs-toggle="tooltip" title="Edit Kelas">
+                                    <i class="ti ti-edit icon"></i>
+                                </a>
+                                <form action="<?= base_url('kelas/delete/' . $row['id']) ?>" method="post" class="d-inline form-delete-kelas">
+                                    <?= csrf_field() ?>
+                                    <button type="button" class="btn btn-icon btn-sm btn-ghost-danger btn-delete-item" data-title="Hapus Kelas <?= esc($row['nama_kelas']) ?>?" data-text="Data kelas akan dihapus dari sistem." data-bs-toggle="tooltip" title="Hapus Kelas">
+                                        <i class="ti ti-trash icon"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
                     </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
+                <?php endforeach; ?>
+            <?php else : ?>
+                <tr>
+                    <td colspan="7" class="p-0">
+                        <div class="empty py-5">
+                            <div class="empty-icon">
+                                <i class="ti ti-door-off text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                            <p class="empty-title">Belum ada data kelas</p>
+                            <p class="empty-subtitle text-muted">
+                                Rombongan belajar (rombel) belum ditambahkan ke dalam database madrasah.
+                            </p>
+                            <div class="empty-action">
+                                <a href="<?= base_url('kelas/create') ?>" class="btn btn-primary">
+                                    <i class="ti ti-plus icon me-1"></i> Tambah Kelas Pertama
+                                </a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
 </div>
-
-<script>
-    $(document).ready(function() {
-        if ($.fn.DataTable.isDataTable('.datatable')) {
-            $('.datatable').DataTable().destroy();
-        }
-        $('.datatable').DataTable({
-            "language": {
-                "url": "https://cdn.datatables.net/plug-ins/1.13.4/i18n/id.json"
-            },
-            "pageLength": 10
-        });
-        $('.tooltip-info').tooltip();
-    });
-</script>

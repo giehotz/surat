@@ -99,7 +99,7 @@
             <!-- Page header -->
             <?php if (!isset($hide_default_header) || !$hide_default_header): ?>
             <div class="page-header d-print-none">
-                <div class="container-xl">
+                <div class="<?= $container_class ?? 'container-xl' ?>">
                     <div class="row g-2 align-items-center">
                         <div class="col">
                             <!-- Page pre-title -->
@@ -117,7 +117,7 @@
 
             <!-- Page body -->
             <div class="page-body">
-                <div class="container-xl">
+                <div class="<?= $container_class ?? 'container-xl' ?>">
 
                     <!-- Flash Messages (Handled by SweetAlert2 at the bottom) -->
 
