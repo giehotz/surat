@@ -195,6 +195,21 @@ $routes->group('surat-resmi', ['filter' => 'isLoggedIn'], function ($routes) {
     $routes->post('template/delete/(:num)', 'SuratResmi::templateDelete/$1', ['filter' => 'role:admin,operator']);
 });
 
+// Generator Dokumen Template Word (.docx)
+$routes->group('dokumen-template', ['filter' => 'isLoggedIn'], function ($routes) {
+    $routes->get('/', 'DokumenTemplate::index');
+    $routes->get('buat/(:segment)', 'DokumenTemplate::create/$1');
+    $routes->post('generate/(:segment)', 'DokumenTemplate::generate/$1');
+    $routes->get('download-template/(:num)', 'DokumenTemplate::downloadTemplateSource/$1');
+
+    // Admin & Operator: Upload & Custom Template Management
+    $routes->get('upload', 'DokumenTemplate::upload', ['filter' => 'role:admin,operator']);
+    $routes->post('store-upload', 'DokumenTemplate::storeUpload', ['filter' => 'role:admin,operator']);
+    $routes->get('configure-fields/(:num)', 'DokumenTemplate::configureFields/$1', ['filter' => 'role:admin,operator']);
+    $routes->post('save-fields/(:num)', 'DokumenTemplate::saveFields/$1', ['filter' => 'role:admin,operator']);
+    $routes->post('delete/(:num)', 'DokumenTemplate::delete/$1', ['filter' => 'role:admin,operator']);
+});
+
 // Pengaturan Routes
 $routes->group('pengaturan', ['filter' => 'role:admin,admin_tamu'], function ($routes) {
     $routes->get('/', 'Pengaturan::index');

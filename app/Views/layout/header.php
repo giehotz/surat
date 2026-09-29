@@ -73,6 +73,7 @@
                             </span>
                         </a>
                     </li>
+
                     <?php endif; ?>
                     <?php if (session('role') !== 'operator' && session('role') !== 'admin_tamu'): ?>
                     <li class="nav-item <?= strpos(current_url(), 'data-madrasah') !== false ? 'active' : '' ?>">

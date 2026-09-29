@@ -2,12 +2,38 @@
 
 <?= $this->section('content') ?>
 
+<!-- TAB NAVIGASI MODUL SURAT -->
+<div class="row mb-3 align-items-center">
+    <div class="col-md-8">
+        <ul class="nav nav-pills">
+            <li class="nav-item">
+                <a class="nav-link active fw-bold" href="<?= base_url('surat-resmi') ?>">
+                    <i class="ti ti-file-certificate me-1"></i> Pembuat Surat Resmi (HTML / Cetak)
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link fw-bold" href="<?= base_url('dokumen-template') ?>">
+                    <i class="ti ti-file-word me-1"></i> Template Word (.docx)
+                </a>
+            </li>
+        </ul>
+    </div>
+    <div class="col-md-4 text-md-end mt-2 mt-md-0">
+        <a href="<?= base_url('surat-keluar') ?>" class="btn btn-outline-secondary">
+            <i class="ti ti-arrow-left me-1"></i> Kembali ke Surat Keluar
+        </a>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-12">
         <div class="card mb-4">
             <div class="card-header d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2">
                 <h3 class="card-title mb-0">Daftar Surat Resmi</h3>
                 <div class="d-flex gap-2">
+                    <a href="<?= base_url('dokumen-template') ?>" class="btn btn-outline-primary d-sm-inline-block">
+                        <i class="ti ti-file-word me-1"></i> Generator Word (.docx)
+                    </a>
                     <button type="button" class="btn btn-outline-secondary d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modalKopSurat">
                         <i class="ti ti-settings me-1"></i> Kop Surat
                     </button>
