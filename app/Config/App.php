@@ -24,7 +24,7 @@ class App extends BaseConfig
 
         if (isset($_SERVER['HTTP_HOST']) && $this->baseURL === 'http://localhost:8080/') {
             // WHITELIST HOSTNAME: Mencegah Host Header Injection Attack
-            $allowedHosts = ['localhost', '127.0.0.1', 'surat.min2tanggamus.sch.id'];
+            $allowedHosts = ['localhost', '127.0.0.1', 'surat.min2tanggamus.sch.id', 'www.surat.min2tanggamus.sch.id'];
             $currentHost = $_SERVER['HTTP_HOST'];
             
             // Ambil host saja tanpa port (jika ada port)
@@ -32,8 +32,10 @@ class App extends BaseConfig
             
             // Lakukan deteksi base URL SECARA OTOMATIS HANYA jika host dikenali!
             if (in_array($hostWithoutPort, $allowedHosts, true)) {
-                $isHttps = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || 
-                           (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+                $isHttps = (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off') || 
+                           (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower((string)$_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https') ||
+                           (isset($_SERVER['HTTP_X_FORWARDED_SSL']) && strtolower((string)$_SERVER['HTTP_X_FORWARDED_SSL']) === 'on') ||
+                           (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443);
                 $protocol = $isHttps ? 'https://' : 'http://';
                 
                 $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
