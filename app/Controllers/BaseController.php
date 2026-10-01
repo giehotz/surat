@@ -33,6 +33,11 @@ abstract class BaseController extends Controller
     protected $appSettings;
 
     /**
+     * @var array|null
+     */
+    protected $kopSurat;
+
+    /**
      * @return void
      */
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
@@ -57,8 +62,19 @@ abstract class BaseController extends Controller
             cache()->save('app_settings', $this->appSettings, 86400); // cache for 1 day
         }
 
+        // Load Global Kop Surat dari tabel khusus kop_surat
+        $this->kopSurat = cache('active_kop_surat');
+        if (!$this->kopSurat) {
+            $kopSuratModel = new \App\Models\KopSuratModel();
+            $this->kopSurat = $kopSuratModel->getActiveKop();
+            if ($this->kopSurat) {
+                cache()->save('active_kop_surat', $this->kopSurat, 86400);
+            }
+        }
+
         // Expose to all views via service
         $renderer = service('renderer');
         $renderer->setVar('appSettings', $this->appSettings);
+        $renderer->setVar('kopSurat', $this->kopSurat);
     }
 }

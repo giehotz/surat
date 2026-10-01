@@ -1,11 +1,35 @@
 <!-- Header Navigation Menu -->
+<style>
+    /* Paksa navbar dan setiap teks item menu tetap 1 baris tanpa wrapping */
+    #navbar-menu .navbar-nav {
+        flex-wrap: nowrap !important;
+        white-space: nowrap !important;
+    }
+    #navbar-menu .nav-item {
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+    }
+    #navbar-menu .nav-link {
+        white-space: nowrap !important;
+        padding-left: 0.55rem !important;
+        padding-right: 0.55rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+    #navbar-menu .nav-link-title {
+        white-space: nowrap !important;
+        word-break: keep-all !important;
+        display: inline !important;
+    }
+    #navbar-menu .nav-link-icon {
+        margin-right: 0.35rem !important;
+    }
+</style>
 <header class="navbar-expand-md position-sticky top-0" style="z-index: 1030; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
     <div class="collapse navbar-collapse" id="navbar-menu">
         <div class="navbar">
-            <!-- Menambahkan d-flex dan justify-content-center di sini -->
             <div class="container-xl d-flex justify-content-center">
-                <!-- Tambahkan mx-auto untuk memastikan list berada di tengah -->
-                <ul class="navbar-nav mx-auto gap-2">
+                <ul class="navbar-nav mx-auto flex-nowrap gap-1 gap-xl-2">
                     <?php if (session('role') !== 'admin_tamu'): ?>
                     <li class="nav-item <?= current_url() == base_url('dashboard') ? 'active' : '' ?>">
                         <a class="nav-link" href="<?= base_url('dashboard') ?>">
@@ -63,8 +87,9 @@
                         </a>
                     </li>
 
-                    <li class="nav-item <?= strpos(current_url(), 'daftar-hadir') !== false ? 'active' : '' ?>">
-                        <a class="nav-link" href="<?= base_url('daftar-hadir') ?>">
+                    <!-- Menu Daftar Hadir (Submenu: Daftar Hadir Rapat & Daftar Hadir Harian) -->
+                    <li class="nav-item dropdown <?= strpos(current_url(), 'daftar-hadir') !== false ? 'active' : '' ?>">
+                        <a class="nav-link dropdown-toggle" href="#navbar-daftar-hadir" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
                                 <i class="ti ti-clipboard-list icon text-teal"></i>
                             </span>
@@ -72,6 +97,16 @@
                                 Daftar Hadir
                             </span>
                         </a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item <?= (strpos(current_url(), 'daftar-hadir/rapat') !== false || current_url() == base_url('daftar-hadir')) ? 'active' : '' ?>" href="<?= base_url('daftar-hadir/rapat') ?>">
+                                <span class="nav-link-icon d-inline-block me-1"><i class="ti ti-notes icon text-teal"></i></span>
+                                1. Daftar Hadir Rapat
+                            </a>
+                            <a class="dropdown-item <?= strpos(current_url(), 'daftar-hadir/harian') !== false ? 'active' : '' ?>" href="<?= base_url('daftar-hadir/harian') ?>">
+                                <span class="nav-link-icon d-inline-block me-1"><i class="ti ti-calendar-event icon text-primary"></i></span>
+                                2. Daftar Hadir Harian
+                            </a>
+                        </div>
                     </li>
 
                     <?php endif; ?>

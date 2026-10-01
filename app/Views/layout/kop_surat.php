@@ -45,15 +45,16 @@
 
 <div class="kop-surat">
     <?php 
-        // Gunakan logo dari appSettings jika ada, atau logo default
-        $logo = !empty($appSettings['sekolah_logo']) ? base_url('uploads/logo/' . $appSettings['sekolah_logo']) : 'https://via.placeholder.com/90';
+        // Gunakan logo khusus kop jika ada, atau logo sekolah dari appSettings, atau default
+        $logoNama = !empty($kopSurat['logo_kop']) ? $kopSurat['logo_kop'] : ($appSettings['sekolah_logo'] ?? '');
+        $logo = !empty($logoNama) ? base_url('uploads/logo/' . $logoNama) : 'https://via.placeholder.com/90';
     ?>
     <img src="<?= $logo ?>" class="logo-kop" alt="Logo Instansi">
     <div class="teks-kop">
-        <h1 style="font-size: 12pt; margin-bottom: 2px; font-weight: bold;"><?= esc($appSettings['sekolah_kementerian'] ?? 'KEMENTERIAN AGAMA REPUBLIK INDONESIA') ?></h1>
-        <h1 style="font-size: 12pt; margin-bottom: 2px; font-weight: bold;"><?= esc($appSettings['sekolah_kantor_kementerian'] ?? 'KANTOR KEMENTERIAN AGAMA KABUPATEN TANGGAMUS') ?></h1>
-        <h2 style="font-size: 12pt; margin-bottom: 5px;"><?= esc($appSettings['sekolah_nama'] ?? 'MADRASAH IBTIDAIYAH NEGERI 2 TANGGAMUS') ?></h2>
-        <p style="font-size: 9pt; margin-bottom: 0;"><?= esc($appSettings['sekolah_alamat'] ?? 'Jln. Lap. Ampera No. 109 Purwodadi Kec. Gisting Kab. Tanggamus (0729) 347578 35378') ?></p>
-        <p style="font-size: 9pt;">Email : <?= esc($appSettings['sekolah_kontak'] ?? 'minduatanggamus@gmail.com') ?></p>
+        <h1 style="font-size: 12pt; margin-bottom: 2px; font-weight: bold;"><?= esc($kopSurat['kementerian'] ?? ($appSettings['sekolah_kementerian'] ?? 'KEMENTERIAN AGAMA REPUBLIK INDONESIA')) ?></h1>
+        <h1 style="font-size: 12pt; margin-bottom: 2px; font-weight: bold;"><?= esc($kopSurat['kantor_kementerian'] ?? ($appSettings['sekolah_kantor_kementerian'] ?? 'KANTOR KEMENTERIAN AGAMA KABUPATEN TANGGAMUS')) ?></h1>
+        <h2 style="font-size: 12pt; margin-bottom: 5px;"><?= esc($kopSurat['nama_madrasah_kop'] ?? ($appSettings['sekolah_nama'] ?? 'MADRASAH IBTIDAIYAH NEGERI 2 TANGGAMUS')) ?></h2>
+        <p style="font-size: 9pt; margin-bottom: 0;"><?= esc($kopSurat['alamat_kop'] ?? ($appSettings['sekolah_alamat'] ?? 'Jln. Lap. Ampera No. 109 Purwodadi Kec. Gisting Kab. Tanggamus (0729) 347578 35378')) ?></p>
+        <p style="font-size: 9pt;">Email : <?= esc($kopSurat['kontak_kop'] ?? ($appSettings['sekolah_kontak'] ?? 'minduatanggamus@gmail.com')) ?></p>
     </div>
 </div>

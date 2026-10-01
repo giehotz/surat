@@ -80,11 +80,44 @@
             </div>
 
             <!-- BAGIAN 3: ALAMAT & KONTAK -->
-            <h4 class="subheader text-muted mb-3">Alamat & Kontak</h4>
-            <div class="row g-4 mb-4">
+            <h4 class="subheader text-muted mb-3">Alamat Wilayah & Kontak</h4>
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6 col-md-6">
+                    <label class="form-label">Provinsi</label>
+                    <div class="input-group input-group-flat">
+                        <span class="input-group-text"><i class="ti ti-map"></i></span>
+                        <input type="text" class="form-control ps-1" name="sekolah_provinsi" value="<?= esc($settings['sekolah_provinsi'] ?? 'Lampung') ?>" placeholder="Contoh: Lampung">
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-md-6">
+                    <label class="form-label">Kabupaten / Kota</label>
+                    <div class="input-group input-group-flat">
+                        <span class="input-group-text"><i class="ti ti-building-community"></i></span>
+                        <input type="text" class="form-control ps-1" name="sekolah_kabupaten" value="<?= esc($settings['sekolah_kabupaten'] ?? 'Kabupaten Tanggamus') ?>" placeholder="Contoh: Kabupaten Tanggamus">
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-md-6">
+                    <label class="form-label">Kecamatan</label>
+                    <div class="input-group input-group-flat">
+                        <span class="input-group-text"><i class="ti ti-map-2"></i></span>
+                        <input type="text" class="form-control ps-1" name="sekolah_kecamatan" value="<?= esc($settings['sekolah_kecamatan'] ?? 'Gisting') ?>" placeholder="Contoh: Gisting">
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-md-6">
+                    <label class="form-label">Kelurahan / Desa</label>
+                    <div class="input-group input-group-flat">
+                        <span class="input-group-text"><i class="ti ti-home-2"></i></span>
+                        <input type="text" class="form-control ps-1" name="sekolah_desa" value="<?= esc($settings['sekolah_desa'] ?? 'Purwodadi') ?>" placeholder="Contoh: Purwodadi">
+                    </div>
+                </div>
+
                 <div class="col-12">
-                    <label class="form-label required">Alamat Lengkap</label>
-                    <textarea class="form-control" name="sekolah_alamat" rows="3" placeholder="Jl. Contoh No. 123, Kelurahan, Kecamatan, Kota..." required><?= esc($settings['sekolah_alamat'] ?? '') ?></textarea>
+                    <label class="form-label required">Jalan / Alamat Lengkap Detail</label>
+                    <textarea class="form-control" name="sekolah_alamat" rows="2" placeholder="Jln. Lap. Ampera No. 109, RT/RW..." required><?= esc($settings['sekolah_alamat'] ?? '') ?></textarea>
+                    <small class="form-hint mt-1">Sertakan nama jalan, nomor bangunan, RT/RW, dan kode pos.</small>
                 </div>
                 
                 <div class="col-12">

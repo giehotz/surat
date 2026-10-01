@@ -33,6 +33,7 @@ class Pengaturan extends BaseController
         $data = [
             'title'               => 'Pengaturan Aplikasi',
             'settings'            => $this->pengaturanModel->getSettings(),
+            'kopSurat'            => (new \App\Models\KopSuratModel())->getActiveKop(),
             'active_tab'          => session()->getFlashdata('active_tab') ?? $this->request->getGet('active_tab') ?? 'identitas',
             'users'               => $userModel->findAll(),
             'wajib_fields'        => $wajibFieldModel->getPengaturanByForm('surat_keluar'),
@@ -56,7 +57,19 @@ class Pengaturan extends BaseController
             return redirect()->to('/pengaturan')->withInput()->with('error', 'Nama institusi dan alamat wajib diisi.')->with('active_tab', 'identitas');
         }
 
-        $this->saveSettingFields(['sekolah_kementerian', 'sekolah_nama', 'sekolah_npsn', 'sekolah_nsm', 'sekolah_alamat', 'sekolah_kontak']);
+        $this->saveSettingFields([
+            'sekolah_kementerian',
+            'sekolah_nama',
+            'sekolah_npsn',
+            'sekolah_nsm',
+            'sekolah_provinsi',
+            'sekolah_kabupaten',
+            'sekolah_kecamatan',
+            'sekolah_desa',
+            'sekolah_kodepos',
+            'sekolah_alamat',
+            'sekolah_kontak'
+        ]);
 
         // Handle Logo Upload
         $fileLogo = $this->request->getFile('sekolah_logo');
@@ -283,10 +296,54 @@ class Pengaturan extends BaseController
     {
         if (session('role') !== 'admin') return redirect()->back();
 
-        $this->saveSettingFields(['sekolah_kementerian', 'sekolah_kantor_kementerian', 'sekolah_nama', 'sekolah_alamat', 'sekolah_kontak']);
+        $kopSuratModel = new \App\Models\KopSuratModel();
+
+        $rules = [
+            'nama_madrasah_kop' => 'required',
+            'alamat_kop'        => 'required',
+        ];
+
+        if (!$this->validate($rules)) {
+            return redirect()->to('/pengaturan')->withInput()->with('error', 'Nama madrasah dan alamat pada kop surat wajib diisi.')->with('active_tab', 'kop-surat');
+        }
+
+        $postData = $this->request->getPost();
+        $kopData = [
+            'kementerian'        => trim($postData['kementerian'] ?? ''),
+            'kantor_kementerian' => trim($postData['kantor_kementerian'] ?? ''),
+            'nama_madrasah_kop'  => trim($postData['nama_madrasah_kop'] ?? ''),
+            'alamat_kop'         => trim($postData['alamat_kop'] ?? ''),
+            'kontak_kop'         => trim($postData['kontak_kop'] ?? ''),
+        ];
+
+        // Handle upload logo khusus kop jika diunggah
+        $fileLogo = $this->request->getFile('logo_kop');
+        if ($fileLogo && $fileLogo->isValid() && !$fileLogo->hasMoved()) {
+            $logoRules = [
+                'logo_kop' => 'uploaded[logo_kop]|is_image[logo_kop]|mime_in[logo_kop,image/jpg,image/jpeg,image/png]|max_size[logo_kop,2048]'
+            ];
+
+            if ($this->validate($logoRules)) {
+                $activeKop = $kopSuratModel->getActiveKop();
+                if (!empty($activeKop['logo_kop']) && file_exists(FCPATH . 'uploads/logo/' . $activeKop['logo_kop'])) {
+                    @unlink(FCPATH . 'uploads/logo/' . $activeKop['logo_kop']);
+                }
+
+                $targetDir = FCPATH . 'uploads/logo';
+                if (!is_dir($targetDir)) mkdir($targetDir, 0755, true);
+
+                $newName = $fileLogo->getRandomName();
+                $fileLogo->move($targetDir, $newName);
+                $kopData['logo_kop'] = $newName;
+            }
+        }
+
+        $kopSuratModel->saveActiveKop($kopData);
+
+        cache()->delete('active_kop_surat');
         $this->invalidateSettingsCache();
 
-        return redirect()->to('/pengaturan')->with('success', 'Pengaturan Kop Surat berhasil disimpan.')->with('active_tab', 'kop-surat');
+        return redirect()->to('/pengaturan')->with('success', 'Pengaturan Kop Surat berhasil disimpan ke tabel kop_surat.')->with('active_tab', 'kop-surat');
     }
 
     public function getLinkDrive()

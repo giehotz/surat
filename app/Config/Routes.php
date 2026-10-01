@@ -231,9 +231,13 @@ $routes->group('pengaturan', ['filter' => 'role:admin,admin_tamu'], function ($r
 // API Pengaturan (diakses oleh semua user yang sudah login)
 $routes->get('pengaturan/get-link-drive', 'Pengaturan::getLinkDrive');
 
-// Daftar Hadir Rapat / Kegiatan Guru & Notulen
+// Daftar Hadir Rapat / Kegiatan Guru & Notulen serta Daftar Hadir Harian
 $routes->group('daftar-hadir', ['filter' => 'role:admin,operator,pimpinan,piket'], function ($routes) {
-    $routes->get('/', 'DaftarHadir::index');
+    $routes->get('/', 'DaftarHadir::rapat');
+    $routes->get('rapat', 'DaftarHadir::rapat');
+    $routes->get('harian', 'DaftarHadir::harian');
+    $routes->get('cetak-harian', 'DaftarHadir::cetakHarian');
+    $routes->get('sync-libur', 'DaftarHadir::syncHariLibur');
     $routes->post('store-notulen', 'DaftarHadir::storeNotulen');
     $routes->post('delete-notulen/(:num)', 'DaftarHadir::deleteNotulen/$1');
     $routes->get('download-notulen/(:num)', 'DaftarHadir::downloadNotulen/$1');
