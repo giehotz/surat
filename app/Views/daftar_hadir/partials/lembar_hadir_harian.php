@@ -256,7 +256,7 @@
                     <div class="col-kiri">
                         <div class="flex-row-id">
                             <span class="label-id">NAMA</span>
-                            <span class="value-id">: <?= strtoupper(esc($guru['nama_pegawai'] ?? '-')) ?></span>
+                            <span class="value-id">: <?= esc($guru['nama_pegawai'] ?? '-') ?></span>
                         </div>
                         <div class="flex-row-id">
                             <span class="label-id">NIP</span>
@@ -336,7 +336,7 @@
                     <p class="ttd-row-tanggal">&nbsp;</p>
                     <p class="ttd-row-jabatan">Pegawai yang bersangkutan,</p>
                     <div class="ttd-space"></div><br>
-                    <p class="ttd-row-nama"><?= strtoupper(esc($guru['nama_pegawai'] ?? '')) ?></p>
+                    <p class="ttd-row-nama"><?= esc($guru['nama_pegawai'] ?? '') ?></p>
                     <p class="ttd-row-nip"><?= !empty($guru['nip']) ? 'NIP. ' . esc($guru['nip']) : '-' ?></p>
                 </div>
 
@@ -344,7 +344,7 @@
                     <p class="ttd-row-tanggal"><?= esc($kota_titimangsa) ?>, <?= esc($tanggal_akhir_bulan) ?></p>
                     <p class="ttd-row-jabatan">Kepala Madrasah,</p>
                     <div class="ttd-space"></div><br>
-                    <p class="ttd-row-nama"><?= strtoupper(esc($appSettings['pejabat_kepsek_nama'] ?? 'SIPULLOH, M.Pd.I')) ?></p>
+                    <p class="ttd-row-nama"><?= esc($appSettings['pejabat_kepsek_nama'] ?? 'SIPULLOH, M.Pd.I') ?></p>
                     <p class="ttd-row-nip"><?= !empty($appSettings['pejabat_kepsek_nip']) ? 'NIP. ' . esc($appSettings['pejabat_kepsek_nip']) : '-' ?></p>
                 </div>
             </div>
