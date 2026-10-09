@@ -76,6 +76,19 @@
                         </a>
                     </li>
 
+                    <?php if (in_array(session('role'), ['admin', 'operator', 'pimpinan'])): ?>
+                    <li class="nav-item <?= strpos(current_url(), 'laporan') !== false ? 'active' : '' ?>">
+                        <a class="nav-link" href="<?= base_url('laporan') ?>">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <i class="ti ti-file-analytics icon text-indigo"></i>
+                            </span>
+                            <span class="nav-link-title">
+                                Laporan
+                            </span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+
                     <li class="nav-item <?= strpos(current_url(), 'prestasi-siswa') !== false ? 'active' : '' ?>">
                         <a class="nav-link" href="<?= base_url('prestasi-siswa') ?>">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">

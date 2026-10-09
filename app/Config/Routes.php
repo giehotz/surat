@@ -90,6 +90,12 @@ $routes->group('prestasi-siswa', function ($routes) {
     $routes->get('export-pdf', 'PrestasiSiswa::exportPdf');
 });
 
+// Laporan Surat Masuk & Keluar
+$routes->group('laporan', ['filter' => 'role:admin,operator,pimpinan'], function ($routes) {
+    $routes->get('/', 'Laporan::index');
+    $routes->get('export-pdf', 'Laporan::exportPdf');
+});
+
 
 
 // Admin Routes (Users & Setting)
