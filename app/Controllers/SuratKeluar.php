@@ -186,12 +186,20 @@ class SuratKeluar extends BaseController
             ->orderBy('id', 'DESC')
             ->first();
 
+        $tahunAnggaran = $settings['tahun_anggaran'] ?? date('Y');
+        $nextNomorUrut = $this->suratService->getNextNomorUrut($tahunAnggaran);
+        $currentBulan  = date('m');
+        $kodeSatker    = $settings['kode_satker'] ?? 'MI.08.02/PP.00.4';
+
         $data = [
             'required_fields'           => $wajibFieldModel->getRequiredFields('surat_keluar'),
             'allowedMethods'            => $allowedMethods,
             'defaultMethod'             => $defaultMethod,
             'latest_nomor_surat_keluar' => $lastSurat ? $lastSurat['nomor_surat'] : '-',
-            'tahun_anggaran'            => $settings['tahun_anggaran'] ?? date('Y'),
+            'tahun_anggaran'            => $tahunAnggaran,
+            'next_nomor_urut'           => $nextNomorUrut,
+            'current_bulan'             => $currentBulan,
+            'kode_satker'               => $kodeSatker,
             'bulan_list'                => $this->suratService->getBulanList(),
             'format_surat_list'         => (new FormatSuratModel())->findAll(),
         ];
@@ -204,10 +212,14 @@ class SuratKeluar extends BaseController
         $pengaturanModel = new PengaturanModel();
         $settings        = $pengaturanModel->getSettings();
 
-        $nomorUrut     = $this->request->getPost('nomor_urut');
-        $bulan         = $this->request->getPost('bulan');
+        $nomorUrut     = trim($this->request->getPost('nomor_urut') ?? '');
+        $bulan         = $this->request->getPost('bulan') ?: date('m');
         $formatSuratId = $this->request->getPost('format_surat_id');
         $perihal       = $this->request->getPost('perihal');
+        $tanggalSurat  = $this->request->getPost('tanggal_surat') ?: date('Y-m-d');
+        if (empty($bulan) && !empty($tanggalSurat)) {
+            $bulan = date('m', strtotime($tanggalSurat));
+        }
 
         $nomorSurat = '';
         if (!empty($nomorUrut) && !empty($bulan) && !empty($formatSuratId)) {
@@ -216,6 +228,14 @@ class SuratKeluar extends BaseController
             $template = $format['template'] ?? '{nomor}/{bulan}/{tahun}';
             $tahun = $settings['tahun_anggaran'] ?? date('Y');
             $nomorSurat = $this->suratService->generateNomorSurat($template, $nomorUrut, $bulan, $tahun);
+        }
+
+        // Validasi format nomor surat sesuai acuan standar: tolak dan jangan simpan jika tidak valid
+        if (!empty($nomorSurat)) {
+            $valResult = $this->suratService->validateNomorSuratFormat($nomorSurat);
+            if (!$valResult['valid']) {
+                return redirect()->back()->withInput()->with('error', $valResult['message']);
+            }
         }
 
         // Cek duplikasi: nomor_surat harus unik; jika draft, perihal harus unik
@@ -252,8 +272,12 @@ class SuratKeluar extends BaseController
             return redirect()->back()->withInput()->with('error', 'Data tidak valid. Silakan periksa kembali inputan Anda.')->with('validation', $this->validator);
         }
 
-        $tahunAgenda  = date('Y');
-        $nomorAgenda  = $this->suratService->generateNextNomorAgendaKeluar($tahunAgenda);
+        $tahunAgenda  = !empty($tanggalSurat) ? date('Y', strtotime($tanggalSurat)) : ($settings['tahun_anggaran'] ?? date('Y'));
+        if (!empty($nomorUrut) && preg_match('/^(\d+)-([A-Za-z0-9]+)$/', trim($nomorUrut))) {
+            $nomorAgenda  = $this->suratService->generateAgendaForSisipan($tahunAgenda, $bulan, $nomorUrut);
+        } else {
+            $nomorAgenda  = $this->suratService->generateNextNomorAgendaKeluar($tahunAgenda, $bulan);
+        }
 
         $fileInfo = null;
         $fileLink = null;
@@ -338,6 +362,7 @@ class SuratKeluar extends BaseController
             'surat'             => $surat,
             'id'                => $id,
             'tahun_anggaran'    => $settings['tahun_anggaran'] ?? date('Y'),
+            'kode_satker'       => $settings['kode_satker'] ?? 'MI.08.02/PP.00.4',
             'bulan_list'        => $this->suratService->getBulanList(),
             'format_surat_list' => (new FormatSuratModel())->findAll(),
         ];
@@ -355,7 +380,7 @@ class SuratKeluar extends BaseController
         $pengaturanModel = new PengaturanModel();
         $settings        = $pengaturanModel->getSettings();
 
-        $nomorUrut     = $this->request->getPost('nomor_urut');
+        $nomorUrut     = trim($this->request->getPost('nomor_urut') ?? '');
         $bulan         = $this->request->getPost('bulan');
         $formatSuratId = $this->request->getPost('format_surat_id');
         $perihal       = $this->request->getPost('perihal');
@@ -367,6 +392,14 @@ class SuratKeluar extends BaseController
             $template = $format['template'] ?? '{nomor}/{bulan}/{tahun}';
             $tahun = $settings['tahun_anggaran'] ?? date('Y');
             $nomorSurat = $this->suratService->generateNomorSurat($template, $nomorUrut, $bulan, $tahun);
+        }
+
+        // Validasi format nomor surat sesuai acuan standar
+        if (!empty($nomorSurat)) {
+            $valResult = $this->suratService->validateNomorSuratFormat($nomorSurat);
+            if (!$valResult['valid']) {
+                return redirect()->back()->withInput()->with('error', $valResult['message']);
+            }
         }
 
         // Cek duplikasi
@@ -443,6 +476,12 @@ class SuratKeluar extends BaseController
             'file_link'        => $fileLink,
             'updated_by'       => session()->get('user_id'),
         ];
+
+        if (!empty($nomorUrut) && preg_match('/^(\d+)-([A-Za-z0-9]+)$/', trim($nomorUrut))) {
+            $tglSurat = $this->request->getPost('tanggal_surat');
+            $tahunAgenda = !empty($tglSurat) ? date('Y', strtotime($tglSurat)) : date('Y');
+            $data['nomor_agenda'] = $this->suratService->generateAgendaForSisipan($tahunAgenda, $bulan, $nomorUrut);
+        }
 
         $this->suratKeluarModel->update($id, $data);
 

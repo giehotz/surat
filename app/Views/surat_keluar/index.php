@@ -33,7 +33,7 @@
                                 <i class="ti ti-upload me-1.5"></i> Import
                             </a>
                             <form action="<?= base_url('surat-keluar/renumber') ?>" method="post" style="display:inline;" 
-                                  onsubmit="return confirm('Urutkan ulang nomor surat? Data yang ada akan diurutkan ulang secara berurutan.');">
+                                  onsubmit="return confirm('Urutkan ulang nomor surat berdasarkan kronologis tanggal dan bulan?\n\n- Nomor agenda diseragamkan ke format: OUT-{bulan}-{tahun}-{nomor}\n- Nomor urut dilanjutkan berurutan (001, 002, dst) secara kontinu antar format surat.');">
                                 <?= csrf_field() ?>
                                 <button type="submit" class="btn btn-outline-warning">
                                     <i class="ti ti-sort-ascending me-1.5"></i> Urutkan Ulang

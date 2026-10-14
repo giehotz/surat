@@ -96,20 +96,146 @@ class SuratService
     }
 
     /**
-     * Generate nomor agenda surat keluar berikutnya untuk tahun tertentu
+     * Generate nomor agenda surat keluar berikutnya untuk tahun tertentu dan bulan tertentu
+     * Format: OUT-{bulan}-{tahun}-{nomor} (nomor urut berlanjut sepanjang tahun anggaran)
      */
-    public function generateNextNomorAgendaKeluar(string $tahun): string
+    public function generateNextNomorAgendaKeluar(string $tahun, ?string $bulan = null): string
     {
+        $bulanStr = !empty($bulan) ? str_pad($bulan, 2, '0', STR_PAD_LEFT) : date('m');
         $suratKeluarModel = new SuratKeluarModel();
-        $countThisYear = $suratKeluarModel
-            ->where('nomor_agenda LIKE', 'OUT-' . $tahun . '-%')
-            ->countAllResults();
 
-        return 'OUT-' . $tahun . '-' . sprintf('%03d', $countThisYear + 1);
+        // Cari nomor urut agenda tertinggi pada tahun bersangkutan
+        $rows = $suratKeluarModel
+            ->groupStart()
+                ->like('nomor_agenda', 'OUT-%-' . $tahun . '-%', 'after')
+                ->orLike('nomor_agenda', 'OUT-' . $tahun . '-%', 'after')
+                ->orWhere('YEAR(tanggal_surat)', $tahun)
+            ->groupEnd()
+            ->select('nomor_agenda')
+            ->findAll();
+
+        $maxNum = 0;
+        foreach ($rows as $r) {
+            if (!empty($r['nomor_agenda']) && preg_match('/-(\d+)$/', $r['nomor_agenda'], $m)) {
+                $num = (int) $m[1];
+                if ($num > $maxNum) {
+                    $maxNum = $num;
+                }
+            }
+        }
+
+        $nextNum = max($maxNum + 1, count($rows) + 1);
+        $padded = str_pad((string)$nextNum, 2, '0', STR_PAD_LEFT);
+
+        return 'OUT-' . $bulanStr . '-' . $tahun . '-' . $padded;
     }
 
     /**
-     * Merapikan dan renumber seluruh nomor urut dan nomor agenda Surat Keluar
+     * Ambil nomor urut surat keluar berikutnya untuk tahun anggaran tertentu (tidak reset saat ganti format)
+     */
+    public function getNextNomorUrut(string $tahun): string
+    {
+        $suratKeluarModel = new SuratKeluarModel();
+        $rows = $suratKeluarModel
+            ->groupStart()
+                ->where('YEAR(tanggal_surat)', $tahun)
+                ->orLike('nomor_surat', '/' . $tahun)
+            ->groupEnd()
+            ->select('nomor_urut, nomor_surat')
+            ->findAll();
+
+        $maxNum = 0;
+        foreach ($rows as $r) {
+            if (!empty($r['nomor_urut']) && is_numeric($r['nomor_urut'])) {
+                $n = (int) $r['nomor_urut'];
+                if ($n > $maxNum) $maxNum = $n;
+            } elseif (!empty($r['nomor_surat']) && preg_match('/^[A-Za-z0-9.]+-(\d+)/', $r['nomor_surat'], $m)) {
+                $n = (int) $m[1];
+                if ($n > $maxNum) $maxNum = $n;
+            }
+        }
+
+        $next = $maxNum + 1;
+        return str_pad((string)$next, 3, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Generate nomor agenda khusus surat sisipan (contoh: nomor urut 005-A menghasilkan agenda OUT-01-2026-05A)
+     */
+    public function generateAgendaForSisipan(string $tahun, ?string $bulan, string $nomorUrut): string
+    {
+        $bulanStr = !empty($bulan) ? str_pad($bulan, 2, '0', STR_PAD_LEFT) : date('m');
+        $nomorUrut = trim($nomorUrut);
+        if (preg_match('/^(\d+)-([A-Za-z0-9]+)$/', $nomorUrut, $m)) {
+            $baseSeq = str_pad((string)(int)$m[1], 2, '0', STR_PAD_LEFT);
+            $suffix  = strtoupper($m[2]);
+            return 'OUT-' . $bulanStr . '-' . $tahun . '-' . $baseSeq . $suffix;
+        }
+
+        return $this->generateNextNomorAgendaKeluar($tahun, $bulan);
+    }
+
+    /**
+     * Validasi format nomor surat keluar berdasarkan standar template
+     * Format acuan: [Klasifikasi]-[Nomor]/[KodeSatker]/[Bulan]/[Tahun]
+     * Mendukung nomor urut standar (001) maupun nomor sisipan (005-A)
+     */
+    public function validateNomorSuratFormat(string $nomorSurat, ?string $kodeSatker = null): array
+    {
+        $nomorSurat = trim($nomorSurat);
+        if (empty($nomorSurat)) {
+            return ['valid' => false, 'message' => 'Nomor surat tidak boleh kosong.'];
+        }
+
+        if (!preg_match('/^([A-Za-z0-9.]+)-(\d+(?:-[A-Za-z0-9]+)?)\/(.+)\/(\d{1,2})\/(\d{4})$/', $nomorSurat, $m)) {
+            return [
+                'valid' => false,
+                'message' => 'Format nomor surat tidak sesuai acuan standar: [Klasifikasi]-[Nomor]/[KodeSatker]/[Bulan]/[Tahun] (contoh: B-001/MI.08.02/PP.00.4/01/2026 atau surat sisipan B-005-A/MI.08.02/PP.00.4/01/2026).'
+            ];
+        }
+
+        $prefix     = $m[1];
+        $nomorUrut  = $m[2];
+        $satkerPart = $m[3];
+        $bulan      = (int)$m[4];
+        $tahun      = (int)$m[5];
+
+        if (!empty($kodeSatker) && trim($satkerPart) !== trim($kodeSatker)) {
+            return [
+                'valid' => false,
+                'message' => "Kode satker pada nomor surat ('{$satkerPart}') tidak sesuai dengan kode satker aktif ('{$kodeSatker}')."
+            ];
+        }
+
+        if ($bulan < 1 || $bulan > 12) {
+            return [
+                'valid' => false,
+                'message' => "Bulan pada nomor surat ($m[4]) tidak valid. Harus antara 01 hingga 12."
+            ];
+        }
+
+        if ($tahun < 2000 || $tahun > 2100) {
+            return [
+                'valid' => false,
+                'message' => "Tahun pada nomor surat ($m[5]) tidak valid."
+            ];
+        }
+
+        return [
+            'valid'       => true,
+            'message'     => 'Format nomor surat valid.',
+            'prefix'      => $prefix,
+            'nomor_urut'  => $nomorUrut,
+            'kode_satker' => $satkerPart,
+            'bulan'       => str_pad((string)$bulan, 2, '0', STR_PAD_LEFT),
+            'tahun'       => (string)$tahun,
+        ];
+    }
+
+    /**
+     * Merapikan dan renumber seluruh nomor urut dan nomor agenda Surat Keluar secara kronologis
+     * Mengurutkan berdasarkan bulan/tanggal surat, nomor agenda berformat OUT-{bulan}-{tahun}-{nomor},
+     * dan nomor urut berlanjut terus sepanjang tahun (tidak reset ke 1 antar format).
      * 
      * @return int Jumlah record yang diperbarui
      */
@@ -117,173 +243,134 @@ class SuratService
     {
         $suratKeluarModel = new SuratKeluarModel();
         $formatModel = new FormatSuratModel();
+        $pengaturanModel = new \App\Models\PengaturanModel();
         $db = $suratKeluarModel->db;
         $updated = 0;
 
         $hasFormatCol = $suratKeluarModel->db->fieldExists('format_surat_id', 'surat_keluar');
         $hasNomorUrutCol = $suratKeluarModel->db->fieldExists('nomor_urut', 'surat_keluar');
+        $hasBulanCol = $suratKeluarModel->db->fieldExists('bulan', 'surat_keluar');
+
+        $kodeSatker = $pengaturanModel->getValue('kode_satker') ?? 'MI.08.02/PP.00.4';
+        $defaultFormat = $formatModel->first();
+        $defaultTemplate = $defaultFormat['template'] ?? ('B-{nomor}/' . $kodeSatker . '/{bulan}/{tahun}');
 
         $db->transBegin();
 
         try {
-            // 1. Proses record yang memiliki format_surat_id (pakai template)
-            if ($hasFormatCol && $hasNomorUrutCol) {
-                $withFormat = $suratKeluarModel
-                    ->where('format_surat_id IS NOT NULL', null, false)
-                    ->where('nomor_urut !=', '')
-                    ->where('nomor_urut IS NOT NULL', null, false)
-                    ->orderBy('format_surat_id', 'ASC')
-                    ->orderBy('YEAR(tanggal_surat)', 'ASC')
-                    ->orderBy("CAST(nomor_urut AS UNSIGNED)", 'ASC')
-                    ->orderBy('id', 'ASC')
-                    ->findAll();
-
-                if (!empty($withFormat)) {
-                    // Set temporary nomor_surat to avoid duplicate entry on unique key
-                    foreach ($withFormat as $rec) {
-                        $suratKeluarModel->update($rec['id'], [
-                            'nomor_surat' => 'TEMP-FMT-' . $rec['id'] . '-' . uniqid()
-                        ]);
-                    }
-
-                    $grouped = [];
-                    foreach ($withFormat as $s) {
-                        if (!empty($s['format_surat_id']) && !empty($s['tanggal_surat'])) {
-                            $tahun = date('Y', strtotime($s['tanggal_surat']));
-                            $key = $s['format_surat_id'] . '-' . $tahun;
-                            $grouped[$key][] = $s;
-                        }
-                    }
-
-                    foreach ($grouped as $list) {
-                        $no = 1;
-                        foreach ($list as $rec) {
-                            $nomorUrutBaru = str_pad($no, 3, '0', STR_PAD_LEFT);
-                            $format = $formatModel->find($rec['format_surat_id']);
-                            $tahun = date('Y', strtotime($rec['tanggal_surat']));
-                            $nomorSuratBaru = $format
-                                ? $this->generateNomorSurat($format['template'], $nomorUrutBaru, $rec['bulan'] ?? null, $tahun)
-                                : '';
-
-                            $suratKeluarModel->update($rec['id'], [
-                                'nomor_urut' => $nomorUrutBaru,
-                                'nomor_surat' => $nomorSuratBaru,
-                            ]);
-                            if ($rec['nomor_urut'] !== $nomorUrutBaru || $rec['nomor_surat'] !== $nomorSuratBaru) {
-                                $updated++;
-                            }
-                            $no++;
-                        }
-                    }
-                }
-            }
-
-            // 2. Proses record legacy (format_surat_id IS NULL)
-            $legacyQuery = $suratKeluarModel
-                ->where('nomor_surat !=', '')
-                ->where('nomor_surat IS NOT NULL', null, false);
-
-            if ($hasFormatCol) {
-                $legacyQuery->where('format_surat_id IS NULL', null, false);
-            }
-
-            $legacy = $legacyQuery->findAll();
-
-            if (!empty($legacy)) {
-                // Set temporary nomor_surat to avoid unique key collisions
-                foreach ($legacy as $rec) {
-                    $suratKeluarModel->update($rec['id'], [
-                        'nomor_surat' => 'TEMP-LEG-' . $rec['id'] . '-' . uniqid()
-                    ]);
-                }
-
-                $legacyGrouped = [];
-                foreach ($legacy as $rec) {
-                    $tahun = date('Y', strtotime($rec['tanggal_surat']));
-                    if (!$tahun || $tahun == '0000') {
-                        preg_match('/(\d{4})$/', $rec['nomor_surat'], $m);
-                        $tahun = $m[1] ?? 'unknown';
-                    }
-                    preg_match('/^([A-Za-z]+)-\d+/', $rec['nomor_surat'], $m);
-                    $prefix = $m[1] ?? 'unknown';
-                    $key = $prefix . '-' . $tahun;
-                    $legacyGrouped[$key][] = $rec;
-                }
-
-                foreach ($legacyGrouped as &$list) {
-                    usort($list, function ($a, $b) {
-                        preg_match('/^[A-Za-z]+-(\d+)/', $a['nomor_surat'], $ma);
-                        preg_match('/^[A-Za-z]+-(\d+)/', $b['nomor_surat'], $mb);
-                        $na = (int) ($ma[1] ?? 0);
-                        $nb = (int) ($mb[1] ?? 0);
-                        return $na === $nb ? $a['id'] - $b['id'] : $na - $nb;
-                    });
-                }
-
-                foreach ($legacyGrouped as $list) {
-                    $no = 1;
-                    foreach ($list as $rec) {
-                        $nomorBaru = str_pad($no, 3, '0', STR_PAD_LEFT);
-                        preg_match('/^([A-Za-z]+)-(\d+)(.*)$/', $rec['nomor_surat'], $m);
-                        if ($m) {
-                            $prefix = $m[1];
-                            $rest = $m[3];
-                            $newNomorSurat = $prefix . '-' . $nomorBaru . $rest;
-
-                            $updateData = ['nomor_surat' => $newNomorSurat];
-                            if ($hasNomorUrutCol) {
-                                $updateData['nomor_urut'] = $nomorBaru;
-                            }
-                            $suratKeluarModel->update($rec['id'], $updateData);
-
-                            if ($rec['nomor_surat'] !== $newNomorSurat) {
-                                $updated++;
-                            }
-                        }
-                        $no++;
-                    }
-                }
-            }
-
-            // 3. Renumber nomor_agenda (OUT-YYYY-NNN)
+            // Urutkan seluruh data surat keluar secara kronologis (Tahun -> Bulan -> Tanggal -> ID)
             $allSurat = $suratKeluarModel
-                ->where('nomor_agenda !=', '')
-                ->where('nomor_agenda IS NOT NULL', null, false)
-                ->orderBy('id', 'ASC')
-                ->findAll();
-
-            foreach ($allSurat as $s) {
-                $suratKeluarModel->update($s['id'], [
-                    'nomor_agenda' => 'OUT-TEMP-' . $s['id'] . '-' . uniqid()
-                ]);
-            }
-
-            $chronological = $suratKeluarModel
                 ->orderBy('YEAR(tanggal_surat)', 'ASC')
+                ->orderBy('MONTH(tanggal_surat)', 'ASC')
                 ->orderBy('tanggal_surat', 'ASC')
                 ->orderBy('id', 'ASC')
                 ->findAll();
 
+            if (empty($allSurat)) {
+                $db->transCommit();
+                return 0;
+            }
+
+            // Set temporary nomor_surat & nomor_agenda untuk mencegah collision unique constraint saat renumber
+            foreach ($allSurat as $s) {
+                $suratKeluarModel->update($s['id'], [
+                    'nomor_surat'  => 'TEMP-S-' . $s['id'] . '-' . uniqid(),
+                    'nomor_agenda' => 'TEMP-A-' . $s['id'] . '-' . uniqid(),
+                ]);
+            }
+
+            // Kelompokkan per Tahun Anggaran
             $groupedByYear = [];
-            foreach ($chronological as $s) {
+            foreach ($allSurat as $s) {
                 $tahun = date('Y', strtotime($s['tanggal_surat']));
-                if (!$tahun || $tahun == '0000') {
-                    $tahun = date('Y');
+                if (!$tahun || $tahun == '0000' || $tahun == '1970') {
+                    if (!empty($s['nomor_surat']) && preg_match('/(\d{4})$/', $s['nomor_surat'], $my)) {
+                        $tahun = $my[1];
+                    } else {
+                        $tahun = date('Y');
+                    }
                 }
                 $groupedByYear[$tahun][] = $s;
             }
 
+            // Lakukan penomoran berlanjut per tahun
             foreach ($groupedByYear as $tahun => $list) {
                 $no = 1;
                 foreach ($list as $rec) {
-                    $nomorBaru = 'OUT-' . $tahun . '-' . sprintf('%03d', $no);
-                    $suratKeluarModel->update($rec['id'], [
-                        'nomor_agenda' => $nomorBaru
-                    ]);
-                    if ($rec['nomor_agenda'] !== $nomorBaru) {
+                    $tglSurat = $rec['tanggal_surat'];
+                    $bulanStr = !empty($rec['bulan']) ? str_pad($rec['bulan'], 2, '0', STR_PAD_LEFT) : (!empty($tglSurat) ? date('m', strtotime($tglSurat)) : '01');
+
+                    // Deteksi apakah data merupakan surat sisipan ber-suffix (misal 005-A)
+                    $isSisipan = false;
+                    $suffix = '';
+                    if (!empty($rec['nomor_urut']) && preg_match('/^(\d+)-([A-Za-z0-9]+)$/', trim($rec['nomor_urut']), $ms)) {
+                        $isSisipan = true;
+                        $suffix = strtoupper($ms[2]);
+                    } elseif (!empty($rec['nomor_surat']) && preg_match('/^[A-Za-z0-9.]+-(\d+)-([A-Za-z0-9]+)\//', $rec['nomor_surat'], $ms)) {
+                        $isSisipan = true;
+                        $suffix = strtoupper($ms[2]);
+                    }
+
+                    if ($isSisipan) {
+                        // Suffix mengikuti nomor induk sebelumnya (tidak menaikkan nomor reguler $no)
+                        $baseNo = max(1, $no - 1);
+                        $agendaSeq = str_pad((string)$baseNo, 2, '0', STR_PAD_LEFT) . $suffix;
+                        $nomorAgendaBaru = 'OUT-' . $bulanStr . '-' . $tahun . '-' . $agendaSeq;
+                        $nomorUrutBaru = str_pad((string)$baseNo, 3, '0', STR_PAD_LEFT) . '-' . $suffix;
+                    } else {
+                        // 1. Nomor agenda baru: OUT-{bulan}-{tahun}-{nomor} (minimal 2 digit: 01..99, 100, dst)
+                        $agendaSeq = str_pad((string)$no, 2, '0', STR_PAD_LEFT);
+                        $nomorAgendaBaru = 'OUT-' . $bulanStr . '-' . $tahun . '-' . $agendaSeq;
+
+                        // 2. Nomor urut baru (3 digit: 001..020..021..102) berlanjut terus lintas format
+                        $nomorUrutBaru = str_pad((string)$no, 3, '0', STR_PAD_LEFT);
+                    }
+
+                    // 3. Nomor surat baru berdasarkan template format
+                    $template = '';
+                    if (!empty($rec['format_surat_id'])) {
+                        $fmt = $formatModel->find($rec['format_surat_id']);
+                        if ($fmt) {
+                            $template = $fmt['template'];
+                        }
+                    }
+
+                    if (empty($template)) {
+                        if (!empty($rec['nomor_surat']) && preg_match('/^([A-Za-z0-9.]+)-(\d+(?:-[A-Za-z0-9]+)?)\/(.+)\/(\d{1,2})\/(\d{4})$/', $rec['nomor_surat'], $m)) {
+                            // Selalu standarkan kode satker ke kodeSatker resmi jika merupakan satker internal instansi
+                            $satkerToUse = (stripos($m[3], 'MI.08.02') !== false || stripos($m[3], 'PP.') !== false) ? $kodeSatker : $m[3];
+                            $template = $m[1] . '-{nomor}/' . $satkerToUse . '/{bulan}/{tahun}';
+                        } else {
+                            $template = $defaultTemplate;
+                        }
+                    }
+
+                    // Pastikan tidak ada variasi salah ketik (PP.004 atau PP.04) yang lolos ke template
+                    $template = str_replace(['MI.08.02/PP.004', 'MI.08.02/PP.04'], $kodeSatker, $template);
+
+                    $nomorSuratBaru = $this->generateNomorSurat($template, $nomorUrutBaru, $bulanStr, $tahun);
+
+                    $updateData = [
+                        'nomor_agenda' => $nomorAgendaBaru,
+                        'nomor_surat'  => $nomorSuratBaru,
+                    ];
+                    if ($hasNomorUrutCol) {
+                        $updateData['nomor_urut'] = $nomorUrutBaru;
+                    }
+                    if ($hasBulanCol) {
+                        $updateData['bulan'] = $bulanStr;
+                    }
+
+                    $suratKeluarModel->update($rec['id'], $updateData);
+
+                    if ($rec['nomor_agenda'] !== $nomorAgendaBaru || $rec['nomor_surat'] !== $nomorSuratBaru) {
                         $updated++;
                     }
-                    $no++;
+
+                    // Hanya naikkan urutan jika bukan surat sisipan
+                    if (!$isSisipan) {
+                        $no++;
+                    }
                 }
             }
 

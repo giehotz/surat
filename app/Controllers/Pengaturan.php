@@ -204,6 +204,23 @@ class Pengaturan extends BaseController
         return redirect()->to('/pengaturan')->with('success', 'Tahun Anggaran ' . $tahun . ' berhasil diaktifkan.')->with('active_tab', 'tahun-anggaran');
     }
 
+    public function updateKodeSatker()
+    {
+        if (session('role') !== 'admin') return redirect()->back();
+
+        $kodeSatker = trim($this->request->getPost('kode_satker') ?? '');
+        $kodeSatker = trim($kodeSatker, '/');
+
+        if (empty($kodeSatker)) {
+            return redirect()->to('/pengaturan')->withInput()->with('error', 'Kode Satker instansi tidak boleh kosong.')->with('active_tab', 'format-surat');
+        }
+
+        $this->pengaturanModel->updateSetting('kode_satker', $kodeSatker);
+        $this->invalidateSettingsCache();
+
+        return redirect()->to('/pengaturan')->with('success', 'Kode Satker berhasil diperbarui.')->with('active_tab', 'format-surat');
+    }
+
     public function storeFormatSurat()
     {
         if (session('role') !== 'admin') return redirect()->back();
@@ -217,10 +234,20 @@ class Pengaturan extends BaseController
             return redirect()->to('/pengaturan')->withInput()->with('error', 'Nama dan template format surat wajib diisi.')->with('active_tab', 'format-surat');
         }
 
+        $template = trim($this->request->getPost('template'));
+
+        if (!str_contains($template, '{nomor}') || !str_contains($template, '{bulan}') || !str_contains($template, '{tahun}')) {
+            return redirect()->to('/pengaturan')->withInput()->with('error', 'Template format surat harus memuat tag {nomor}, {bulan}, dan {tahun}. Contoh: B-{nomor}/MI.08.02/PP.00.4/{bulan}/{tahun}')->with('active_tab', 'format-surat');
+        }
+
+        if (!preg_match('/^[A-Za-z0-9.]+-\{nomor\}\//', $template)) {
+            return redirect()->to('/pengaturan')->withInput()->with('error', 'Format surat harus diawali klasifikasi dan tanda strip, contoh: B-{nomor}/...')->with('active_tab', 'format-surat');
+        }
+
         $model = new FormatSuratModel();
         $model->insert([
             'nama'     => $this->request->getPost('nama'),
-            'template' => $this->request->getPost('template'),
+            'template' => $template,
         ]);
 
         return redirect()->to('/pengaturan')->with('success', 'Format Surat berhasil ditambahkan.')->with('active_tab', 'format-surat');
@@ -245,9 +272,19 @@ class Pengaturan extends BaseController
             return redirect()->to('/pengaturan')->withInput()->with('error', 'Nama dan template format surat wajib diisi.')->with('active_tab', 'format-surat');
         }
 
+        $template = trim($this->request->getPost('template'));
+
+        if (!str_contains($template, '{nomor}') || !str_contains($template, '{bulan}') || !str_contains($template, '{tahun}')) {
+            return redirect()->to('/pengaturan')->withInput()->with('error', 'Template format surat harus memuat tag {nomor}, {bulan}, dan {tahun}. Contoh: B-{nomor}/MI.08.02/PP.00.4/{bulan}/{tahun}')->with('active_tab', 'format-surat');
+        }
+
+        if (!preg_match('/^[A-Za-z0-9.]+-\{nomor\}\//', $template)) {
+            return redirect()->to('/pengaturan')->withInput()->with('error', 'Format surat harus diawali klasifikasi dan tanda strip, contoh: B-{nomor}/...')->with('active_tab', 'format-surat');
+        }
+
         $model->update($id, [
             'nama'     => $this->request->getPost('nama'),
-            'template' => $this->request->getPost('template'),
+            'template' => $template,
         ]);
 
         return redirect()->to('/pengaturan')->with('success', 'Format Surat berhasil diperbarui.')->with('active_tab', 'format-surat');

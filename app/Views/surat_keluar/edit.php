@@ -42,73 +42,118 @@
                             <label class="form-label">Nomor Agenda (Otomatis)</label>
                             <div class="input-icon">
                                 <span class="input-icon-addon"><i class="ti ti-hash text-muted"></i></span>
-                                <input type="text" class="form-control bg-light text-muted fw-bold" name="nomor_agenda" id="nomor_agenda" value="<?= esc($surat['nomor_agenda']) ?>" readonly tabindex="-1" data-bs-toggle="tooltip" title="Nomor agenda dibuat otomatis oleh sistem dan tidak dapat diubah.">
+                                <input type="text" class="form-control bg-light text-muted fw-bold font-monospace fs-5" name="nomor_agenda" id="nomor_agenda" value="<?= esc($surat['nomor_agenda']) ?>" readonly tabindex="-1" data-bs-toggle="tooltip" title="Nomor agenda dibuat otomatis oleh sistem dan tidak dapat diubah.">
                             </div>
+                            <small class="text-muted">Format: <code>OUT-{bulan}-{tahun}-{nomor}</code></small>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label required mb-0">
-                                Format Surat
-                            </label>
+                        <div class="col-md-6">
+                            <label class="form-label required mb-1">Pilih Format Surat</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="ti ti-file-description text-muted"></i></span>
                                 <select class="form-select <?= isset($validation) && $validation->hasError('format_surat_id') ? 'is-invalid' : '' ?>" 
                                        name="format_surat_id" id="format_surat_id" required>
                                     <option value="">-- Pilih Format --</option>
                                     <?php foreach ($format_surat_list as $f): ?>
-                                        <option value="<?= $f['id'] ?>" data-template="<?= esc($f['template'], 'attr') ?>" <?= (old('format_surat_id') ?? $surat['format_surat_id']) == $f['id'] ? 'selected' : '' ?>><?= esc($f['nama']) ?></option>
+                                        <option value="<?= $f['id'] ?>" data-template="<?= esc($f['template'], 'attr') ?>" <?= (old('format_surat_id') ?? $surat['format_surat_id']) == $f['id'] ? 'selected' : '' ?>><?= esc($f['nama']) ?> (<?= esc($f['template']) ?>)</option>
                                     <?php endforeach; ?>
                                 </select>
                                 <?php if(isset($validation) && $validation->hasError('format_surat_id')): ?>
                                     <div class="invalid-feedback"><?= $validation->getError('format_surat_id') ?></div>
                                 <?php endif; ?>
                             </div>
-                            <p class="text-muted small mb-1 mt-1">
+                            <small class="text-muted">
                                 <i class="ti ti-settings me-1"></i>
-                                Kelola format di <a href="<?= base_url('pengaturan?active_tab=format-surat') ?>">Pengaturan &rarr; Format Surat Keluar</a>
-                            </p>
+                                Kelola format di <a href="<?= base_url('pengaturan?active_tab=format-surat') ?>" target="_blank">Pengaturan &rarr; Format Surat Keluar</a>
+                            </small>
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label <?= in_array('nomor_surat', $required_fields ?? []) ? 'required' : '' ?>">
-                                Nomor Urut
-                            </label>
-                            <div class="input-icon">
-                                <span class="input-icon-addon"><i class="ti ti-123 text-muted"></i></span>
-                                <input type="text" class="form-control <?= isset($validation) && $validation->hasError('nomor_urut') ? 'is-invalid' : '' ?>" 
-                                       name="nomor_urut" id="nomor_urut" 
-                                       value="<?= old('nomor_urut') ?? $surat['nomor_urut'] ?>" 
-                                       placeholder="036"
-                                       <?= in_array('nomor_surat', $required_fields ?? []) ? 'required' : '' ?>>
-                                <?php if(isset($validation) && $validation->hasError('nomor_urut')): ?>
-                                    <div class="invalid-feedback"><?= $validation->getError('nomor_urut') ?></div>
-                                <?php endif; ?>
+
+                        <!-- 4 Komponen Pembentuk Nomor Surat -->
+                        <div class="col-12">
+                            <div class="card bg-light-subtle border p-3">
+                                <div class="small fw-bold text-muted text-uppercase mb-2">
+                                    <i class="ti ti-layout-grid me-1"></i> 4 Komponen Pembentuk Nomor Surat
+                                </div>
+                                <div class="row g-2 align-items-center">
+                                    <!-- 1. Klasifikasi -->
+                                    <div class="col-md-3">
+                                        <label class="form-label small mb-1 text-muted">1. Klasifikasi Surat</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white"><i class="ti ti-tag text-muted"></i></span>
+                                            <input type="text" class="form-control font-monospace fw-bold bg-white" id="segment_klasifikasi" readonly tabindex="-1" value="B-">
+                                        </div>
+                                        <small class="text-muted">Dari format terpilih</small>
+                                    </div>
+                                    <!-- 2. Nomor Urut -->
+                                    <div class="col-md-3">
+                                        <label class="form-label required small mb-1 text-muted">2. Nomor Urut</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white"><i class="ti ti-123 text-muted"></i></span>
+                                            <input type="text" class="form-control form-control-lg font-monospace fw-bold text-primary <?= isset($validation) && $validation->hasError('nomor_urut') ? 'is-invalid' : '' ?>" 
+                                                   name="nomor_urut" id="nomor_urut" 
+                                                   value="<?= old('nomor_urut') ?? $surat['nomor_urut'] ?>" 
+                                                   placeholder="036"
+                                                   required>
+                                        </div>
+                                        <div class="d-flex align-items-center justify-content-between mt-1">
+                                            <small class="text-muted" id="nomor_urut_hint">Nomor urut surat</small>
+                                            <div class="form-check m-0">
+                                                <input class="form-check-input" type="checkbox" id="check_is_sisipan" style="cursor:pointer;">
+                                                <label class="form-check-label small fw-bold text-warning" for="check_is_sisipan" style="cursor:pointer;">
+                                                    Sisipan (005-A)
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div id="sisipan_box" class="d-none mt-2 p-2 bg-yellow-lt rounded border border-warning-subtle shadow-sm">
+                                            <div class="row g-1">
+                                                <div class="col-7">
+                                                    <label class="small text-muted mb-0" style="font-size:0.75rem;">No. Induk:</label>
+                                                    <input type="text" class="form-control form-control-sm font-monospace fw-bold" id="sisipan_base" placeholder="005">
+                                                </div>
+                                                <div class="col-5">
+                                                    <label class="small text-muted mb-0" style="font-size:0.75rem;">Suffix:</label>
+                                                    <input type="text" class="form-control form-control-sm font-monospace text-uppercase fw-bold text-danger" id="sisipan_suffix" placeholder="A" maxlength="5">
+                                                </div>
+                                            </div>
+                                            <small class="text-muted d-block mt-1" style="font-size:0.7rem;"><i class="ti ti-info-circle me-1"></i>Format hasil: <span class="fw-bold font-monospace" id="sisipan_preview_text">005-A</span></small>
+                                        </div>
+                                    </div>
+                                    <!-- 3. Kode Satker -->
+                                    <div class="col-md-3">
+                                        <label class="form-label small mb-1 text-muted">3. Kode Satker</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text font-monospace">/</span>
+                                            <input type="text" class="form-control font-monospace bg-white text-muted" id="segment_satker" readonly tabindex="-1" value="<?= esc($kode_satker ?? 'MI.08.02/PP.00.4') ?>">
+                                            <span class="input-group-text font-monospace">/</span>
+                                        </div>
+                                        <small class="text-muted">Permanen dari Pengaturan</small>
+                                    </div>
+                                    <!-- 4. Bulan & Tahun -->
+                                    <div class="col-md-3">
+                                        <label class="form-label required small mb-1 text-muted">4. Bulan Surat</label>
+                                        <div class="input-group">
+                                            <select class="form-select <?= isset($validation) && $validation->hasError('bulan') ? 'is-invalid' : '' ?>" 
+                                                   name="bulan" id="bulan" required>
+                                                <?php foreach ($bulan_list as $val => $label): ?>
+                                                    <option value="<?= $val ?>" <?= (old('bulan') ?? $surat['bulan']) == $val ? 'selected' : '' ?>><?= $val ?> - <?= $label ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <span class="input-group-text font-monospace text-muted">/<?= esc($tahun_anggaran) ?></span>
+                                        </div>
+                                        <small class="text-muted">Tahun anggaran: <?= esc($tahun_anggaran) ?></small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label <?= in_array('nomor_surat', $required_fields ?? []) ? 'required' : '' ?>">
-                                Bulan
-                            </label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="ti ti-calendar-month text-muted"></i></span>
-                                <select class="form-select <?= isset($validation) && $validation->hasError('bulan') ? 'is-invalid' : '' ?>" 
-                                       name="bulan" id="bulan"
-                                       <?= in_array('nomor_surat', $required_fields ?? []) ? 'required' : '' ?>>
-                                    <option value="">-- Pilih --</option>
-                                    <?php foreach ($bulan_list as $val => $label): ?>
-                                        <option value="<?= $val ?>" <?= (old('bulan') ?? $surat['bulan']) == $val ? 'selected' : '' ?>><?= $label ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <?php if(isset($validation) && $validation->hasError('bulan')): ?>
-                                    <div class="invalid-feedback"><?= $validation->getError('bulan') ?></div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        <div class="col-md-5">
+
+                        <div class="col-12">
                             <label class="form-label">Preview Nomor Surat</label>
-                            <div class="alert alert-info bg-info-lt py-2 px-3 mb-1" id="preview-container" style="display: none;">
+                            <div class="alert alert-info bg-info-lt py-2 px-3 mb-1" id="preview-container">
                                 <div class="d-flex align-items-center">
-                                    <i class="ti ti-eye me-2 text-info"></i>
-                                    <strong class="me-2">Hasil:</strong>
-                                    <span id="preview-nomor" class="fw-bold text-info"></span>
+                                    <i class="ti ti-eye me-2 text-info fs-4"></i>
+                                    <div>
+                                        <strong class="me-2 text-secondary">Hasil Nomor Surat:</strong>
+                                        <span id="preview-nomor" class="fw-bold text-primary fs-5"></span>
+                                    </div>
                                 </div>
                             </div>
                             <input type="hidden" name="nomor_surat" id="hidden-nomor-surat" value="<?= old('nomor_surat') ?? $surat['nomor_surat'] ?>">
@@ -350,6 +395,19 @@
 
 <?= $this->section('scripts') ?>
 <script>
+    function formatAgendaSeq(nomorUrut) {
+        var mUrut = nomorUrut.match(/^0*(\d+)-([A-Za-z0-9]+)$/);
+        if (mUrut) {
+            var base = mUrut[1].padStart(2, '0');
+            return base + mUrut[2].toUpperCase();
+        }
+        var n = parseInt(nomorUrut, 10);
+        if (!isNaN(n)) {
+            return String(n).padStart(2, '0');
+        }
+        return nomorUrut.length === 1 ? '0' + nomorUrut : nomorUrut;
+    }
+
     function updatePreview() {
         var nomorUrut = document.getElementById('nomor_urut').value.trim();
         var bulan = document.getElementById('bulan').value;
@@ -361,38 +419,118 @@
         var container = document.getElementById('preview-container');
         var hidden = document.getElementById('hidden-nomor-surat');
 
-        if (nomorUrut && bulan) {
+        // Update visual segment fields from template
+        if (template) {
+            var m = template.match(/^([^{]+)\{nomor\}\/(.+)\/\{bulan\}\/\{tahun\}$/);
+            if (m) {
+                var klasEl = document.getElementById('segment_klasifikasi');
+                var satkEl = document.getElementById('segment_satker');
+                if (klasEl) klasEl.value = m[1];
+                if (satkEl) satkEl.value = m[2];
+            }
+        }
+
+        if (nomorUrut && bulan && template) {
             var result = template.replace('{nomor}', nomorUrut)
                                  .replace('{bulan}', bulan)
                                  .replace('{tahun}', tahun);
-            previewEl.textContent = result;
+            var agendaSeq = formatAgendaSeq(nomorUrut);
+            var agendaPreview = 'OUT-' + bulan + '-' + tahun + '-' + agendaSeq;
+
+            previewEl.innerHTML = '<span class="text-primary fw-bold fs-5">' + escapeHtml(result) + '</span>' +
+                                  '<span class="text-muted small ms-3"><i class="ti ti-bookmark me-1"></i>Agenda: <strong>' + escapeHtml(agendaPreview) + '</strong></span>';
             hidden.value = result;
             container.style.display = '';
         } else {
-            previewEl.textContent = '-';
-            hidden.value = '';
-            container.style.display = 'none';
+            previewEl.textContent = hidden.value || '-';
+            if (!hidden.value) container.style.display = 'none';
         }
     }
 
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(text));
+        return div.innerHTML;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('nomor_urut').addEventListener('input', updatePreview);
+        var nomorUrutInput = document.getElementById('nomor_urut');
+        var checkSisipan = document.getElementById('check_is_sisipan');
+        var sisipanBox = document.getElementById('sisipan_box');
+        var sisipanBase = document.getElementById('sisipan_base');
+        var sisipanSuffix = document.getElementById('sisipan_suffix');
+        var sisipanPreviewText = document.getElementById('sisipan_preview_text');
+        var hintEl = document.getElementById('nomor_urut_hint');
+
+        // Deteksi awal jika nilai nomor_urut sudah ber-suffix
+        if (nomorUrutInput.value && nomorUrutInput.value.indexOf('-') !== -1) {
+            var parts = nomorUrutInput.value.split('-');
+            sisipanBase.value = parts[0];
+            sisipanSuffix.value = parts.slice(1).join('-').toUpperCase();
+            checkSisipan.checked = true;
+            sisipanBox.classList.remove('d-none');
+            sisipanPreviewText.textContent = nomorUrutInput.value;
+            hintEl.textContent = 'Mode surat sisipan aktif';
+        }
+
+        // Toggle Sisipan
+        checkSisipan.addEventListener('change', function() {
+            if (this.checked) {
+                sisipanBox.classList.remove('d-none');
+                hintEl.textContent = 'Mode surat sisipan aktif';
+                if (!sisipanBase.value) {
+                    var cur = nomorUrutInput.value.trim();
+                    sisipanBase.value = (cur && cur.indexOf('-') === -1) ? cur : '001';
+                }
+                if (!sisipanSuffix.value) {
+                    sisipanSuffix.value = 'A';
+                }
+                syncFromSisipan();
+            } else {
+                sisipanBox.classList.add('d-none');
+                hintEl.textContent = 'Nomor urut surat';
+                var cur = nomorUrutInput.value.trim();
+                if (cur.indexOf('-') !== -1) {
+                    nomorUrutInput.value = cur.split('-')[0];
+                }
+                updatePreview();
+            }
+        });
+
+        function syncFromSisipan() {
+            var base = sisipanBase.value.trim() || '001';
+            var sfx = sisipanSuffix.value.trim().toUpperCase() || 'A';
+            var combined = base + '-' + sfx;
+            nomorUrutInput.value = combined;
+            sisipanPreviewText.textContent = combined;
+            updatePreview();
+        }
+
+        sisipanBase.addEventListener('input', syncFromSisipan);
+        sisipanSuffix.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+            syncFromSisipan();
+        });
+
+        // Direct input di nomor_urut
+        nomorUrutInput.addEventListener('input', function() {
+            var val = this.value.trim();
+            if (val.indexOf('-') !== -1) {
+                var p = val.split('-');
+                sisipanBase.value = p[0];
+                sisipanSuffix.value = p.slice(1).join('-').toUpperCase();
+                sisipanPreviewText.textContent = val.toUpperCase();
+                checkSisipan.checked = true;
+                sisipanBox.classList.remove('d-none');
+                hintEl.textContent = 'Mode surat sisipan aktif';
+            }
+            updatePreview();
+        });
+
         document.getElementById('bulan').addEventListener('change', updatePreview);
         document.getElementById('format_surat_id').addEventListener('change', updatePreview);
 
-        // Auto-show preview if nomor_surat already exists
-        if (document.getElementById('hidden-nomor-surat').value) {
-            var nomorUrut = document.getElementById('nomor_urut').value.trim();
-            var bulan = document.getElementById('bulan').value;
-        if (nomorUrut && bulan && template) {
-                updatePreview();
-            } else {
-                var previewEl = document.getElementById('preview-nomor');
-                var container = document.getElementById('preview-container');
-                previewEl.textContent = document.getElementById('hidden-nomor-surat').value;
-                container.style.display = '';
-            }
-        }
+        updatePreview();
 
         // === Logika Tipe Penyimpanan (Radio Button atau Hidden Input) ===
         const radios = document.querySelectorAll('input[name="tipe_penyimpanan"][type="radio"]');

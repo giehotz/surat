@@ -345,10 +345,7 @@ class ImportService
 
         $db->transStart();
 
-        $tahunAgenda = date('Y');
-        $agendaCounter = $suratKeluarModel
-            ->where('nomor_agenda LIKE', 'OUT-' . $tahunAgenda . '-%')
-            ->countAllResults();
+        $suratService = new SuratService();
 
         foreach ($importData as $index => $row) {
             $rowNum = $index + 2;
@@ -357,6 +354,14 @@ class ImportService
                 $errors[] = "Baris {$rowNum}: Nomor surat kosong.";
                 continue;
             }
+
+            // Validasi format nomor surat sesuai standar template: tolak dan jangan simpan jika tidak sesuai
+            $valResult = $suratService->validateNomorSuratFormat($row['nomor_surat']);
+            if (!$valResult['valid']) {
+                $errors[] = "Baris {$rowNum}: {$valResult['message']} (Nilai: '{$row['nomor_surat']}')";
+                continue;
+            }
+
             if (empty($row['tujuan'])) {
                 $errors[] = "Baris {$rowNum}: Tujuan surat kosong.";
                 continue;
@@ -383,12 +388,18 @@ class ImportService
                 continue;
             }
 
-            $agendaCounter++;
-            $nomor_agenda = 'OUT-' . $tahunAgenda . '-' . sprintf('%03d', $agendaCounter);
+            $tahunSurat = date('Y', strtotime($row['tanggal_surat']));
+            $bulanSurat = date('m', strtotime($row['tanggal_surat']));
+            $nomor_agenda = $suratService->generateNextNomorAgendaKeluar($tahunSurat, $bulanSurat);
+
+            preg_match('/^[A-Za-z0-9.]+-(\d+)/', $row['nomor_surat'], $nm);
+            $nomorUrutVal = $nm[1] ?? null;
 
             $dataInsert = [
                 'nomor_agenda'     => $nomor_agenda,
                 'nomor_surat'      => $row['nomor_surat'],
+                'nomor_urut'       => $nomorUrutVal,
+                'bulan'            => $bulanSurat,
                 'tanggal_surat'    => $row['tanggal_surat'],
                 'tanggal_kirim'    => $row['tanggal_kirim'],
                 'tujuan'           => $row['tujuan'],

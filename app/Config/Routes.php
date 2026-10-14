@@ -228,6 +228,7 @@ $routes->group('pengaturan', ['filter' => 'role:admin,admin_tamu'], function ($r
     $routes->post('store-tahun-anggaran', 'Pengaturan::storeTahunAnggaran');
     $routes->post('delete-tahun-anggaran/(:num)', 'Pengaturan::deleteTahunAnggaran/$1');
     $routes->post('aktifkan-tahun-anggaran/(:any)', 'Pengaturan::aktifkanTahunAnggaran/$1');
+    $routes->post('update-kode-satker', 'Pengaturan::updateKodeSatker');
     $routes->post('store-format-surat', 'Pengaturan::storeFormatSurat');
     $routes->post('update-format-surat/(:num)', 'Pengaturan::updateFormatSurat/$1');
     $routes->post('delete-format-surat/(:num)', 'Pengaturan::deleteFormatSurat/$1');
