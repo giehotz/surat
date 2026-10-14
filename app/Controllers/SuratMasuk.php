@@ -426,6 +426,12 @@ class SuratMasuk extends BaseController
             $builder->where('YEAR(tanggal_terima)', $tahunAnggaran);
         }
 
+        $userModel = new \App\Models\UserModel();
+        $currentUser = session('user_id') ? $userModel->find(session('user_id')) : null;
+        $data['pelapor_nama']    = $currentUser['nama_lengkap'] ?? session('nama_lengkap') ?? 'Staf Tata Usaha / Admin Persuratan';
+        $data['pelapor_jabatan'] = $currentUser['jabatan'] ?? session('jabatan') ?? 'Staf Tata Usaha';
+        $data['pelapor_nip']     = $currentUser['nip'] ?? session('nip') ?? null;
+
         $data['appSettings'] = $settings;
         $data['surat_masuk'] = $builder->orderBy('tanggal_terima', 'ASC')->get()->getResultArray();
         $html = view('surat_masuk/print_pdf', $data);

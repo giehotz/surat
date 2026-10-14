@@ -155,10 +155,11 @@
     <!-- BAGIAN TANDA TANGAN -->
     <table style="width: 100%; border: none; margin-top: 40px; page-break-inside: avoid;">
         <tr>
-            <td style="width: 60%; border: none;"></td>
-            <td style="width: 40%; text-align: center; border: none; font-size: 11pt;">
-                <p style="margin: 0; padding-bottom: 5px;">Mengesahkan,</p>
-                <p style="margin: 0; font-weight: bold;">Kepala Sekolah</p>
+            <!-- Kolom Mengetahui (Kiri) -->
+            <td style="width: 50%; text-align: center; border: none; font-size: 10pt;">
+                <p style="margin: 0 0 3px 0;">&nbsp;</p>
+                <p style="margin: 0; font-weight: bold;">Mengetahui,</p>
+                <p style="margin: 0; font-weight: bold;">Kepala <?= esc($appSettings['sekolah_nama'] ?? 'MIN 2 Tanggamus') ?></p>
                 
                 <!-- Ruang untuk Tanda Tangan & Stempel -->
                 <br><br><br><br>
@@ -166,8 +167,28 @@
                 <p style="margin: 0; font-weight: bold; text-decoration: underline;">
                     <?= esc($appSettings['pejabat_kepsek_nama'] ?? 'NAMA KEPALA SEKOLAH') ?>
                 </p>
-                <p style="margin: 0;">
+                <p style="margin: 2px 0 0 0; font-size: 9pt;">
                     NIP. <?= esc($appSettings['pejabat_kepsek_nip'] ?? '-') ?>
+                </p>
+            </td>
+
+            <!-- Kolom Pelapor (Kanan) -->
+            <td style="width: 50%; text-align: center; border: none; font-size: 10pt;">
+                <?php 
+                $kotaNama = !empty($appSettings['sekolah_kabupaten']) ? str_ireplace('kabupaten ', '', $appSettings['sekolah_kabupaten']) : 'Tanggamus';
+                ?>
+                <p style="margin: 0 0 3px 0;"><?= esc($kotaNama) ?>, <?= format_tanggal_indo(date('Y-m-d')) ?></p>
+                <p style="margin: 0; font-weight: bold;">Pelapor,</p>
+                <p style="margin: 0; font-size: 9.5pt; color: #333;"><?= esc($pelapor_jabatan ?? 'Staf Tata Usaha / Admin Persuratan') ?></p>
+                
+                <!-- Ruang untuk Tanda Tangan -->
+                <br><br><br><br>
+                
+                <p style="margin: 0; font-weight: bold; text-decoration: underline;">
+                    <?= esc($pelapor_nama ?? 'Staf Tata Usaha') ?>
+                </p>
+                <p style="margin: 2px 0 0 0; font-size: 9pt;">
+                    NIP. <?= !empty($pelapor_nip) ? esc($pelapor_nip) : '-' ?>
                 </p>
             </td>
         </tr>

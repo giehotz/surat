@@ -187,8 +187,11 @@ class Laporan extends BaseController
             $tanggalCetak = date('Y-m-d');
         }
 
-        $pelaporNama    = session('nama_lengkap') ?? 'Staf Tata Usaha / Admin Persuratan';
-        $pelaporJabatan = session('jabatan') ?? 'Staf Tata Usaha';
+        $userModel = new \App\Models\UserModel();
+        $currentUser = session('user_id') ? $userModel->find(session('user_id')) : null;
+        $pelaporNama    = $currentUser['nama_lengkap'] ?? session('nama_lengkap') ?? 'Staf Tata Usaha / Admin Persuratan';
+        $pelaporJabatan = $currentUser['jabatan'] ?? session('jabatan') ?? 'Staf Tata Usaha';
+        $pelaporNip     = $currentUser['nip'] ?? session('nip') ?? null;
 
         $data = [
             'appSettings'     => $settings,
@@ -207,6 +210,7 @@ class Laporan extends BaseController
             'surat_keluar'    => $suratKeluarList,
             'pelapor_nama'    => $pelaporNama,
             'pelapor_jabatan' => $pelaporJabatan,
+            'pelapor_nip'     => $pelaporNip,
         ];
 
         $html = view('laporan/print_pdf', $data);

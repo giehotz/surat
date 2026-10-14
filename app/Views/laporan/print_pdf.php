@@ -592,7 +592,7 @@
                     <?= esc($pelapor_nama ?? 'Staf Tata Usaha') ?>
                 </p>
                 <p style="margin: 2px 0 0 0; font-size: 9pt;">
-                    Petugas Administrasi Persuratan
+                    NIP. <?= !empty($pelapor_nip) ? esc($pelapor_nip) : '-' ?>
                 </p>
             </td>
         </tr>

@@ -789,6 +789,12 @@ class SuratKeluar extends BaseController
             $data['filter_text'] = "Periode: Tahun " . $tahunAnggaran;
         }
 
+        $userModel = new \App\Models\UserModel();
+        $currentUser = session('user_id') ? $userModel->find(session('user_id')) : null;
+        $data['pelapor_nama']    = $currentUser['nama_lengkap'] ?? session('nama_lengkap') ?? 'Staf Tata Usaha / Admin Persuratan';
+        $data['pelapor_jabatan'] = $currentUser['jabatan'] ?? session('jabatan') ?? 'Staf Tata Usaha';
+        $data['pelapor_nip']     = $currentUser['nip'] ?? session('nip') ?? null;
+
         $data['surat_keluar'] = $builder->orderBy('tanggal_surat', 'ASC')->get()->getResultArray();
         $html = view('surat_keluar/print_pdf', $data);
 
