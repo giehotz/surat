@@ -56,6 +56,7 @@ class Auth extends BaseController
                 $ses_data = [
                     'user_id'       => $data['id'],
                     'nama_lengkap'  => $data['nama_lengkap'],
+                    'nip'           => $data['nip'] ?? null,
                     'email'         => $data['email'],
                     'jabatan'       => $data['jabatan'],
                     'role'          => $data['role'],

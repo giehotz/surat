@@ -29,6 +29,21 @@
                                     </div>
                                 <?php endif; ?>
 
+                                <div class="mt-1 mb-2">
+                                    <div class="fw-bold text-dark fs-3"><?= esc($user['nama_lengkap']) ?></div>
+                                    <div class="text-muted small">
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><?= esc(ucfirst($user['role'] ?? 'User')) ?></span>
+                                        <?php if (!empty($user['jabatan'])): ?>
+                                            <span class="text-muted ms-1">• <?= esc($user['jabatan']) ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <?php if (!empty($user['nip'])): ?>
+                                        <div class="text-muted small font-monospace mt-1">
+                                            <i class="ti ti-id-badge me-1"></i>NIP. <?= esc($user['nip']) ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+
                                 <div class="w-100 text-start mt-2">
                                     <label class="form-label fw-medium small mb-2"><i class="ti ti-camera me-1"></i> Ganti Foto (Opsional)</label>
                                     <input type="file" class="form-control form-control-sm" name="foto_profile" accept="image/png, image/jpeg, image/jpg">
@@ -65,8 +80,17 @@
                                         <input type="text" class="form-control" name="nama_lengkap" value="<?= esc($user['nama_lengkap']) ?>" required>
                                     </div>
                                 </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">NIP (Nomor Induk Pegawai)</label>
+                                    <div class="input-icon">
+                                        <span class="input-icon-addon"><i class="ti ti-id-badge text-muted"></i></span>
+                                        <input type="text" class="form-control font-monospace" name="nip" value="<?= esc($user['nip'] ?? '') ?>" placeholder="Masukkan NIP (18 digit)" maxlength="30">
+                                    </div>
+                                    <small class="form-hint" style="font-size: 0.75rem;">Kosongkan jika bukan ASN / Pegawai Negeri.</small>
+                                </div>
                                 
-                                <div class="col-md-12">
+                                <div class="col-md-6">
                                     <label class="form-label required">Alamat Email</label>
                                     <div class="input-icon">
                                         <span class="input-icon-addon"><i class="ti ti-mail text-muted"></i></span>

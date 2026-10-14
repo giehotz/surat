@@ -45,10 +45,12 @@ class User extends BaseController
             return redirect()->back()->withInput()->with('error', 'Validasi gagal, silakan periksa kembali isian Anda.');
         }
 
+        $nip = trim((string)$this->request->getPost('nip'));
         $this->userModel->save([
             'username'     => $this->request->getPost('username'),
             'password'     => password_hash($this->request->getPost('password'), PASSWORD_BCRYPT),
             'nama_lengkap' => $this->request->getPost('nama_lengkap'),
+            'nip'          => !empty($nip) ? $nip : null,
             'email'        => $this->request->getPost('email'),
             'jabatan'      => $this->request->getPost('jabatan'),
             'role'         => $this->request->getPost('role'),
@@ -89,10 +91,12 @@ class User extends BaseController
             return redirect()->back()->withInput()->with('error', 'Validasi gagal, silakan periksa kembali isian Anda.');
         }
 
+        $nip = trim((string)$this->request->getPost('nip'));
         $data = [
             'id'           => $id,
             'username'     => $this->request->getPost('username'),
             'nama_lengkap' => $this->request->getPost('nama_lengkap'),
+            'nip'          => !empty($nip) ? $nip : null,
             'email'        => $this->request->getPost('email'),
             'jabatan'      => $this->request->getPost('jabatan'),
             'role'         => $this->request->getPost('role'),

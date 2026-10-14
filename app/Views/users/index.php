@@ -36,7 +36,12 @@
                                             <span class="avatar me-2" style="background-image: url('https://ui-avatars.com/api/?name=<?= urlencode($user['nama_lengkap']) ?>')"></span>
                                             <div class="flex-fill">
                                                 <div class="font-weight-medium"><?= esc($user['nama_lengkap']) ?></div>
-                                                <div class="text-secondary"><a href="mailto:<?= esc($user['email']) ?>" class="text-reset"><?= esc($user['email']) ?></a></div>
+                                                <div class="text-secondary small">
+                                                    <a href="mailto:<?= esc($user['email']) ?>" class="text-reset"><?= esc($user['email']) ?></a>
+                                                    <?php if (!empty($user['nip'])): ?>
+                                                        <span class="ms-1 font-monospace">• NIP. <?= esc($user['nip']) ?></span>
+                                                    <?php endif; ?>
+                                                </div>
                                             </div>
                                         </div>
                                     </td>

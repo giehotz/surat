@@ -45,8 +45,10 @@ class Profile extends BaseController
             return redirect()->back()->withInput()->with('error', $this->validator->listErrors());
         }
 
+        $nip = trim((string)$this->request->getPost('nip'));
         $dataUpdate = [
             'nama_lengkap' => $this->request->getPost('nama_lengkap'),
+            'nip'          => !empty($nip) ? $nip : null,
             'email'        => $this->request->getPost('email'),
         ];
 
@@ -73,6 +75,7 @@ class Profile extends BaseController
 
         // Update session
         session()->set('nama_lengkap', $dataUpdate['nama_lengkap']);
+        session()->set('nip', $dataUpdate['nip']);
         session()->set('email', $dataUpdate['email']);
         if (isset($dataUpdate['foto_profile'])) {
             session()->set('foto_profile', $dataUpdate['foto_profile']);

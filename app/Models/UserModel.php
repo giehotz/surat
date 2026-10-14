@@ -16,6 +16,7 @@ class UserModel extends Model
         'username',
         'password',
         'nama_lengkap',
+        'nip',
         'email',
         'jabatan',
         'role',

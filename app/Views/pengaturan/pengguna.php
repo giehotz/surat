@@ -75,57 +75,17 @@
                                     <span class="avatar me-3 rounded-circle shadow-sm" style="background-image: url('https://ui-avatars.com/api/?name=<?= urlencode($user['nama_lengkap']) ?>&background=random&color=fff')"></span>
                                     <div class="flex-fill">
                                         <div class="font-weight-bold text-body mb-1"><?= esc($user['nama_lengkap']) ?></div>
-                                        <div class="text-muted small">
-                                            <i class="ti ti-mail me-1"></i>
-                                            <a href="mailto:<?= esc($user['email']) ?>" class="text-reset text-decoration-none hover-primary"><?= esc($user['email']) ?></a>
-</div>
-
-<script>
-(function() {
-    var searchInput = document.getElementById('search-user');
-    var roleFilter = document.getElementById('filter-role');
-    var perPage = document.getElementById('per-page');
-    var tableBody = document.querySelector('#tab-pengguna tbody');
-    if (!tableBody || !searchInput || !roleFilter || !perPage) return;
-
-    var allRows = Array.prototype.slice.call(tableBody.querySelectorAll('tr[data-role]'));
-
-    function filterRows() {
-        var keyword = searchInput.value.toLowerCase().trim();
-        var role = roleFilter.value;
-        var max = parseInt(perPage.value) || 25;
-
-        var visible = allRows.filter(function(row) {
-            if (role && row.getAttribute('data-role') !== role) return false;
-            if (keyword) {
-                var text = row.textContent.toLowerCase();
-                if (text.indexOf(keyword) === -1) return false;
-            }
-            return true;
-        });
-
-        // Hide all first
-        allRows.forEach(function(r) { r.style.display = 'none'; });
-
-        // Show only matching + within page limit
-        visible.slice(0, max).forEach(function(r) { r.style.display = ''; });
-
-        // Update pagination info
-        var info = document.querySelector('#tab-pengguna .card-footer .text-muted small');
-        if (info) {
-            var shown = Math.min(visible.length, max);
-            info.innerHTML = 'Menampilkan <span>1</span> hingga <span>' + shown + '</span> dari <span>' + visible.length + '</span> entri';
-        }
-    }
-
-    searchInput.addEventListener('input', filterRows);
-    roleFilter.addEventListener('change', filterRows);
-    perPage.addEventListener('change', filterRows);
-
-    // Initial filter
-    filterRows();
-})();
-</script>
+                                        <div class="text-muted small d-flex flex-wrap align-items-center gap-2">
+                                            <span>
+                                                <i class="ti ti-mail me-1"></i>
+                                                <a href="mailto:<?= esc($user['email']) ?>" class="text-reset text-decoration-none hover-primary"><?= esc($user['email']) ?></a>
+                                            </span>
+                                            <?php if (!empty($user['nip'])): ?>
+                                                <span class="badge bg-light text-muted border font-monospace py-0 px-2">
+                                                    <i class="ti ti-id-badge me-1"></i>NIP: <?= esc($user['nip']) ?>
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
                                 </div>
                             </td>
@@ -208,3 +168,50 @@
     <?php endif; ?>
 
 </div>
+
+<script>
+(function() {
+    var searchInput = document.getElementById('search-user');
+    var roleFilter = document.getElementById('filter-role');
+    var perPage = document.getElementById('per-page');
+    var tableBody = document.querySelector('#tab-pengguna tbody');
+    if (!tableBody || !searchInput || !roleFilter || !perPage) return;
+
+    var allRows = Array.prototype.slice.call(tableBody.querySelectorAll('tr[data-role]'));
+
+    function filterRows() {
+        var keyword = searchInput.value.toLowerCase().trim();
+        var role = roleFilter.value;
+        var max = parseInt(perPage.value) || 25;
+
+        var visible = allRows.filter(function(row) {
+            if (role && row.getAttribute('data-role') !== role) return false;
+            if (keyword) {
+                var text = row.textContent.toLowerCase();
+                if (text.indexOf(keyword) === -1) return false;
+            }
+            return true;
+        });
+
+        // Hide all first
+        allRows.forEach(function(r) { r.style.display = 'none'; });
+
+        // Show only matching + within page limit
+        visible.slice(0, max).forEach(function(r) { r.style.display = ''; });
+
+        // Update pagination info
+        var info = document.querySelector('#tab-pengguna .card-footer .text-muted small');
+        if (info) {
+            var shown = Math.min(visible.length, max);
+            info.innerHTML = 'Menampilkan <span>1</span> hingga <span>' + shown + '</span> dari <span>' + visible.length + '</span> entri';
+        }
+    }
+
+    searchInput.addEventListener('input', filterRows);
+    roleFilter.addEventListener('change', filterRows);
+    perPage.addEventListener('change', filterRows);
+
+    // Initial filter
+    filterRows();
+})();
+</script>

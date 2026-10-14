@@ -12,9 +12,15 @@
             <form action="<?= base_url('admin/users/update/' . $user['id']) ?>" method="post">
                 <?= csrf_field() ?>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label required">Nama Lengkap</label>
-                        <input type="text" class="form-control" name="nama_lengkap" placeholder="Masukkan nama lengkap" value="<?= old('nama_lengkap', $user['nama_lengkap']) ?>" required>
+                    <div class="row mb-3">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label class="form-label required">Nama Lengkap</label>
+                            <input type="text" class="form-control" name="nama_lengkap" placeholder="Masukkan nama lengkap" value="<?= old('nama_lengkap', $user['nama_lengkap']) ?>" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">NIP (Nomor Induk Pegawai)</label>
+                            <input type="text" class="form-control font-monospace" name="nip" placeholder="18 digit (opsional jika bukan ASN)" value="<?= old('nip', $user['nip'] ?? '') ?>" maxlength="30">
+                        </div>
                     </div>
 
                     <div class="row mb-3">
